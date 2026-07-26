@@ -1,0 +1,169 @@
+{
+  "meta": {
+    "displayName": "Arch Wiki",
+    "version": "1.0.0",
+    "description": "Framework-agnostic architecture map & documentation generator skill for AI coding assistants.",
+    "generatedAt": "2026-07-26",
+    "techStack": {
+      "language": "TypeScript",
+      "framework": "Express.js",
+      "database": "PostgreSQL",
+      "auth": "JWT / Bearer Token"
+    }
+  },
+  "workspaces": [
+    {
+      "id": "api",
+      "name": "api",
+      "type": "backend",
+      "description": "Main REST API",
+      "port": 3000,
+      "entrypoint": "src/index.ts"
+    }
+  ],
+  "infrastructure": [],
+  "dockerDiagram": {
+    "description": "",
+    "nodes": [],
+    "edges": []
+  },
+  "systemArchitectureDiagram": {
+    "description": "System architecture and component relationships.",
+    "subgraphs": [
+      {
+        "id": "client_layer",
+        "label": "Client Layer",
+        "nodes": [
+          {
+            "id": "web_client",
+            "label": "Web / Mobile Client",
+            "type": "app"
+          }
+        ]
+      },
+      {
+        "id": "api_layer",
+        "label": "API Layer",
+        "nodes": [
+          {
+            "id": "api_server",
+            "label": "REST API Server",
+            "type": "app"
+          }
+        ]
+      },
+      {
+        "id": "data_layer",
+        "label": "Data & Storage Layer",
+        "nodes": [
+          {
+            "id": "db",
+            "label": "PostgreSQL Database",
+            "type": "database"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "from": "web_client",
+        "to": "api_server",
+        "label": "HTTPS REST"
+      },
+      {
+        "from": "api_server",
+        "to": "db",
+        "label": "Query"
+      }
+    ]
+  },
+  "swaggerSchemas": {
+    "matchStatus": "Verified Parity (0/0 Endpoints)",
+    "openapi": "3.0.0",
+    "servedAt": "/api/docs",
+    "securityScheme": "bearerAuth (JWT Bearer Token)",
+    "servers": [
+      {
+        "url": "http://localhost:3000",
+        "description": "Local Development Server"
+      },
+      {
+        "url": "https://api.arch-wiki.com",
+        "description": "Production"
+      }
+    ],
+    "schemas": []
+  },
+  "modules": [],
+  "systemEndpoints": [
+    {
+      "method": "GET",
+      "path": "/health",
+      "auth": false,
+      "description": "Health check endpoint"
+    }
+  ],
+  "coreLayer": {
+    "security": [
+      {
+        "name": "Helmet.js",
+        "description": "HTTP security headers protection"
+      },
+      {
+        "name": "CORS",
+        "description": "Cross-Origin Resource Sharing control"
+      },
+      {
+        "name": "JWT Auth",
+        "description": "Bearer token authentication & verification"
+      }
+    ],
+    "middleware": [
+      {
+        "name": "authenticateJWT",
+        "file": "src/middlewares/auth.middleware.ts",
+        "description": "Verifies JWT access tokens in HTTP Authorization headers",
+        "guards": [
+          "JWT Verification"
+        ]
+      },
+      {
+        "name": "authorizeRoles",
+        "file": "src/middlewares/auth.middleware.ts",
+        "description": "Enforces Role-Based Access Control (RBAC) permissions per route",
+        "guards": [
+          "RBAC Check"
+        ]
+      }
+    ],
+    "services": [
+      {
+        "name": "PrismaClient",
+        "file": "src/prisma.ts",
+        "description": "Database ORM client service connection manager",
+        "exports": [
+          "prisma"
+        ]
+      }
+    ]
+  },
+  "dataFlow": {
+    "requestPipeline": [
+      "HTTP Request received",
+      "Security headers applied (Helmet / CORS)",
+      "Route matched \u2014 module router selected",
+      "JWT token validated (authenticateJWT)",
+      "RBAC role checked (authorizeRoles)",
+      "Controller processes request",
+      "ORM executes database query",
+      "JSON response returned to client"
+    ],
+    "tenantIsolation": "Tenant data isolation enforced via middleware scope and schema queries."
+  },
+  "permissions": {
+    "description": "RBAC permission catalog and endpoint mapping.",
+    "catalog": [],
+    "details": []
+  },
+  "sqlQueries": []
+}

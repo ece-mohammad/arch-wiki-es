@@ -1,0 +1,25 @@
+{
+  "name": "arch-wiki",
+  "version": "1.0.0",
+  "description": "Framework-agnostic architecture map & documentation generator skill for AI coding assistants.",
+  "main": "bin/install.js",
+  "bin": {
+    "arch-wiki": "bin/install.js"
+  },
+  "scripts": {
+    "install-skill": "node bin/install.js"
+  },
+  "keywords": [
+    "ai-skill",
+    "antigravity",
+    "claude-code",
+    "cursor",
+    "architecture-documentation",
+    "swagger",
+    "express",
+    "fastapi",
+    "nestjs"
+  ],
+  "author": "Antigravity",
+  "license": "MIT"
+}
