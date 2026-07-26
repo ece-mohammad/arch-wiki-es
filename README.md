@@ -33,6 +33,17 @@ The output is a **single self-contained HTML file** with:
 
 ---
 
+## 🤖 AI Token & Context Optimization
+
+Beyond serving as an interactive dashboard, `architecture.json` acts as a **machine-readable context index** specifically designed for AI coding assistants (Antigravity, Claude Code, Cursor, Codex, OpenCode, etc.):
+
+- ⚡ **Fast Code Reading:** AI tools can read `docs/architecture/architecture.json` in a **single file view** to immediately understand all API modules, endpoints, database queries, RBAC permissions, and container topologies.
+- 🪙 **Massive Token Savings:** Eliminates the need for AI agents to make dozens of `grep` or file-reading calls across hundreds of source files, saving thousands of prompt tokens and drastically lowering API context consumption.
+- 🎯 **Pinpoint Navigation:** Every endpoint and SQL query in `architecture.json` links directly to its underlying file path (`controller.ts`, `router.py`, `repository.ts`), allowing AI agents to navigate straight to relevant files without scanning the entire repo.
+- 🧠 **Living System Blueprint:** Gives AI models a structured, top-down mental model of your architecture that persists across chat sessions.
+
+---
+
 ## Project Structure
 
 ```
