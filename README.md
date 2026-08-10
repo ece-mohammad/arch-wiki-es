@@ -290,12 +290,13 @@ The generated `architecture.html` includes 11 navigation sections:
 | 📦 **API Modules** | Searchable module cards with all endpoints |
 | 🏗️ **System Architecture** | Mermaid component diagram with pan/zoom toolbar & hand cursor |
 | 🐋 **Docker Topology** | Mermaid container dependency graph with pan/zoom toolbar & hand cursor |
-| ⚡ **Swagger & OpenAPI** | Live Swagger UI (Dark Theme) + cURL snippets + JSON spec |
-| 🔐 **Permissions** | RBAC catalog grid + detailed flow cards |
+| ⚡ **Swagger & OpenAPI** | Live Swagger UI (Dark Theme), API catalog with cURL snippets, & OpenAPI JSON spec |
+| 🔐 **Permissions & Scopes** | RBAC catalog, system scope fallbacks (authenticated/public), & scope-to-endpoint mapping |
 | 🗃️ **SQL Queries** | Query catalog with SQL syntax highlighting |
 | 🖥️ **Infrastructure** | Docker service cards with feature tags |
 | 🛡️ **Core Layer** | Middleware and core service documentation |
 | 🔄 **Request Pipeline** | Step-by-step request flow visualization |
+| 📄 **PDF Export** | 1-click PDF generator that forces pre-rendering of diagrams, Swagger views, and scope mappings |
 
 
 ---
