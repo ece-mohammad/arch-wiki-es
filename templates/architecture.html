@@ -9,6 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui.css" />
     <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui-bundle.js"></script>
     <style>
         :root {
@@ -393,13 +394,45 @@
             margin-top: 8px;
         }
         .diagram-box {
+            position: relative;
             background: var(--bg2);
             border: 1px solid var(--border);
             border-radius: 8px;
             padding: 20px;
             text-align: center;
-            overflow-x: auto;
+            overflow: hidden;
         }
+        .diagram-toolbar {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(13, 17, 23, 0.85);
+            backdrop-filter: blur(8px);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 4px 8px;
+        }
+        .diagram-toolbar button {
+            background: var(--bg3);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 4px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+            transition: all 0.15s ease;
+        }
+        .diagram-toolbar button:hover {
+            background: var(--accent);
+            color: #000;
+            border-color: var(--accent);
+        }
+
         .mwcard {
             background: var(--bg2);
             border: 1px solid var(--border);
@@ -441,83 +474,244 @@
             display: block;
         }
 
-        /* Swagger UI Dark Mode Theme Overrides */
+        /* Comprehensive Swagger UI Dark Mode Theme Overrides */
         #swagger-ui-container .swagger-ui {
-            color: var(--text);
-            font-family: var(--font-main);
+            color: var(--text) !important;
+            font-family: var(--font-main) !important;
+        }
+        #swagger-ui-container .swagger-ui .info {
+            margin: 20px 0 !important;
         }
         #swagger-ui-container .swagger-ui .info .title {
-            color: var(--text);
+            color: var(--text) !important;
         }
         #swagger-ui-container .swagger-ui .info p, 
-        #swagger-ui-container .swagger-ui .info li {
-            color: var(--muted);
+        #swagger-ui-container .swagger-ui .info li,
+        #swagger-ui-container .swagger-ui .info td {
+            color: var(--muted) !important;
         }
         #swagger-ui-container .swagger-ui .scheme-container {
-            background: var(--bg2);
-            box-shadow: none;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 15px;
+            background: var(--bg2) !important;
+            box-shadow: none !important;
+            border: 1px solid var(--border) !important;
+            border-radius: 8px !important;
+            padding: 15px !important;
+        }
+        #swagger-ui-container .swagger-ui label {
+            color: var(--text) !important;
         }
         #swagger-ui-container .swagger-ui .opblock-tag {
-            color: var(--text);
-            border-bottom: 1px solid var(--border);
-            font-size: 16px;
+            color: var(--text) !important;
+            border-bottom: 1px solid var(--border) !important;
+            font-size: 16px !important;
+            font-weight: 600 !important;
+        }
+        #swagger-ui-container .swagger-ui .opblock-tag small {
+            color: var(--muted) !important;
         }
         #swagger-ui-container .swagger-ui .opblock {
-            background: var(--bg2);
-            border-radius: 8px;
-            border: 1px solid var(--border);
-            margin-bottom: 10px;
+            background: var(--bg2) !important;
+            border-radius: 8px !important;
+            border: 1px solid var(--border) !important;
+            margin-bottom: 12px !important;
+            box-shadow: none !important;
+        }
+        #swagger-ui-container .swagger-ui .opblock .opblock-summary {
+            border-bottom-color: var(--border) !important;
         }
         #swagger-ui-container .swagger-ui .opblock .opblock-summary-path {
-            color: var(--text);
-            font-family: var(--font-code);
-            font-size: 13px;
+            color: var(--text) !important;
+            font-family: var(--font-code) !important;
+            font-size: 13px !important;
+            font-weight: 600 !important;
         }
         #swagger-ui-container .swagger-ui .opblock .opblock-summary-description {
-            color: var(--muted);
-            font-size: 12px;
+            color: var(--muted) !important;
+            font-size: 12px !important;
+        }
+        
+        /* Method Badges & Operation Containers */
+        #swagger-ui-container .swagger-ui .opblock.opblock-get {
+            background: rgba(63, 185, 80, 0.08) !important;
+            border-color: rgba(63, 185, 80, 0.4) !important;
+        }
+        #swagger-ui-container .swagger-ui .opblock.opblock-get .opblock-summary-method {
+            background: #3fb950 !important;
+            color: #000 !important;
+            font-weight: 700 !important;
+        }
+
+        #swagger-ui-container .swagger-ui .opblock.opblock-post {
+            background: rgba(88, 166, 255, 0.08) !important;
+            border-color: rgba(88, 166, 255, 0.4) !important;
+        }
+        #swagger-ui-container .swagger-ui .opblock.opblock-post .opblock-summary-method {
+            background: #58a6ff !important;
+            color: #000 !important;
+            font-weight: 700 !important;
+        }
+
+        #swagger-ui-container .swagger-ui .opblock.opblock-put {
+            background: rgba(210, 153, 34, 0.08) !important;
+            border-color: rgba(210, 153, 34, 0.4) !important;
+        }
+        #swagger-ui-container .swagger-ui .opblock.opblock-put .opblock-summary-method {
+            background: #d29922 !important;
+            color: #000 !important;
+            font-weight: 700 !important;
+        }
+
+        #swagger-ui-container .swagger-ui .opblock.opblock-patch {
+            background: rgba(255, 140, 66, 0.08) !important;
+            border-color: rgba(255, 140, 66, 0.4) !important;
+        }
+        #swagger-ui-container .swagger-ui .opblock.opblock-patch .opblock-summary-method {
+            background: #ff8c42 !important;
+            color: #000 !important;
+            font-weight: 700 !important;
+        }
+
+        #swagger-ui-container .swagger-ui .opblock.opblock-delete {
+            background: rgba(248, 81, 73, 0.08) !important;
+            border-color: rgba(248, 81, 73, 0.4) !important;
+        }
+        #swagger-ui-container .swagger-ui .opblock.opblock-delete .opblock-summary-method {
+            background: #f85149 !important;
+            color: #fff !important;
+            font-weight: 700 !important;
+        }
+
+        #swagger-ui-container .swagger-ui .opblock-section-header {
+            background: var(--bg3) !important;
+            color: var(--text) !important;
+            border-radius: 4px !important;
+        }
+        #swagger-ui-container .swagger-ui .opblock-section-header h4 {
+            color: var(--text) !important;
+        }
+        #swagger-ui-container .swagger-ui .opblock-body pre {
+            background: var(--bg) !important;
+            color: var(--text) !important;
+            border: 1px solid var(--border) !important;
+            border-radius: 6px !important;
         }
         #swagger-ui-container .swagger-ui table thead tr th, 
         #swagger-ui-container .swagger-ui table thead tr td {
-            color: var(--text);
-            border-bottom: 1px solid var(--border);
+            color: var(--text) !important;
+            border-bottom: 1px solid var(--border) !important;
         }
-        #swagger-ui-container .swagger-ui .parameter__name, 
-        #swagger-ui-container .swagger-ui .parameter__type {
-            color: var(--text);
+        #swagger-ui-container .swagger-ui table.parameters td {
+            color: var(--text) !important;
+        }
+        #swagger-ui-container .swagger-ui .parameter__name {
+            color: var(--text) !important;
+            font-family: var(--font-code) !important;
+            font-weight: 600 !important;
+        }
+        #swagger-ui-container .swagger-ui .parameter__name.required:after {
+            color: var(--red) !important;
+        }
+        #swagger-ui-container .swagger-ui .parameter__type,
+        #swagger-ui-container .swagger-ui .parameter__extension,
+        #swagger-ui-container .swagger-ui .parameter__in {
+            color: var(--muted) !important;
+            font-family: var(--font-code) !important;
+        }
+        #swagger-ui-container .swagger-ui .responses-inner h4,
+        #swagger-ui-container .swagger-ui .responses-inner h5 {
+            color: var(--text) !important;
+        }
+        #swagger-ui-container .swagger-ui .response-col_status {
+            color: var(--text) !important;
+            font-family: var(--font-code) !important;
+            font-weight: 600 !important;
+        }
+        #swagger-ui-container .swagger-ui .response-col_description {
+            color: var(--muted) !important;
         }
         #swagger-ui-container .swagger-ui section.models {
-            border: 1px solid var(--border);
-            background: var(--bg2);
-            border-radius: 8px;
+            border: 1px solid var(--border) !important;
+            background: var(--bg2) !important;
+            border-radius: 8px !important;
         }
         #swagger-ui-container .swagger-ui section.models h4 {
-            color: var(--text);
-            border-bottom: 1px solid var(--border);
+            color: var(--text) !important;
+            border-bottom: 1px solid var(--border) !important;
+        }
+        #swagger-ui-container .swagger-ui .model-box {
+            background: var(--bg3) !important;
+            color: var(--text) !important;
+            border-radius: 6px !important;
+            padding: 10px !important;
         }
         #swagger-ui-container .swagger-ui .model-title {
-            color: var(--text);
+            color: var(--accent) !important;
+            font-family: var(--font-code) !important;
         }
-        #swagger-ui-container .swagger-ui pre {
-            background: var(--bg3);
-            color: var(--text);
-            border-radius: 6px;
+        #swagger-ui-container .swagger-ui .model {
+            color: var(--text) !important;
+            font-family: var(--font-code) !important;
         }
-        #swagger-ui-container .swagger-ui input, 
+        #swagger-ui-container .swagger-ui .prop-type {
+            color: var(--purple) !important;
+        }
+        #swagger-ui-container .swagger-ui .prop-format {
+            color: var(--muted) !important;
+        }
+        #swagger-ui-container .swagger-ui pre,
+        #swagger-ui-container .swagger-ui code {
+            color: var(--text) !important;
+            font-family: var(--font-code) !important;
+        }
+        #swagger-ui-container .swagger-ui input[type=text], 
         #swagger-ui-container .swagger-ui select, 
         #swagger-ui-container .swagger-ui textarea {
-            background: var(--bg3);
-            color: var(--text);
-            border: 1px solid var(--border);
-            border-radius: 4px;
+            background: var(--bg3) !important;
+            color: var(--text) !important;
+            border: 1px solid var(--border) !important;
+            border-radius: 4px !important;
+            padding: 6px 10px !important;
+        }
+        #swagger-ui-container .swagger-ui input[type=text]:focus, 
+        #swagger-ui-container .swagger-ui select:focus, 
+        #swagger-ui-container .swagger-ui textarea:focus {
+            border-color: var(--accent) !important;
+            outline: none !important;
         }
         #swagger-ui-container .swagger-ui .btn {
-            background: var(--bg3);
-            color: var(--text);
-            border: 1px solid var(--border);
+            background: var(--bg3) !important;
+            color: var(--text) !important;
+            border: 1px solid var(--border) !important;
+            border-radius: 4px !important;
+            font-weight: 500 !important;
+            box-shadow: none !important;
+        }
+        #swagger-ui-container .swagger-ui .btn:hover {
+            background: var(--border) !important;
+            color: var(--text) !important;
+        }
+        #swagger-ui-container .swagger-ui .btn.execute {
+            background: var(--accent) !important;
+            color: #000 !important;
+            border-color: var(--accent) !important;
+            font-weight: 700 !important;
+        }
+        #swagger-ui-container .swagger-ui .btn.authorize {
+            color: var(--green) !important;
+            border-color: var(--green) !important;
+            background: rgba(63, 185, 80, 0.1) !important;
+        }
+        #swagger-ui-container .swagger-ui svg {
+            fill: var(--text) !important;
+        }
+        #swagger-ui-container .swagger-ui .arrow {
+            fill: var(--text) !important;
+        }
+        #swagger-ui-container .swagger-ui .tab li {
+            color: var(--text) !important;
+        }
+        #swagger-ui-container .swagger-ui .tab li.active {
+            color: var(--accent) !important;
         }
     </style>
 </head>
@@ -980,6 +1174,61 @@ flowchart TB
     var dockerMermaidRendered = false;
     var sysarchMermaidRendered = false;
     var swaggerUiRendered = false;
+    var sysarchPanZoom = null;
+    var dockerPanZoom = null;
+
+    function initPanZoom(containerId, isSysarch) {
+        var container = document.getElementById(containerId);
+        if (!container) return;
+        var svg = container.querySelector('svg');
+        if (!svg) return;
+
+        svg.style.width = '100%';
+        svg.style.height = '100%';
+        svg.style.maxHeight = '70vh';
+        svg.style.display = 'block';
+
+        var parentBox = container.closest('.diagram-box');
+        if (parentBox && !parentBox.querySelector('.diagram-toolbar')) {
+            var toolbar = document.createElement('div');
+            toolbar.className = 'diagram-toolbar';
+            toolbar.innerHTML = `
+                <button onclick="zoomDiagram('${containerId}', 'in')" title="Zoom In">🔍 +</button>
+                <button onclick="zoomDiagram('${containerId}', 'out')" title="Zoom Out">🔍 -</button>
+                <button onclick="zoomDiagram('${containerId}', 'reset')" title="Reset View">↺ Reset</button>
+                <button onclick="zoomDiagram('${containerId}', 'fit')" title="Fit to Screen">⛶ Fit</button>
+            `;
+            parentBox.insertBefore(toolbar, container);
+        }
+
+        if (typeof svgPanZoom !== 'undefined') {
+            try {
+                var pz = svgPanZoom(svg, {
+                    zoomEnabled: true,
+                    controlIconsEnabled: false,
+                    mouseWheelZoomEnabled: true,
+                    fit: true,
+                    center: true,
+                    minZoom: 0.2,
+                    maxZoom: 10,
+                    zoomScaleSensitivity: 0.2
+                });
+                if (isSysarch) sysarchPanZoom = pz;
+                else dockerPanZoom = pz;
+            } catch(e) {
+                console.warn("svgPanZoom init error:", e);
+            }
+        }
+    }
+
+    function zoomDiagram(containerId, action) {
+        var pz = (containerId === 'sysarchMermaid') ? sysarchPanZoom : dockerPanZoom;
+        if (!pz) return;
+        if (action === 'in') pz.zoomIn();
+        else if (action === 'out') pz.zoomOut();
+        else if (action === 'reset') { pz.resetZoom(); pz.resetPan(); pz.fit(); pz.center(); }
+        else if (action === 'fit') { pz.fit(); pz.center(); }
+    }
 
     function renderSysarchDiagram() {
         if (sysarchMermaidRendered) return;
@@ -991,6 +1240,7 @@ flowchart TB
             var uniqueId = 'svg_' + Math.floor(Math.random() * 1000000);
             mermaid.render(uniqueId, src).then(function(res) {
                 target.innerHTML = res.svg;
+                setTimeout(function() { initPanZoom('sysarchMermaid', true); }, 50);
             }).catch(function(err) {
                 console.error("Mermaid render error:", err);
                 target.innerHTML = '<div style="color:var(--red); padding:20px;">Failed to render Mermaid diagram: ' + err.message + '</div>';
@@ -1008,6 +1258,7 @@ flowchart TB
             var uniqueId = 'svg_' + Math.floor(Math.random() * 1000000);
             mermaid.render(uniqueId, src).then(function(res) {
                 target.innerHTML = res.svg;
+                setTimeout(function() { initPanZoom('dockerMermaid', false); }, 50);
             }).catch(function(err) {
                 console.error("Mermaid render error:", err);
                 target.innerHTML = '<div style="color:var(--red); padding:20px;">Failed to render Mermaid diagram: ' + err.message + '</div>';
