@@ -22,10 +22,12 @@
 
 The output is a **single self-contained HTML file** with:
 - 📊 Overview stats dashboard
+- 📋 System Prerequisites & Setup Pipeline
 - 📦 API Modules catalog with all endpoints
-- 🏗️ System Architecture diagram (Mermaid)
-- 🐋 Docker Topology diagram (Mermaid)
-- ⚡ Interactive Swagger UI (try-it-out enabled)
+- 🏗️ System Architecture diagram with pan/zoom & hand cursor (Mermaid)
+- 🐋 Docker Topology diagram with pan/zoom & hand cursor (Mermaid)
+- 📄 One-click PDF Export (exports all 11 sections into a single formatted PDF document)
+- ⚡ Interactive Swagger UI (try-it-out enabled with polished dark mode theme)
 - 🔐 Permissions & RBAC mapping
 - 🗃️ SQL Queries catalog with syntax highlighting
 - 🖥️ Infrastructure services catalog
@@ -57,7 +59,7 @@ arch-wiki/
 > `architecture.json` is automatically generated on first run by `build_html.py --init`
 > via a **zero-dependency codebase scanner**. It automatically scans your `docker-compose.yml`,
 > route files (`*.routes.ts`, `routers/*.py`), and `package.json` to populate endpoints,
-> services, workspaces, permissions, and SQL queries without manual setup!
+> services, workspaces, permissions, prerequisites, and SQL queries without manual setup!
 > Built-in deduplication automatically filters out build directories (`dist/`, `build/`, `node_modules/`)
 > to prevent duplicate route definitions.
 
@@ -128,7 +130,7 @@ Once installed, **you never need to run python scripts manually**. Simply open y
 
 The AI Assistant will autonomously:
 1. Copy the codebase scanner engine into `docs/architecture/build_html.py`.
-2. Scan Docker services (`docker-compose.yml`), API endpoints (`*.routes.ts`, `routers/*.py`), permissions, and SQL queries.
+2. Scan Docker services (`docker-compose.yml`), API endpoints (`*.routes.ts`, `routers/*.py`), permissions, prerequisites, and SQL queries.
 3. Create/Sync `docs/architecture/architecture.json`.
 4. Generate the interactive dashboard at `docs/architecture/architecture.html`.
 
@@ -246,6 +248,7 @@ The AI assistant will automatically run the codebase scanner, detect any new or 
 | Section | Purpose |
 |---|---|
 | `meta` | Project name, version, generated date, tech stack |
+| `prerequisites` | Required runtime engines, infrastructure tools, databases, and setup steps |
 | `workspaces` | Monorepo apps/packages (backend, frontend, packages) |
 | `infrastructure` | Docker services (database, cache, queue, proxy, etc.) |
 | `dockerDiagram` | Container topology nodes & edges for Mermaid diagram |
@@ -278,20 +281,22 @@ The skill is designed to work with **any backend framework**. The AI adapts the 
 
 ## Dashboard Screenshots
 
-The generated `architecture.html` includes 10 navigation sections:
+The generated `architecture.html` includes 11 navigation sections:
 
 | Section | Description |
 |---|---|
 | 📌 **Overview** | Stats cards + workspace list + system endpoints |
+| 📋 **Prerequisites** | Developer tools, database runtimes, & step-by-step setup commands |
 | 📦 **API Modules** | Searchable module cards with all endpoints |
-| 🏗️ **System Architecture** | Mermaid component diagram |
-| 🐋 **Docker Topology** | Mermaid container dependency graph |
-| ⚡ **Swagger & OpenAPI** | Live Swagger UI + cURL snippets + JSON spec |
+| 🏗️ **System Architecture** | Mermaid component diagram with pan/zoom toolbar & hand cursor |
+| 🐋 **Docker Topology** | Mermaid container dependency graph with pan/zoom toolbar & hand cursor |
+| ⚡ **Swagger & OpenAPI** | Live Swagger UI (Dark Theme) + cURL snippets + JSON spec |
 | 🔐 **Permissions** | RBAC catalog grid + detailed flow cards |
 | 🗃️ **SQL Queries** | Query catalog with SQL syntax highlighting |
 | 🖥️ **Infrastructure** | Docker service cards with feature tags |
 | 🛡️ **Core Layer** | Middleware and core service documentation |
 | 🔄 **Request Pipeline** | Step-by-step request flow visualization |
+
 
 ---
 

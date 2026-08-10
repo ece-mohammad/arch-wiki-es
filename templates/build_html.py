@@ -79,6 +79,13 @@ def _color(name, i): return next((c for k,c in {'auth':'#6366f1','user':'#f59e0b
     'product':'#06b6d4','order':'#84cc16','payment':'#ec4899'}.items()
     if k in name.lower()), _COLORS[i % len(_COLORS)])
 
+def clean_mermaid(text):
+    if not text:
+        return ""
+    if not isinstance(text, str):
+        text = str(text)
+    return text.replace('"', '').replace("'", '').replace('\n', ' ').strip()
+
 def _find_root(start):
     """Find the root directory of the project containing this docs/architecture folder.
     Checks for markers like docker-compose.yml, package.json, backend/, .git, etc."""
@@ -99,12 +106,12 @@ def _find_root(start):
     return os.path.abspath(os.path.join(start, "..", ".."))  # default to 2 levels up from docs/architecture
 
 def _detect_fw(root):
-    for sub in ['', 'app', 'server', 'backend']:
+    for sub in ['', 'app', 'server', 'backend', 'apps/api', 'apps/server', 'apps/backend']:
         if os.path.isfile(os.path.join(root, sub, 'pom.xml')) or os.path.isfile(os.path.join(root, 'pom.xml')):
             return 'spring'
         if os.path.isfile(os.path.join(root, sub, 'build.gradle')) or os.path.isfile(os.path.join(root, 'build.gradle')):
             return 'spring'
-    for sub in ['', 'backend', 'api', 'server', 'app']:
+    for sub in ['', 'backend', 'api', 'server', 'app', 'apps/api', 'apps/server', 'apps/backend']:
         pkg = os.path.join(root, sub, 'package.json') if sub else os.path.join(root, 'package.json')
         if os.path.isfile(pkg):
             try:
@@ -116,6 +123,22 @@ def _detect_fw(root):
                 if '@nestjs/core' in deps: return 'nestjs'
                 if 'fastify' in deps: return 'fastify'
             except: pass
+
+    apps_dir = os.path.join(root, 'apps')
+    if os.path.isdir(apps_dir):
+        for sub in os.listdir(apps_dir):
+            pkg = os.path.join(apps_dir, sub, 'package.json')
+            if os.path.isfile(pkg):
+                try:
+                    deps = {}
+                    with open(pkg, encoding='utf-8') as f:
+                        d = json.load(f)
+                    deps.update(d.get('dependencies', {})); deps.update(d.get('devDependencies', {}))
+                    if 'express' in deps: return 'express'
+                    if '@nestjs/core' in deps: return 'nestjs'
+                    if 'fastify' in deps: return 'fastify'
+                except: pass
+
     for sub in ['', 'backend', 'api', 'app']:
         base = os.path.join(root, sub) if sub else root
         for req_name in ['requirements.txt', 'pyproject.toml', 'Pipfile', 'setup.py']:
@@ -240,11 +263,18 @@ def _infer_desc(method, path, mod):
 
 def _scan_express(root):
     src_dirs = []
-    for sub in ['', 'backend', 'api', 'server', 'app']:
+    for sub in ['', 'backend', 'api', 'server', 'app', 'apps/api', 'apps/server', 'apps/backend']:
         c = os.path.join(root, sub, 'src') if sub else os.path.join(root, 'src')
         if os.path.isdir(c): src_dirs.append(c)
         c2 = os.path.join(root, sub) if sub else None
         if c2 and os.path.isdir(os.path.join(c2, 'routes')): src_dirs.append(c2)
+    apps_dir = os.path.join(root, 'apps')
+    if os.path.isdir(apps_dir):
+        for sub in os.listdir(apps_dir):
+            c = os.path.join(apps_dir, sub, 'src')
+            if os.path.isdir(c): src_dirs.append(c)
+            c2 = os.path.join(apps_dir, sub)
+            if os.path.isdir(os.path.join(c2, 'routes')): src_dirs.append(c2)
     src_dirs = sorted(set(src_dirs))
     if not src_dirs: return []
 
@@ -309,7 +339,7 @@ def _scan_express(root):
 
         global_auth = bool(re.search(r'router\.use\((authenticateJWT|authenticate|authMiddleware|requireAuth)\)', txt)) or ('authenticateJWT' in txt) or ('authenticate' in txt)
         
-        global_roles = re.findall(r"(?:authorizeRoles|authorize|requireRole|checkPermission|hasRole)\(([^)]+)\)", txt)
+        global_roles = re.findall(r"(?:authorizeRoles|authorize|requireRole|requirePermission|checkPermission|hasRole)\(([^)]+)\)", txt)
         g_roles = []
         for r in global_roles:
             cleaned = r.replace('[','').replace(']','').replace("'",'').replace('"','').strip()
@@ -319,14 +349,14 @@ def _scan_express(root):
                     g_roles.append(xc)
 
         eps, seen = [], set()
-        for m in re.finditer(r"router\.(get|post|put|patch|delete)\s*\(\s*['\"]([^'\"]*)['\"]([^;\n]*?)(?:\)|;|\n)", txt, re.IGNORECASE):
+        for m in re.finditer(r"router\.(get|post|put|patch|delete)\s*\(\s*['\"]([^'\"]*)['\"]([\s\S]*?)(?=\n\s*router\.|\n\s*export|\n\s*const|\n\s*/\*\*|;\s*\n|\)\s*;|\)$)", txt, re.IGNORECASE):
             method, path, rest = m.group(1).upper(), m.group(2), m.group(3)
             key_ep = f"{method}:{path}"
             if key_ep in seen: continue
             seen.add(key_ep)
-            auth = global_auth or ('authenticateJWT' in rest) or ('authenticate' in rest) or ('auth' in path.lower())
+            auth = global_auth or ('authenticateJWT' in rest) or ('authenticate' in rest) or ('auth' in path.lower()) or ('requirePermission' in rest)
             
-            rm = re.search(r"(?:authorizeRoles|authorize|requireRole|checkPermission|hasRole)\(([^)]+)\)", rest)
+            rm = re.search(r"(?:authorizeRoles|authorize|requireRole|requirePermission|checkPermission|hasRole)\(([^)]+)\)", rest)
             if rm:
                 cleaned = rm.group(1).replace('[','').replace(']','').replace("'",'').replace('"','').strip()
                 perm_list = [x.strip() for x in cleaned.split(',') if x.strip()]
@@ -336,6 +366,18 @@ def _scan_express(root):
 
             eps.append({'method': method, 'path': path, 'auth': auth,
                         'permission': perm, 'description': _infer_desc(method, path, name)})
+
+        # Fallback if multiline lookahead misses single line at end of file
+        if not eps:
+            for m in re.finditer(r"router\.(get|post|put|patch|delete)\s*\(\s*['\"]([^'\"]*)['\"]([^;\n]*?)(?:\)|;|\n)", txt, re.IGNORECASE):
+                method, path, rest = m.group(1).upper(), m.group(2), m.group(3)
+                key_ep = f"{method}:{path}"
+                if key_ep in seen: continue
+                seen.add(key_ep)
+                auth = global_auth or ('authenticateJWT' in rest) or ('authenticate' in rest) or ('auth' in path.lower()) or ('requirePermission' in rest)
+                rm = re.search(r"(?:authorizeRoles|authorize|requireRole|requirePermission|checkPermission|hasRole)\(([^)]+)\)", rest)
+                perm = rm.group(1).replace("'",'').replace('"','').strip() if rm else (' | '.join(g_roles) if g_roles else None)
+                eps.append({'method': method, 'path': path, 'auth': auth, 'permission': perm, 'description': _infer_desc(method, path, name)})
 
         if not eps: continue
         perms = list(set(e['permission'] for e in eps if e.get('permission')))
@@ -829,8 +871,19 @@ def _scan_core_layer(root, fw):
     }
 
 def _build_sys_diagram(modules, infrastructure):
-    client_nodes = [{'id': 'web_client', 'label': 'Web / Mobile Client', 'type': 'app'}]
-    api_nodes = [{'id': 'api_server', 'label': 'REST API Server', 'type': 'app'}]
+    client_nodes = [
+        {'id': 'web_client', 'label': 'Web Application / Client', 'type': 'app'},
+        {'id': 'mobile_client', 'label': 'Mobile App / API Consumer', 'type': 'app'}
+    ]
+    api_nodes = []
+    if modules:
+        for m in modules:
+            m_name = m.get('name', 'API Module')
+            m_id = f"mod_{re.sub(r'[^a-zA-Z0-9_]', '_', m_name.lower())}"
+            api_nodes.append({'id': m_id, 'label': f"{m_name} Module", 'type': 'app'})
+    if not api_nodes:
+        api_nodes.append({'id': 'api_server', 'label': 'REST API Gateway / Server', 'type': 'app'})
+        
     data_nodes = []
     for s in infrastructure:
         if s.get('type') in ('database', 'cache', 'queue', 'storage'):
@@ -839,15 +892,22 @@ def _build_sys_diagram(modules, infrastructure):
         data_nodes.append({'id': 'db', 'label': 'PostgreSQL Database', 'type': 'database'})
     
     subgraphs = [
-        {'id': 'client_layer', 'label': 'Client Layer', 'nodes': client_nodes},
-        {'id': 'api_layer', 'label': 'API Layer', 'nodes': api_nodes},
-        {'id': 'data_layer', 'label': 'Data & Storage Layer', 'nodes': data_nodes},
+        {'id': 'client_layer', 'label': 'Client & Consumer Layer', 'nodes': client_nodes},
+        {'id': 'api_layer', 'label': 'Application & Service Layer', 'nodes': api_nodes},
+        {'id': 'data_layer', 'label': 'Data & Infrastructure Layer', 'nodes': data_nodes},
     ]
-    edges = [{'from': 'web_client', 'to': 'api_server', 'label': 'HTTPS REST'}]
-    for dn in data_nodes:
-        lbl = 'Store / Fetch' if dn.get('type') == 'storage' else ('Cache / PubSub' if dn.get('type') == 'cache' else 'Query')
-        edges.append({'from': 'api_server', 'to': dn['id'], 'label': lbl})
-    return {'description': 'System architecture and component relationships.',
+    
+    edges = []
+    for cn in client_nodes:
+        for an in api_nodes:
+            edges.append({'from': cn['id'], 'to': an['id'], 'label': 'HTTPS REST'})
+            
+    for an in api_nodes:
+        for dn in data_nodes:
+            lbl = 'Store / Fetch' if dn.get('type') == 'storage' else ('Cache / PubSub' if dn.get('type') == 'cache' else 'Query')
+            edges.append({'from': an['id'], 'to': dn['id'], 'label': lbl})
+            
+    return {'description': 'System architecture, module boundaries, and infrastructure component relationships.',
             'subgraphs': subgraphs, 'edges': edges}
 
 
@@ -1032,28 +1092,37 @@ def init_architecture(target_root=None):
     workspaces = _scan_workspaces(root)
 
     # 6. Collect all permission slugs & details
-    all_perms = sorted(set(p for m in modules for p in m.get('permissions',[]) if p))
     perm_details = []
     for mod in modules:
         for ep in mod.get('endpoints', []):
             pslug = ep.get('permission')
-            if not pslug: continue
-            for sub_slug in [s.strip() for s in pslug.split('|')]:
-                if not sub_slug: continue
+            full_ep_path = (mod['basePath'] + ("" if ep['path'] == "/" else ep['path'])).replace("//", "/")
+            ep_obj = {"method": ep['method'], "path": full_ep_path}
+
+            if pslug:
+                sub_slugs = [s.strip() for s in pslug.split('|') if s.strip()]
+            elif ep.get('auth', False):
+                sub_slugs = ['authenticated']
+            else:
+                sub_slugs = ['public']
+
+            for sub_slug in sub_slugs:
                 existing = next((d for d in perm_details if d['slug'] == sub_slug), None)
-                full_ep_path = (mod['basePath'] + ("" if ep['path'] == "/" else ep['path'])).replace("//", "/")
-                ep_obj = {"method": ep['method'], "path": full_ep_path}
                 if existing:
                     if ep_obj not in existing['endpoints']:
                         existing['endpoints'].append(ep_obj)
                 else:
+                    action_type = "SYSTEM SCOPE" if sub_slug in ('authenticated', 'public') else "RBAC PERMISSION"
+                    page_label = "Public Access" if sub_slug == 'public' else ("Authenticated User Access" if sub_slug == 'authenticated' else f"{mod['name']} Management")
                     perm_details.append({
                         "slug": sub_slug,
                         "module": mod['name'],
-                        "action": "ACCESS",
+                        "action": action_type,
                         "endpoints": [ep_obj],
-                        "adminPages": [f"{mod['name']} Management"]
+                        "adminPages": [page_label]
                     })
+
+    all_perms = sorted(set(d['slug'] for d in perm_details))
 
     # 7. System arch diagram
     sys_diag = _build_sys_diagram(modules, infrastructure)
@@ -1150,6 +1219,8 @@ def init_architecture(target_root=None):
     today = datetime.date.today().isoformat()
     total_ep_str = f"{total_ep}/{total_ep}"
 
+    prerequisites = _scan_prerequisites(root, fw, infrastructure, workspaces)
+
     scaffold = {
         "meta": {
             "displayName": display_name,
@@ -1163,6 +1234,7 @@ def init_architecture(target_root=None):
                 "auth": "JWT / Bearer Token"
             }
         },
+        "prerequisites": prerequisites,
         "workspaces": workspaces,
         "infrastructure": infrastructure,
         "dockerDiagram": docker_diagram,
@@ -1197,6 +1269,163 @@ def init_architecture(target_root=None):
 
     print(f"[arch-wiki] Generated architecture.json -> {json_path}")
     return scaffold
+
+
+def _scan_prerequisites(root, fw, infrastructure, workspaces):
+    tools = []
+
+    # 1. Primary Runtime Engine
+    if fw in ('express', 'nestjs', 'fastify'):
+        tools.append({
+            "name": "Node.js & npm",
+            "version": ">= 18.0.0",
+            "required": True,
+            "category": "runtime",
+            "description": "JavaScript runtime engine for executing the Express REST API backend and frontend tooling."
+        })
+    elif fw in ('spring', 'java'):
+        tools.append({
+            "name": "Java OpenJDK / JDK",
+            "version": ">= 17",
+            "required": True,
+            "category": "runtime",
+            "description": "Java SE Development Kit required for Spring Boot backend compilation and execution."
+        })
+    elif fw in ('fastapi', 'django', 'flask'):
+        tools.append({
+            "name": "Python",
+            "version": ">= 3.10",
+            "required": True,
+            "category": "runtime",
+            "description": "Python runtime interpreter for backend API execution and virtual environments."
+        })
+    else:
+        tools.append({
+            "name": "Node.js",
+            "version": ">= 18.0.0",
+            "required": True,
+            "category": "runtime",
+            "description": "JavaScript runtime environment."
+        })
+
+    # 2. Containerization / Infrastructure tools
+    has_compose = os.path.isfile(os.path.join(root, 'docker-compose.yml')) or os.path.isfile(os.path.join(root, 'docker-compose.yaml'))
+    if infrastructure or has_compose:
+        tools.append({
+            "name": "Docker & Docker Compose",
+            "version": ">= 24.0.0 (Compose v2)",
+            "required": True,
+            "category": "infrastructure",
+            "description": "Container engine & orchestration tool to launch database, caching, messaging, and monitoring services."
+        })
+
+    # 3. Services detected from infrastructure
+    for s in infrastructure:
+        stype = s.get('type', '')
+        sname = s.get('name', 'Service')
+        simg  = s.get('image', 'latest')
+        sport = s.get('port')
+        if stype in ('database', 'cache', 'queue', 'monitoring'):
+            tools.append({
+                "name": f"{sname} ({stype.title()})",
+                "version": simg,
+                "required": True if stype in ('database', 'cache') else False,
+                "category": stype,
+                "description": f"Containerized {stype} service running on port {sport or 'internal'}."
+            })
+
+    # 4. Workspace & Monorepo Package Managers
+    if os.path.isfile(os.path.join(root, 'pnpm-workspace.yaml')):
+        tools.append({
+            "name": "pnpm Package Manager",
+            "version": ">= 8.0.0",
+            "required": True,
+            "category": "package_manager",
+            "description": "Disk-efficient monorepo package manager."
+        })
+
+    # Setup Steps Pipeline
+    setup_steps = []
+    step_num = 1
+
+    # Step 1: Environment File Setup
+    env_file = os.path.join(root, '.env.example')
+    if not os.path.isfile(env_file):
+        env_file = os.path.join(root, 'apps', 'api', '.env.example')
+
+    if os.path.isfile(env_file):
+        setup_steps.append({
+            "step": step_num,
+            "title": "Configure Environment Variables",
+            "command": "cp .env.example .env",
+            "description": "Create local .env configuration file and update database host, credentials, JWT secrets, and service ports."
+        })
+    else:
+        setup_steps.append({
+            "step": step_num,
+            "title": "Configure Environment Variables",
+            "command": "touch .env",
+            "description": "Set up environment variables (PORT, DB_HOST, DB_PASSWORD, JWT_SECRET)."
+        })
+    step_num += 1
+
+    # Step 2: Launch Docker Containers
+    if infrastructure or has_compose:
+        setup_steps.append({
+            "step": step_num,
+            "title": "Start Infrastructure Containers",
+            "command": "docker compose up -d",
+            "description": "Spin up containerized services in background mode."
+        })
+        step_num += 1
+
+    # Step 3: Install Package Dependencies
+    if fw in ('express', 'nestjs', 'fastify'):
+        setup_steps.append({
+            "step": step_num,
+            "title": "Install Workspace Dependencies",
+            "command": "npm install",
+            "description": "Install dependencies across backend API, shared libraries, and admin frontend."
+        })
+    elif fw in ('spring', 'java'):
+        setup_steps.append({
+            "step": step_num,
+            "title": "Build Maven Modules",
+            "command": "./mvnw clean install -DskipTests",
+            "description": "Compile Java packages and download Maven dependencies."
+        })
+    elif fw in ('fastapi', 'django', 'flask'):
+        setup_steps.append({
+            "step": step_num,
+            "title": "Install Python Virtual Environment",
+            "command": "python -m venv venv && source venv/bin/activate && pip install -r requirements.txt",
+            "description": "Initialize virtual environment and install dependencies."
+        })
+    step_num += 1
+
+    # Step 4: Database Migrations & Seeds
+    setup_steps.append({
+        "step": step_num,
+        "title": "Run Schema Migrations & Database Seeds",
+        "command": "npm run db:migrate && npm run db:seed" if fw in ('express', 'nestjs') else ("./mvnw compile exec:java" if fw == 'spring' else "alembic upgrade head"),
+        "description": "Execute database schema migrations and populate initial seed records."
+    })
+    step_num += 1
+
+    # Step 5: Boot Application Development Server
+    setup_steps.append({
+        "step": step_num,
+        "title": "Launch Development Server",
+        "command": "npm run dev" if fw in ('express', 'nestjs') else ("./mvnw spring-boot:run" if fw == 'spring' else "uvicorn main:app --reload"),
+        "description": "Start backend API in watch mode."
+    })
+
+    return {
+        "description": "Software runtimes, system dependencies, and step-by-step initialization commands required to run the project.",
+        "tools": tools,
+        "setupSteps": setup_steps
+    }
+
 
 
 def load_architecture(json_path=None):
@@ -1351,9 +1580,12 @@ def generate_html(data, target_dir=None):
     system_arch_diagram = data.get('systemArchitectureDiagram', {})
     swagger_schemas = data.get('swaggerSchemas', {})
     sql_queries = data.get('sqlQueries', [])
+    prerequisites = data.get('prerequisites', {})
 
     tech_stack = meta.get('techStack', {})
     total_endpoints = sum(len(m.get('endpoints', [])) for m in modules) + len(system_endpoints)
+    prereq_tools = prerequisites.get('tools', [])
+    prereq_steps = prerequisites.get('setupSteps', [])
 
     html_content = f"""<!DOCTYPE html>
 <html lang="en">
@@ -1729,12 +1961,10 @@ def generate_html(data, target_dir=None):
         .perm-flow {{
             display: flex;
             align-items: center;
-            gap: 12px;
-            margin-top: 10px;
+            gap: 6px;
             flex-wrap: wrap;
-            background: var(--bg3);
-            padding: 12px;
-            border-radius: 6px;
+            font-size: 12px;
+            margin-top: 8px;
         }}
         .flow-arrow {{ color: var(--muted); font-weight: bold; }}
 
@@ -1758,6 +1988,16 @@ def generate_html(data, target_dir=None):
             padding: 20px;
             text-align: center;
             overflow: hidden;
+            cursor: grab !important;
+        }}
+        .diagram-box:active {{
+            cursor: grabbing !important;
+        }}
+        .diagram-box svg, .diagram-box svg * {{
+            cursor: grab !important;
+        }}
+        .diagram-box svg:active, .diagram-box svg:active * {{
+            cursor: grabbing !important;
         }}
         .diagram-toolbar {{
             position: absolute;
@@ -1802,7 +2042,6 @@ def generate_html(data, target_dir=None):
         th, td {{ padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--border); }}
         th {{ background: var(--bg3); color: var(--muted); font-weight: 600; font-size: 12px; }}
 
-        /* Sub-tab buttons for Swagger view switcher */
         .sub-tab-btn {{
             background: var(--bg2);
             border: 1px solid var(--border);
@@ -1831,52 +2070,70 @@ def generate_html(data, target_dir=None):
             display: block;
         }}
 
-        /* Comprehensive Swagger UI Dark Mode Theme Overrides */
+        /* Comprehensive High-Contrast Dark Theme Overrides for Swagger UI */
         #swagger-ui-container .swagger-ui {{
             color: var(--text) !important;
             font-family: var(--font-main) !important;
         }}
+        #swagger-ui-container .swagger-ui * {{
+            border-color: var(--border) !important;
+        }}
         #swagger-ui-container .swagger-ui .info {{
-            margin: 20px 0 !important;
+            margin: 15px 0 25px 0 !important;
+            background: transparent !important;
         }}
         #swagger-ui-container .swagger-ui .info .title {{
             color: var(--text) !important;
+            font-size: 24px !important;
         }}
-        #swagger-ui-container .swagger-ui .info p, 
+        #swagger-ui-container .swagger-ui .info p,
         #swagger-ui-container .swagger-ui .info li,
-        #swagger-ui-container .swagger-ui .info td {{
+        #swagger-ui-container .swagger-ui .info td,
+        #swagger-ui-container .swagger-ui .info a {{
             color: var(--muted) !important;
         }}
         #swagger-ui-container .swagger-ui .scheme-container {{
             background: var(--bg2) !important;
+            border-radius: 8px !important;
+            padding: 16px !important;
             box-shadow: none !important;
             border: 1px solid var(--border) !important;
-            border-radius: 8px !important;
-            padding: 15px !important;
+            margin-bottom: 20px !important;
         }}
-        #swagger-ui-container .swagger-ui label {{
+        #swagger-ui-container .swagger-ui label,
+        #swagger-ui-container .swagger-ui .title,
+        #swagger-ui-container .swagger-ui .servers-title {{
             color: var(--text) !important;
         }}
         #swagger-ui-container .swagger-ui .opblock-tag {{
             color: var(--text) !important;
             border-bottom: 1px solid var(--border) !important;
-            font-size: 16px !important;
-            font-weight: 600 !important;
+            font-size: 18px !important;
+            font-weight: 700 !important;
+            padding: 10px 0 !important;
+            margin: 20px 0 10px 0 !important;
         }}
         #swagger-ui-container .swagger-ui .opblock-tag small {{
             color: var(--muted) !important;
+            font-size: 13px !important;
+            font-weight: 400 !important;
         }}
         #swagger-ui-container .swagger-ui .opblock {{
             background: var(--bg2) !important;
             border-radius: 8px !important;
             border: 1px solid var(--border) !important;
-            margin-bottom: 12px !important;
+            margin-bottom: 14px !important;
             box-shadow: none !important;
+            overflow: hidden !important;
         }}
         #swagger-ui-container .swagger-ui .opblock .opblock-summary {{
-            border-bottom-color: var(--border) !important;
+            padding: 10px 14px !important;
+            border-bottom: 1px solid transparent !important;
+            display: flex !important;
+            align-items: center !important;
         }}
-        #swagger-ui-container .swagger-ui .opblock .opblock-summary-path {{
+        #swagger-ui-container .swagger-ui .opblock .opblock-summary-path,
+        #swagger-ui-container .swagger-ui .opblock .opblock-summary-path__deprecated {{
             color: var(--text) !important;
             font-family: var(--font-code) !important;
             font-size: 13px !important;
@@ -1886,114 +2143,196 @@ def generate_html(data, target_dir=None):
             color: var(--muted) !important;
             font-size: 12px !important;
         }}
-        
-        /* Method Badges & Operation Containers */
+
+        /* HTTP Method Badges & Container States */
+        /* GET */
         #swagger-ui-container .swagger-ui .opblock.opblock-get {{
             background: rgba(63, 185, 80, 0.08) !important;
             border-color: rgba(63, 185, 80, 0.4) !important;
         }}
         #swagger-ui-container .swagger-ui .opblock.opblock-get .opblock-summary-method {{
             background: #3fb950 !important;
-            color: #000 !important;
+            color: #0d1117 !important;
             font-weight: 700 !important;
+            border-radius: 4px !important;
+            padding: 4px 10px !important;
+            text-shadow: none !important;
         }}
-
+        /* POST */
         #swagger-ui-container .swagger-ui .opblock.opblock-post {{
             background: rgba(88, 166, 255, 0.08) !important;
             border-color: rgba(88, 166, 255, 0.4) !important;
         }}
         #swagger-ui-container .swagger-ui .opblock.opblock-post .opblock-summary-method {{
             background: #58a6ff !important;
-            color: #000 !important;
+            color: #0d1117 !important;
             font-weight: 700 !important;
+            border-radius: 4px !important;
+            padding: 4px 10px !important;
+            text-shadow: none !important;
         }}
-
+        /* PUT */
         #swagger-ui-container .swagger-ui .opblock.opblock-put {{
             background: rgba(210, 153, 34, 0.08) !important;
             border-color: rgba(210, 153, 34, 0.4) !important;
         }}
         #swagger-ui-container .swagger-ui .opblock.opblock-put .opblock-summary-method {{
             background: #d29922 !important;
-            color: #000 !important;
+            color: #0d1117 !important;
             font-weight: 700 !important;
+            border-radius: 4px !important;
+            padding: 4px 10px !important;
+            text-shadow: none !important;
         }}
-
+        /* PATCH */
         #swagger-ui-container .swagger-ui .opblock.opblock-patch {{
             background: rgba(255, 140, 66, 0.08) !important;
             border-color: rgba(255, 140, 66, 0.4) !important;
         }}
         #swagger-ui-container .swagger-ui .opblock.opblock-patch .opblock-summary-method {{
             background: #ff8c42 !important;
-            color: #000 !important;
+            color: #0d1117 !important;
             font-weight: 700 !important;
+            border-radius: 4px !important;
+            padding: 4px 10px !important;
+            text-shadow: none !important;
         }}
-
+        /* DELETE */
         #swagger-ui-container .swagger-ui .opblock.opblock-delete {{
             background: rgba(248, 81, 73, 0.08) !important;
             border-color: rgba(248, 81, 73, 0.4) !important;
         }}
         #swagger-ui-container .swagger-ui .opblock.opblock-delete .opblock-summary-method {{
             background: #f85149 !important;
-            color: #fff !important;
+            color: #ffffff !important;
             font-weight: 700 !important;
+            border-radius: 4px !important;
+            padding: 4px 10px !important;
+            text-shadow: none !important;
         }}
 
+        /* Expanded Opblock Body & Sections */
+        #swagger-ui-container .swagger-ui .opblock-body {{
+            background: var(--bg2) !important;
+            color: var(--text) !important;
+            border-top: 1px solid var(--border) !important;
+            padding: 16px !important;
+        }}
         #swagger-ui-container .swagger-ui .opblock-section-header {{
             background: var(--bg3) !important;
             color: var(--text) !important;
-            border-radius: 4px !important;
+            border-radius: 6px !important;
+            padding: 8px 12px !important;
+            border: 1px solid var(--border) !important;
+            margin-bottom: 12px !important;
         }}
         #swagger-ui-container .swagger-ui .opblock-section-header h4 {{
             color: var(--text) !important;
+            font-size: 13px !important;
+            font-weight: 600 !important;
         }}
-        #swagger-ui-container .swagger-ui .opblock-body pre {{
-            background: var(--bg) !important;
+        #swagger-ui-container .swagger-ui .opblock-description-wrapper,
+        #swagger-ui-container .swagger-ui .opblock-description-wrapper p,
+        #swagger-ui-container .swagger-ui .markdown p,
+        #swagger-ui-container .swagger-ui .renderedMarkdown,
+        #swagger-ui-container .swagger-ui .renderedMarkdown p {{
             color: var(--text) !important;
-            border: 1px solid var(--border) !important;
-            border-radius: 6px !important;
+            font-size: 13px !important;
+            line-height: 1.5 !important;
         }}
-        #swagger-ui-container .swagger-ui table thead tr th, 
+
+        /* Parameter & Response Tables */
+        #swagger-ui-container .swagger-ui table {{
+            background: transparent !important;
+            width: 100% !important;
+        }}
+        #swagger-ui-container .swagger-ui table thead tr th,
         #swagger-ui-container .swagger-ui table thead tr td {{
+            color: var(--muted) !important;
+            border-bottom: 1px solid var(--border) !important;
+            font-size: 12px !important;
+            font-weight: 600 !important;
+            padding: 8px 12px !important;
+            background: transparent !important;
+        }}
+        #swagger-ui-container .swagger-ui table.parameters td,
+        #swagger-ui-container .swagger-ui table.responses-table td {{
             color: var(--text) !important;
             border-bottom: 1px solid var(--border) !important;
-        }}
-        #swagger-ui-container .swagger-ui table.parameters td {{
-            color: var(--text) !important;
+            padding: 10px 12px !important;
+            background: transparent !important;
         }}
         #swagger-ui-container .swagger-ui .parameter__name {{
             color: var(--text) !important;
             font-family: var(--font-code) !important;
             font-weight: 600 !important;
+            font-size: 13px !important;
         }}
         #swagger-ui-container .swagger-ui .parameter__name.required:after {{
             color: var(--red) !important;
         }}
         #swagger-ui-container .swagger-ui .parameter__type,
-        #swagger-ui-container .swagger-ui .parameter__extension,
+        #swagger-ui-container .swagger-ui .parameter__extension {{
+            color: var(--purple) !important;
+            font-family: var(--font-code) !important;
+            font-size: 12px !important;
+        }}
         #swagger-ui-container .swagger-ui .parameter__in {{
             color: var(--muted) !important;
             font-family: var(--font-code) !important;
+            font-size: 11px !important;
+            font-style: italic !important;
+        }}
+
+        /* Response Code Indicators & Links */
+        #swagger-ui-container .swagger-ui .responses-inner {{
+            background: var(--bg) !important;
+            padding: 16px !important;
+            border-radius: 8px !important;
+            border: 1px solid var(--border) !important;
+            margin-top: 10px !important;
         }}
         #swagger-ui-container .swagger-ui .responses-inner h4,
         #swagger-ui-container .swagger-ui .responses-inner h5 {{
             color: var(--text) !important;
-        }}
-        #swagger-ui-container .swagger-ui .response-col_status {{
-            color: var(--text) !important;
-            font-family: var(--font-code) !important;
+            font-size: 13px !important;
             font-weight: 600 !important;
         }}
+        #swagger-ui-container .swagger-ui .response-col_status {{
+            color: var(--green) !important;
+            font-family: var(--font-code) !important;
+            font-weight: 700 !important;
+            font-size: 13px !important;
+        }}
         #swagger-ui-container .swagger-ui .response-col_description {{
+            color: var(--text) !important;
+            font-size: 13px !important;
+        }}
+        #swagger-ui-container .swagger-ui .response-col_links {{
             color: var(--muted) !important;
         }}
+
+        /* Models & Schema Boxes */
         #swagger-ui-container .swagger-ui section.models {{
             border: 1px solid var(--border) !important;
-            background: var(--bg2) !important;
             border-radius: 8px !important;
+            background: var(--bg2) !important;
+            margin-top: 30px !important;
+            padding: 16px !important;
         }}
         #swagger-ui-container .swagger-ui section.models h4 {{
             color: var(--text) !important;
             border-bottom: 1px solid var(--border) !important;
+            font-size: 16px !important;
+            font-weight: 700 !important;
+            padding-bottom: 10px !important;
+        }}
+        #swagger-ui-container .swagger-ui .model-container {{
+            background: var(--bg3) !important;
+            border-radius: 6px !important;
+            padding: 12px !important;
+            margin-top: 10px !important;
+            border: 1px solid var(--border) !important;
         }}
         #swagger-ui-container .swagger-ui .model-box {{
             background: var(--bg3) !important;
@@ -2004,10 +2343,13 @@ def generate_html(data, target_dir=None):
         #swagger-ui-container .swagger-ui .model-title {{
             color: var(--accent) !important;
             font-family: var(--font-code) !important;
+            font-weight: 600 !important;
         }}
-        #swagger-ui-container .swagger-ui .model {{
+        #swagger-ui-container .swagger-ui .model,
+        #swagger-ui-container .swagger-ui .model-box pre {{
             color: var(--text) !important;
             font-family: var(--font-code) !important;
+            font-size: 12px !important;
         }}
         #swagger-ui-container .swagger-ui .prop-type {{
             color: var(--purple) !important;
@@ -2015,33 +2357,69 @@ def generate_html(data, target_dir=None):
         #swagger-ui-container .swagger-ui .prop-format {{
             color: var(--muted) !important;
         }}
+
+        /* Code Snippets, Inputs & Interactive Controls */
         #swagger-ui-container .swagger-ui pre,
-        #swagger-ui-container .swagger-ui code {{
+        #swagger-ui-container .swagger-ui .highlight-code pre,
+        #swagger-ui-container .swagger-ui .model-example pre,
+        #swagger-ui-container .swagger-ui .example pre {{
+            background: var(--bg) !important;
             color: var(--text) !important;
             font-family: var(--font-code) !important;
+            font-size: 12px !important;
+            line-height: 1.6 !important;
+            border: 1px solid var(--border) !important;
+            border-radius: 8px !important;
+            padding: 14px 16px !important;
+            margin: 6px 0 !important;
+            max-height: 400px !important;
+            overflow: auto !important;
+            position: relative !important;
+            z-index: 1 !important;
         }}
-        #swagger-ui-container .swagger-ui input[type=text], 
-        #swagger-ui-container .swagger-ui select, 
+        #swagger-ui-container .swagger-ui code,
+        #swagger-ui-container .swagger-ui pre code,
+        #swagger-ui-container .swagger-ui .model-example code,
+        #swagger-ui-container .swagger-ui .example code {{
+            background: transparent !important;
+            color: inherit !important;
+            font-family: var(--font-code) !important;
+            font-size: inherit !important;
+            border: none !important;
+            border-radius: 0 !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            box-shadow: none !important;
+            display: inline !important;
+        }}
+        #swagger-ui-container .swagger-ui input[type=text],
+        #swagger-ui-container .swagger-ui select,
         #swagger-ui-container .swagger-ui textarea {{
             background: var(--bg3) !important;
             color: var(--text) !important;
             border: 1px solid var(--border) !important;
-            border-radius: 4px !important;
-            padding: 6px 10px !important;
+            border-radius: 6px !important;
+            padding: 8px 12px !important;
+            font-family: var(--font-main) !important;
+            font-size: 13px !important;
         }}
-        #swagger-ui-container .swagger-ui input[type=text]:focus, 
-        #swagger-ui-container .swagger-ui select:focus, 
+        #swagger-ui-container .swagger-ui input[type=text]:focus,
+        #swagger-ui-container .swagger-ui select:focus,
         #swagger-ui-container .swagger-ui textarea:focus {{
             border-color: var(--accent) !important;
             outline: none !important;
+            box-shadow: 0 0 0 2px rgba(88, 166, 255, 0.2) !important;
         }}
         #swagger-ui-container .swagger-ui .btn {{
             background: var(--bg3) !important;
             color: var(--text) !important;
             border: 1px solid var(--border) !important;
-            border-radius: 4px !important;
-            font-weight: 500 !important;
+            border-radius: 6px !important;
+            font-weight: 600 !important;
+            font-size: 12px !important;
+            padding: 6px 14px !important;
             box-shadow: none !important;
+            transition: all 0.15s ease !important;
         }}
         #swagger-ui-container .swagger-ui .btn:hover {{
             background: var(--border) !important;
@@ -2049,14 +2427,20 @@ def generate_html(data, target_dir=None):
         }}
         #swagger-ui-container .swagger-ui .btn.execute {{
             background: var(--accent) !important;
-            color: #000 !important;
+            color: #0d1117 !important;
             border-color: var(--accent) !important;
             font-weight: 700 !important;
+        }}
+        #swagger-ui-container .swagger-ui .btn.execute:hover {{
+            opacity: 0.9 !important;
         }}
         #swagger-ui-container .swagger-ui .btn.authorize {{
             color: var(--green) !important;
             border-color: var(--green) !important;
-            background: rgba(63, 185, 80, 0.1) !important;
+            background: rgba(63, 185, 80, 0.15) !important;
+        }}
+        #swagger-ui-container .swagger-ui .btn.authorize:hover {{
+            background: rgba(63, 185, 80, 0.25) !important;
         }}
         #swagger-ui-container .swagger-ui svg {{
             fill: var(--text) !important;
@@ -2066,9 +2450,121 @@ def generate_html(data, target_dir=None):
         }}
         #swagger-ui-container .swagger-ui .tab li {{
             color: var(--text) !important;
+            font-size: 12px !important;
         }}
-        #swagger-ui-container .swagger-ui .tab li.active {{
-            color: var(--accent) !important;
+        #swagger-ui-container .swagger-ui .dialog-ux .modal-ux {{
+            background: var(--bg2) !important;
+            border: 1px solid var(--border) !important;
+            border-radius: 12px !important;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5) !important;
+        }}
+        #swagger-ui-container .swagger-ui .dialog-ux .modal-ux-header h3,
+        #swagger-ui-container .swagger-ui .dialog-ux .modal-ux-content {{
+            color: var(--text) !important;
+        }}
+        #swagger-ui-container .swagger-ui .dialog-ux .modal-ux-header .close-modal {{
+            fill: var(--text) !important;
+        }}
+
+        /* Fix Swagger UI floating tooltip & accept message overlap glitch */
+        #swagger-ui-container .swagger-ui .response-control-media-type__accept-message,
+        #swagger-ui-container .swagger-ui .response-control-media-type__accept-message small,
+        #swagger-ui-container .swagger-ui .response-control-media-type__accept-message span,
+        #swagger-ui-container .swagger-ui .response-control-media-type__accept-message label {{
+            background: transparent !important;
+            border: none !important;
+            outline: none !important;
+            box-shadow: none !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            color: var(--muted) !important;
+            font-size: 11px !important;
+            font-weight: 500 !important;
+            display: inline !important;
+            position: static !important;
+        }}
+        #swagger-ui-container .swagger-ui .response-control-media-type__accept-message {{
+            display: block !important;
+            margin-top: 6px !important;
+            margin-bottom: 8px !important;
+            clear: both !important;
+        }}
+        #swagger-ui-container .swagger-ui .tooltip,
+        #swagger-ui-container .swagger-ui .tooltip-inner,
+        #swagger-ui-container .swagger-ui [data-hint]:after,
+        #swagger-ui-container .swagger-ui [data-hint]:before {{
+            display: none !important;
+        }}
+        #swagger-ui-container .swagger-ui .model-example,
+        #swagger-ui-container .swagger-ui .example {{
+            margin-top: 8px !important;
+            padding: 0 !important;
+            background: transparent !important;
+            border: none !important;
+            clear: both !important;
+        }}
+
+        /* PDF Export Button & Print Styles */
+        .btn-pdf {{
+            background: linear-gradient(135deg, var(--accent) 0%, #3b82f6 100%) !important;
+            color: #0d1117 !important;
+            font-weight: 700 !important;
+            border: none !important;
+            padding: 6px 14px !important;
+            border-radius: 6px !important;
+            cursor: pointer !important;
+            font-size: 12px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 6px !important;
+            transition: all 0.2s ease !important;
+            box-shadow: 0 2px 8px rgba(88, 166, 255, 0.3) !important;
+        }}
+        .btn-pdf:hover {{
+            transform: translateY(-1px) !important;
+            box-shadow: 0 4px 12px rgba(88, 166, 255, 0.4) !important;
+        }}
+
+        @media print {{
+            body {{
+                background: #ffffff !important;
+                color: #000000 !important;
+            }}
+            .header, .sidebar, .btn-pdf, .zoom-toolbar, .sub-tabs, .sub-tab-btn {{
+                display: none !important;
+            }}
+            .swagger-view-pane {{
+                display: block !important;
+                page-break-inside: avoid !important;
+            }}
+            .app-layout {{
+                display: block !important;
+            }}
+            .main-content {{
+                padding: 0 !important;
+                margin: 0 !important;
+                width: 100% !important;
+            }}
+            .section {{
+                display: block !important;
+                page-break-after: always !important;
+                break-after: page !important;
+                margin-bottom: 30px !important;
+            }}
+            .card, .module-card, .endpoint-item, .prereq-card, .info-card {{
+                break-inside: avoid !important;
+                page-break-inside: avoid !important;
+                border: 1px solid #ccc !important;
+                background: #ffffff !important;
+                color: #000000 !important;
+                box-shadow: none !important;
+            }}
+            * {{
+                color: #000000 !important;
+                background: transparent !important;
+                box-shadow: none !important;
+                text-shadow: none !important;
+            }}
         }}
     </style>
 </head>
@@ -2083,7 +2579,8 @@ def generate_html(data, target_dir=None):
                 <div class="brand-sub">Architecture Map & Documentation</div>
             </div>
         </div>
-        <div class="sidebar-badges" style="margin-top:0;">
+        <div class="sidebar-badges" style="margin-top:0; display: flex; align-items: center; gap: 8px;">
+            <button class="btn-pdf" onclick="exportPDF()">📄 Export PDF</button>
             <span class="badge">v{html.escape(meta.get('version', '1.0.0'))}</span>
             <span class="badge">{html.escape(tech_stack.get('language', 'TypeScript'))}</span>
             <span class="badge badge-green">Generated {html.escape(meta.get('generatedAt', 'Live'))}</span>
@@ -2100,6 +2597,10 @@ def generate_html(data, target_dir=None):
         <nav class="sidebar-nav">
             <button class="nav-btn active" onclick="showTab('overview', this)">
                 <div class="nav-btn-left"><span>&#128204;</span> <span>Overview</span></div>
+            </button>
+            <button class="nav-btn" onclick="showTab('prereq', this)">
+                <div class="nav-btn-left"><span>📋</span> <span>Prerequisites</span></div>
+                <span class="nav-count">{len(prereq_tools)}</span>
             </button>
             <button class="nav-btn" onclick="showTab('modules', this)">
                 <div class="nav-btn-left"><span>&#128230;</span> <span>API Modules</span></div>
@@ -2186,6 +2687,83 @@ def generate_html(data, target_dir=None):
                 <div>
                     <div class="ep-path">{html.escape(se.get('path', ''))}</div>
                     <div class="ep-desc">{html.escape(se.get('description', ''))}</div>
+                </div>
+            </div>
+"""
+
+    html_content += """
+        </div>
+    </div>
+
+    <!-- 1.5 PREREQUISITES -->
+    <div class="section" id="sec-prereq">
+        <div class="card" style="margin-bottom: 20px;">
+            <div class="chead">
+                <span style="font-size:28px">📋</span>
+                <div>
+                    <div class="card-title">System Prerequisites &amp; Setup Requirements</div>
+                    <div class="card-sub">Developer tools, container runtimes, and step-by-step initialization sequence</div>
+                </div>
+            </div>
+            <p class="card-desc">""" + html.escape(prerequisites.get('description', 'Software runtimes, system dependencies, and step-by-step initialization commands required to run the project.')) + """</p>
+        </div>
+
+        <div class="sec-title">🛠️ Required Tools &amp; Runtimes</div>
+        <div class="grid3" style="margin-bottom: 24px;">
+"""
+    for tool in prereq_tools:
+        tname = tool.get('name', 'Tool')
+        tver = tool.get('version', 'latest')
+        treq = tool.get('required', True)
+        tdesc = tool.get('description', '')
+        tcat = tool.get('category', 'general')
+
+        icon_map = {
+            'runtime': '⚡',
+            'infrastructure': '🐳',
+            'database': '🗄️',
+            'cache': '⚡',
+            'queue': '📬',
+            'monitoring': '📊',
+            'package_manager': '📦'
+        }
+        ticon = icon_map.get(tcat, '🛠️')
+        req_badge = '<span class="tag tr">Required</span>' if treq else '<span class="tag tq">Optional</span>'
+
+        html_content += f"""
+            <div class="card">
+                <div class="chead">
+                    <span style="font-size:24px">{ticon}</span>
+                    <div>
+                        <div class="card-title">{html.escape(tname)} {req_badge}</div>
+                        <div class="card-sub" style="font-family:var(--font-code);">Version {html.escape(tver)}</div>
+                    </div>
+                </div>
+                <div class="card-desc">{html.escape(tdesc)}</div>
+            </div>
+"""
+
+    html_content += """
+        </div>
+
+        <div class="sec-title">🚀 Setup &amp; Execution Pipeline</div>
+        <div class="pipeline">
+"""
+    for step in prereq_steps:
+        snum = step.get('step', 1)
+        stitle = step.get('title', '')
+        scmd = step.get('command', '')
+        sdesc = step.get('description', '')
+
+        cmd_block = f'<code style="display:block; margin-top:8px; font-size:12px; color:var(--accent); background:var(--bg); padding:8px 12px; border-radius:6px; font-family:var(--font-code); overflow-x:auto;">{html.escape(scmd)}</code>' if scmd else ''
+
+        html_content += f"""
+            <div class="pipe-step" style="cursor:default;">
+                <div class="pipe-num">{snum}</div>
+                <div style="flex:1;">
+                    <div style="font-size:14px; font-weight:600; color:var(--text);">{html.escape(stitle)}</div>
+                    <div style="font-size:12px; color:var(--muted); margin-top:4px;">{html.escape(sdesc)}</div>
+                    {cmd_block}
                 </div>
             </div>
 """
@@ -2494,12 +3072,19 @@ flowchart TD
         </div>
     </div>
 
-    <!-- 5. PERMISSIONS -->
+    <!-- 5. PERMISSIONS & SECURITY SCOPES -->
     <div class="section" id="sec-perms">
-        <div class="sec-title">&#128273; Permission Catalog</div>
+        <div class="sec-title">&#128273; Scope & Isolation / Permissions</div>
         <p style="font-size: 13px; color: var(--muted); margin-bottom: 16px;">
-            {html.escape(permissions.get('description', 'RBAC Permission Slugs catalog.'))}
+            {html.escape(permissions.get('description', 'Role-Based Access Control (RBAC) & Security Scope mapping.'))}
         </p>
+
+        <div class="stats" style="margin-bottom: 20px;">
+            <div class="stat"><div class="stat-num">{len(permissions.get('catalog', []))}</div><div class="stat-lbl">Security Scopes / Slugs</div></div>
+            <div class="stat"><div class="stat-num">{sum(len(d.get('endpoints', [])) for d in permissions.get('details', []) if d.get('slug') != 'public')}</div><div class="stat-lbl">Authenticated Endpoints</div></div>
+            <div class="stat"><div class="stat-num">{sum(len(d.get('endpoints', [])) for d in permissions.get('details', []) if d.get('slug') == 'public')}</div><div class="stat-lbl">Public Endpoints</div></div>
+            <div class="stat"><div class="stat-num">{len(permissions.get('details', []))}</div><div class="stat-lbl">Mapped Scope Groups</div></div>
+        </div>
 """
     if not permissions.get('catalog', []) and not permissions.get('details', []):
         html_content += """
@@ -2514,12 +3099,13 @@ flowchart TD
         <div class="perm-grid">
 """
         for p in permissions.get('catalog', []):
-            html_content += f'<div class="perm-item">{html.escape(p)}</div>'
+            icon = '🔑' if p not in ('authenticated', 'public') else ('🔒' if p == 'authenticated' else '🌐')
+            html_content += f'<div class="perm-item">{icon} {html.escape(p)}</div>'
 
         html_content += """
         </div>
 
-        <div class="sec-title" style="margin-top: 24px;">&#128279; Interactive Permission-to-Endpoint & Page Mapping Flow</div>
+        <div class="sec-title" style="margin-top: 24px;">&#128279; Interactive Permission & Scope-to-Endpoint Flow</div>
         <div class="grid1">
 """
         for pdet in permissions.get('details', []):
@@ -2529,18 +3115,20 @@ flowchart TD
                 eps_html += f'<span class="method {m}">{m}</span> <code style="font-size:12px">{html.escape(ep.get("path",""))}</code> &nbsp; '
 
             pages_html = ", ".join([f'<span class="tag tb">{html.escape(pg)}</span>' for pg in pdet.get('adminPages', [])])
+            slug_val = pdet.get('slug', '')
+            slug_icon = '🔑' if slug_val not in ('authenticated', 'public') else ('🔒' if slug_val == 'authenticated' else '🌐')
 
             html_content += f"""
             <div class="perm-card">
                 <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <span style="font-family:var(--font-code); font-weight:700; color:var(--purple); font-size:14px;">&#128273; {html.escape(pdet.get('slug', ''))}</span>
+                    <span style="font-family:var(--font-code); font-weight:700; color:var(--purple); font-size:14px;">{slug_icon} {html.escape(slug_val)}</span>
                     <span class="tag tp">{html.escape(pdet.get('module', ''))} • {html.escape(pdet.get('action', ''))}</span>
                 </div>
                 <div style="margin-top: 8px; font-size: 13px;">
-                    <strong>Protected Endpoints:</strong> {eps_html}
+                    <strong>Protected Endpoints ({len(pdet.get('endpoints', []))}):</strong> {eps_html}
                 </div>
                 <div style="margin-top: 6px; font-size: 12px; color: var(--muted);">
-                    <strong>Admin Dashboard Pages:</strong> {pages_html}
+                    <strong>Scope Target:</strong> {pages_html}
                 </div>
             </div>
 """
@@ -2783,10 +3371,13 @@ flowchart TD
         var svg = container.querySelector('svg');
         if (!svg) return;
 
+        svg.removeAttribute('style');
+        svg.removeAttribute('width');
+        svg.removeAttribute('height');
         svg.style.width = '100%';
         svg.style.height = '100%';
-        svg.style.maxHeight = '70vh';
         svg.style.display = 'block';
+        svg.style.overflow = 'visible';
 
         var parentBox = container.closest('.diagram-box');
         if (parentBox && !parentBox.querySelector('.diagram-toolbar')) {{
@@ -2803,18 +3394,28 @@ flowchart TD
 
         if (typeof svgPanZoom !== 'undefined') {{
             try {{
+                if (isSysarch && sysarchPanZoom) {{ sysarchPanZoom.destroy(); sysarchPanZoom = null; }}
+                if (!isSysarch && dockerPanZoom) {{ dockerPanZoom.destroy(); dockerPanZoom = null; }}
+
                 var pz = svgPanZoom(svg, {{
                     zoomEnabled: true,
                     controlIconsEnabled: false,
                     mouseWheelZoomEnabled: true,
                     fit: true,
                     center: true,
-                    minZoom: 0.2,
+                    minZoom: 0.1,
                     maxZoom: 10,
-                    zoomScaleSensitivity: 0.2
+                    zoomScaleSensitivity: 0.25
                 }});
+
                 if (isSysarch) sysarchPanZoom = pz;
                 else dockerPanZoom = pz;
+
+                setTimeout(function() {{
+                    pz.resize();
+                    pz.fit();
+                    pz.center();
+                }}, 100);
             }} catch(e) {{
                 console.warn("svgPanZoom init error:", e);
             }}
@@ -2827,17 +3428,24 @@ flowchart TD
         if (action === 'in') pz.zoomIn();
         else if (action === 'out') pz.zoomOut();
         else if (action === 'reset') {{ pz.resetZoom(); pz.resetPan(); pz.fit(); pz.center(); }}
-        else if (action === 'fit') {{ pz.fit(); pz.center(); }}
+        else if (action === 'fit') {{ pz.resize(); pz.fit(); pz.center(); }}
     }}
 
     function renderSysarchDiagram() {{
-        if (sysarchMermaidRendered) return;
+        if (sysarchMermaidRendered) {{
+            if (sysarchPanZoom) {{
+                sysarchPanZoom.resize();
+                sysarchPanZoom.fit();
+                sysarchPanZoom.center();
+            }}
+            return;
+        }}
         sysarchMermaidRendered = true;
         var tpl = document.getElementById('sysarchMermaidSrc');
         var target = document.getElementById('sysarchMermaid');
         if (tpl && target && typeof mermaid !== 'undefined') {{
             var src = tpl.textContent.trim();
-            var uniqueId = 'svg_' + Math.floor(Math.random() * 1000000);
+            var uniqueId = 'svg_sysarch_' + Math.floor(Math.random() * 1000000);
             mermaid.render(uniqueId, src).then(function(res) {{
                 target.innerHTML = res.svg;
                 setTimeout(function() {{ initPanZoom('sysarchMermaid', true); }}, 50);
@@ -2849,13 +3457,20 @@ flowchart TD
     }}
 
     function renderDockerDiagram() {{
-        if (dockerMermaidRendered) return;
+        if (dockerMermaidRendered) {{
+            if (dockerPanZoom) {{
+                dockerPanZoom.resize();
+                dockerPanZoom.fit();
+                dockerPanZoom.center();
+            }}
+            return;
+        }}
         dockerMermaidRendered = true;
         var tpl = document.getElementById('dockerMermaidSrc');
         var target = document.getElementById('dockerMermaid');
         if (tpl && target && typeof mermaid !== 'undefined') {{
             var src = tpl.textContent.trim();
-            var uniqueId = 'svg_' + Math.floor(Math.random() * 1000000);
+            var uniqueId = 'svg_docker_' + Math.floor(Math.random() * 1000000);
             mermaid.render(uniqueId, src).then(function(res) {{
                 target.innerHTML = res.svg;
                 setTimeout(function() {{ initPanZoom('dockerMermaid', false); }}, 50);
@@ -2915,6 +3530,33 @@ flowchart TD
         }} else if (id === 'swagger') {{
             setTimeout(renderSwaggerUI, 50);
         }}
+    }}
+
+    function exportPDF() {{
+        var sections = document.querySelectorAll('.section');
+        sections.forEach(function(s) {{ s.style.display = 'block'; }});
+
+        var swaggerPanes = document.querySelectorAll('.swagger-view-pane');
+        swaggerPanes.forEach(function(p) {{ p.style.display = 'block'; }});
+
+        // Pre-render diagrams and Swagger UI if not initialized yet
+        if (typeof renderSysarchDiagram === 'function') renderSysarchDiagram();
+        if (typeof renderDockerDiagram === 'function') renderDockerDiagram();
+        if (typeof renderSwaggerUI === 'function') renderSwaggerUI();
+
+        setTimeout(function() {{
+            window.print();
+            sections.forEach(function(s) {{ s.style.display = ''; }});
+            swaggerPanes.forEach(function(p) {{ p.style.display = ''; }});
+            var activeBtn = document.querySelector('.nav-btn.active');
+            if (activeBtn) {{
+                var onClickAttr = activeBtn.getAttribute('onclick');
+                if (onClickAttr) {{
+                    var match = onClickAttr.match(/showTab\('([^']+)'/);
+                    if (match) showTab(match[1], activeBtn);
+                }}
+            }}
+        }}, 600);
     }}
 
     function filterModules() {{

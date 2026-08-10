@@ -251,13 +251,14 @@ python docs/architecture/build_html.py
 Verify `docs/architecture/architecture.html`:
 
 1. **Top Header:** Brand title, subtitle, and badges (Version, Tech Stack, Generated Date) render at the top without navigation buttons.
-2. **Left Sidebar:** All section buttons (`Overview`, `API Modules`, `System Architecture`, `Docker Topology`, `Swagger & OpenAPI`, `Permissions`, `SQL Queries`, `Infrastructure`, `Core Layer`, `Request Pipeline`) are listed under `NAVIGATION`.
-3. **Swagger & OpenAPI Tab:**
-   - **Interactive Swagger UI:** Embedded native `SwaggerUIBundle` explorer with try-it-out functionality.
+2. **Left Sidebar:** All section buttons (`Overview`, `Prerequisites`, `API Modules`, `System Architecture`, `Docker Topology`, `Swagger & OpenAPI`, `Permissions`, `SQL Queries`, `Infrastructure`, `Core Layer`, `Request Pipeline`) are listed under `NAVIGATION`.
+3. **Prerequisites Tab:** Software runtimes, container engines, database requirements, and step-by-step setup commands.
+4. **Swagger & OpenAPI Tab:**
+   - **Interactive Swagger UI:** Embedded native `SwaggerUIBundle` explorer with try-it-out functionality and dark theme overrides.
    - **API Catalog & cURL:** Endpoint list with copyable `cURL` request snippets.
    - **OpenAPI 3.0 JSON Spec:** Formatted JSON specification with 1-click copy button.
-4. **Diagrams:** System Architecture and Docker Topology render cleanly via Mermaid.js.
-5. **SQL Queries:** Full system query catalog displayed with syntax highlighting and mapped endpoints.
+5. **Interactive Diagrams:** System Architecture and Docker Topology render cleanly via Mermaid.js with interactive pan/zoom toolbars and hand (grab) cursor feedback.
+6. **SQL Queries:** Full system query catalog displayed with syntax highlighting and mapped endpoints.
 
 ---
 
