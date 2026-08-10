@@ -1,169 +1,409 @@
 {
   "meta": {
-    "displayName": "Arch Wiki",
+    "displayName": "Arch Wiki Embedded Systems",
     "version": "1.0.0",
-    "description": "Framework-agnostic architecture map & documentation generator skill for AI coding assistants.",
-    "generatedAt": "2026-07-26",
-    "techStack": {
-      "language": "TypeScript",
-      "framework": "Express.js",
-      "database": "PostgreSQL",
-      "auth": "JWT / Bearer Token"
-    }
+    "description": "Embedded firmware architecture map.",
+    "generatedAt": "2026-08-10",
+    "projectType": "rtos",
+    "markers": [
+      "PlatformIO",
+      "Zephyr"
+    ],
+    "isEmbedded": true,
+    "languages": [
+      "C/C++"
+    ],
+    "buildSystems": [
+      "PlatformIO"
+    ]
   },
-  "workspaces": [
-    {
-      "id": "api",
-      "name": "api",
-      "type": "backend",
-      "description": "Main REST API",
-      "port": 3000,
-      "entrypoint": "src/index.ts"
-    }
-  ],
-  "infrastructure": [],
-  "dockerDiagram": {
-    "description": "",
-    "nodes": [],
-    "edges": []
+  "readme": {
+    "path": "README.md",
+    "title": "arch-wiki",
+    "content": "# arch-wiki\n\n`arch-wiki` is an embedded firmware architecture documentation skill for AI coding assistants. It scans a firmware repository and generates:\n\n- `docs/architecture/architecture.json`: machine-readable architecture metadata.\n- `docs/architecture/architecture.html`: interactive architecture dashboard with the project README and generated diagrams embedded in the output.\n\nThe tool is embedded-only. It documents firmware and hardware rather than REST APIs, SQL, Swagger, Docker, or backend services.\n\n## Documented Architecture\n\nThe generated files contain:\n\n0. Brief\n1. Project README\n2. Hardware\n3. Configurations\n4. Memory Layout\n5. Modules & Components\n6. Class Diagrams\n7. Sequence Diagrams\n8. Interaction Diagrams\n9. State Machines\n10. Flow Charts\n11. Data Pipelines\n12. Build\n\nModules, components, and user-defined types include their role and structured source-file references. The type catalog excludes primitive, standard-library, vendor SDK, and RTOS types. User-defined types include their fields, usage roles, modules, components, evidence, and source locations.\n\nCreated objects include allocation kind, storage location, lifetime, owner, creator, ownership transfers, and release/destruction information. Unproven C/C++ ownership is reported as unknown with a warning rather than guessed.\n\nThe target project's README is embedded in both JSON and HTML at generation time. Regenerate after changing the README. Mermaid is loaded from a CDN when diagrams are rendered, so network access is needed for diagram rendering in a browser.\n\n## Supported Projects\n\nThe scanner recognizes common markers for:\n\n- Bare-metal C/C++\n- FreeRTOS\n- Zephyr\n- Embedded Linux/device tree\n- PlatformIO\n- CMake\n- Make\n- ESP-IDF\n- STM32CubeMX\n- Rust embedded projects\n\nIt reads source/header files, build files, linker scripts, map files, device-tree files, Kconfig files, and project README content using only Python's standard library.\n\n## Install\n\n```bash\nnpx arch-wiki\n```\n\nFor local development:\n\n```bash\nnode ./bin/install.js\n```\n\nThe installer registers `SKILL.md` and the scanner with supported AI assistant skill locations.\n\n## Generate Documentation\n\nFrom a target firmware project after installing the skill:\n\n```bash\npython3 docs/architecture/build_html.py --init\n```\n\nFor subsequent changes:\n\n```bash\npython3 docs/architecture/build_html.py --sync\n```\n\nThe script creates `docs/architecture/` when needed. The first run creates or replaces the generated JSON and HTML files. Subsequent runs rescan the project and regenerate both files.\n\nTo scan a different project from a local checkout:\n\n```bash\npython3 /path/to/arch-wiki/templates/build_html.py --init /path/to/firmware-project\n```\n\nThe target project must be passed as an existing path. If no target path is supplied, the current working directory is scanned.\n\nThe generated dashboard can be opened directly in a browser. Mermaid diagrams require access to the Mermaid CDN referenced by the HTML.\n\n## Manifest Sections\n\n`architecture.json` contains these top-level sections:\n\n| Section | Contents |\n|---|---|\n| `meta` | Project type, languages, detected markers, and generation date |\n| `readme` | Embedded project README content and source metadata |\n| `brief` | System purpose, constraints, and documentation status |\n| `hardware` | MCU, board, peripherals, interfaces, pins, and power metadata |\n| `configurations` | Build profiles, feature flags, Kconfig, and device-tree settings |\n| `memoryLayout` | Linker regions, sections, partitions, stack, heap, and map files |\n| `modules` | Logical firmware subsystems, roles, files, tasks, and type usage |\n| `components` | Concrete source-level drivers, services, HALs, and application units |\n| `dataTypes` | Project-defined structs, enums, unions, typedefs, classes, and traits |\n| `objects` | Created objects, storage, lifetime, ownership, and cleanup metadata |\n| `diagrams` | Class, sequence, interaction, state, and flow diagrams |\n| `dataPipelines` | Detected data movement between firmware modules |\n| `build` | Build system, toolchain, targets, artifacts, and flash/debug metadata |\n\n## Types and Source Traceability\n\nOnly project-defined types are documented as `dataTypes`. Primitive types, standard-library types, RTOS types, vendor HAL types, and external dependency types are excluded. They can still appear as field or signature labels.\n\nEach module, component, and user-defined type includes structured file references where detected:\n\n```json\n{\n  \"path\": \"src/sensors/sensor_manager.c\",\n  \"role\": \"implementation\",\n  \"contains\": [\"sensor_manager_init\"],\n  \"line\": 42\n}\n```\n\nUser-defined type entries include:\n\n- The type's firmware role.\n- Fields and references to other project-defined types.\n- Modules and components that use the type.\n- Usage roles such as `produces`, `consumes`, `queues`, `serializes`, or `stores`.\n- Definition and usage files.\n- Evidence and confidence metadata.\n\n## Object Lifetime and Ownership\n\nThe `objects` section documents concrete instances and resources created by firmware, including:\n\n- Global and static objects.\n- Stack objects.\n- Heap allocations.\n- RTOS resources such as tasks and queues.\n- Pool-managed objects.\n- Peripheral handles and buffers where detectable.\n\nEach object may include:\n\n- User-defined type reference.\n- Runtime role.\n- Storage location and memory section.\n- Lifetime scope and start/end events.\n- Creator and destruction/release path.\n- Owner and ownership model.\n- Ownership transfers and usage files.\n\nC and C++ ownership cannot always be proven statically. The scanner reports `unknown` ownership and low confidence instead of claiming a transfer or cleanup path without evidence.\n\n## Manual Overrides\n\nStatic analysis cannot reliably determine every board detail, safety constraint, or ownership policy. Add an optional file at:\n\n```text\ndocs/architecture/embedded-overrides.json\n```\n\nUse it to provide board/MCU details, pin mappings, power and timing requirements, memory partitions, module/component roles, user-defined type relationships, object ownership, diagrams, and flash/debug commands. The example format is in `templates/embedded-overrides.example.json`.\n\nOverride values are merged after scanner output. Lists containing objects with an `id` replace matching generated entries; object values extend generated sections. Invalid override JSON is reported in the generated manifest warnings.\n\n## Project Structure\n\n```text\narch-wiki/\n\u251c\u2500\u2500 SKILL.md\n\u251c\u2500\u2500 README.md\n\u251c\u2500\u2500 bin/install.js\n\u251c\u2500\u2500 templates/\n\u2502   \u251c\u2500\u2500 architecture.json\n\u2502   \u251c\u2500\u2500 architecture.html\n\u2502   \u251c\u2500\u2500 build_html.py\n\u2502   \u2514\u2500\u2500 embedded-overrides.example.json\n\u2514\u2500\u2500 plans/\n    \u2514\u2500\u2500 embedded-arch-wiki.md\n```\n\n## Limitations\n\nThe scanner is intentionally dependency-free and evidence-based. It does not replace a compiler, linker, static analyzer, or hardware review. Complex macro-generated types, custom allocators, ownership conventions, electrical constraints, and generated diagrams may require manual overrides.\n\nCurrent analysis is intentionally conservative:\n\n- Hardware values are extracted only from recognizable source/configuration markers.\n- Detailed pin maps, clock trees, power budgets, and runtime configuration require explicit source evidence or overrides.\n- C/C++ ownership is uncertain when custom allocators, callbacks, or pointer conventions obscure responsibility.\n- Generated diagrams are starting points and should be reviewed against the firmware.\n- The built-in Markdown renderer covers common README constructs, not the complete Markdown specification.\n- The generator uses only the Python standard library; no third-party Python package is required.\n\n## License\n\nMIT.\n",
+    "exists": true,
+    "lastModified": "2026-08-10",
+    "source": "project-readme"
   },
-  "systemArchitectureDiagram": {
-    "description": "System architecture and component relationships.",
-    "subgraphs": [
+  "brief": {
+    "purpose": "arch-wiki is an embedded firmware architecture documentation skill for AI coding assistants. It scans a firmware repository and generates:",
+    "systemType": "rtos",
+    "summary": "arch-wiki is an embedded firmware architecture documentation skill for AI coding assistants. It scans a firmware repository and generates:",
+    "operatingEnvironment": [],
+    "primaryResponsibilities": [],
+    "constraints": [],
+    "safetyAndReliability": [],
+    "powerRequirements": [],
+    "timingRequirements": [],
+    "documentationStatus": "generated",
+    "sourceFiles": [
+      "README.md"
+    ]
+  },
+  "hardware": {
+    "target": {
+      "mcu": "STM32CubeMX"
+    },
+    "power": {
+      "operatingVoltage": null,
+      "sleepModes": [],
+      "powerBudget": {}
+    },
+    "peripherals": [
       {
-        "id": "client_layer",
-        "label": "Client Layer",
-        "nodes": [
-          {
-            "id": "web_client",
-            "label": "Web / Mobile Client",
-            "type": "app"
-          }
-        ]
+        "id": "can",
+        "name": "can",
+        "type": "can",
+        "source": "scanner"
       },
       {
-        "id": "api_layer",
-        "label": "API Layer",
-        "nodes": [
-          {
-            "id": "api_server",
-            "label": "REST API Server",
-            "type": "app"
-          }
-        ]
-      },
-      {
-        "id": "data_layer",
-        "label": "Data & Storage Layer",
-        "nodes": [
-          {
-            "id": "db",
-            "label": "PostgreSQL Database",
-            "type": "database"
-          }
-        ]
+        "id": "time",
+        "name": "time",
+        "type": "timer",
+        "source": "scanner"
       }
     ],
-    "edges": [
-      {
-        "from": "web_client",
-        "to": "api_server",
-        "label": "HTTPS REST"
+    "pinMappings": [],
+    "sensors": [],
+    "actuators": [],
+    "communication": [],
+    "debugInterfaces": [],
+    "clockTree": {},
+    "sourceFiles": [
+      "tests/fixtures/embedded-sample/platformio.ini"
+    ]
+  },
+  "configurations": {
+    "buildProfiles": [],
+    "featureFlags": [],
+    "runtimeConfiguration": [],
+    "kconfigOptions": [],
+    "deviceTreeOverlays": [],
+    "generatedFiles": [],
+    "configurationSources": [
+      "tests/fixtures/embedded-sample/platformio.ini"
+    ]
+  },
+  "memoryLayout": {
+    "addressWidth": 32,
+    "regions": [],
+    "sections": [],
+    "partitions": [],
+    "stack": {},
+    "heap": {},
+    "specialAreas": [],
+    "linkerScripts": [],
+    "mapFiles": [],
+    "usage": {}
+  },
+  "modules": [
+    {
+      "id": "tests",
+      "name": "Tests",
+      "type": "application",
+      "role": "Firmware subsystem discovered from source layout.",
+      "description": "",
+      "files": [
+        {
+          "path": "tests/fixtures/embedded-sample/src/sensor.c",
+          "role": "implementation",
+          "contains": [
+            "sensor_init"
+          ]
+        }
+      ],
+      "components": [],
+      "dataTypes": [
+        {
+          "id": "sensorreading",
+          "role": "uses"
+        }
+      ],
+      "dependencies": [],
+      "configurationRefs": [],
+      "tasks": [],
+      "interrupts": [],
+      "timers": [],
+      "queues": [],
+      "objects": [],
+      "source": "scanner",
+      "confidence": "medium",
+      "evidence": [
+        {
+          "file": "tests/fixtures/embedded-sample/src/sensor.c",
+          "line": 1,
+          "reason": "source layout"
+        }
+      ]
+    }
+  ],
+  "components": [
+    {
+      "id": "sensor",
+      "name": "Sensor",
+      "type": "application",
+      "language": "C/C++",
+      "role": "Sensor implementation component.",
+      "description": "",
+      "files": [
+        {
+          "path": "tests/fixtures/embedded-sample/src/sensor.c",
+          "role": "implementation",
+          "contains": [
+            "sensor_init"
+          ]
+        }
+      ],
+      "publicHeaders": [],
+      "provides": [
+        "sensor_init"
+      ],
+      "consumes": [],
+      "dependencies": [],
+      "dataTypes": [
+        {
+          "id": "sensorreading",
+          "role": "uses"
+        }
+      ],
+      "objects": [],
+      "interrupts": [],
+      "configurationRefs": [],
+      "source": "scanner",
+      "confidence": "medium",
+      "evidence": [
+        {
+          "file": "tests/fixtures/embedded-sample/src/sensor.c",
+          "line": 1,
+          "reason": "source layout"
+        }
+      ],
+      "module": "tests"
+    }
+  ],
+  "dataTypes": [
+    {
+      "id": "sensorreading",
+      "name": "SensorReading",
+      "kind": "struct",
+      "language": "C/C++",
+      "userDefined": true,
+      "ownership": "project",
+      "role": "Project-defined struct used by firmware components.",
+      "description": "",
+      "files": [
+        {
+          "path": "tests/fixtures/embedded-sample/src/sensor.c",
+          "role": "definition",
+          "contains": [
+            "SensorReading"
+          ],
+          "line": 3
+        }
+      ],
+      "fields": [
+        {
+          "name": "value",
+          "type": "uint16_t",
+          "typeReference": null,
+          "role": "Field"
+        },
+        {
+          "name": "timestamp",
+          "type": "uint32_t",
+          "typeReference": null,
+          "role": "Field"
+        }
+      ],
+      "usedByModules": [
+        {
+          "id": "tests",
+          "role": "uses"
+        }
+      ],
+      "usedByComponents": [
+        {
+          "id": "sensor",
+          "role": "uses"
+        }
+      ],
+      "usage": [
+        {
+          "role": "consumes",
+          "module": "tests",
+          "description": "Referenced by module source files."
+        },
+        {
+          "role": "consumes",
+          "component": "sensor",
+          "description": "Referenced by component source files."
+        }
+      ],
+      "objectInstances": [],
+      "source": "scanner",
+      "confidence": "medium",
+      "evidence": [
+        {
+          "file": "tests/fixtures/embedded-sample/src/sensor.c",
+          "line": 3,
+          "reason": "user-defined type declaration"
+        }
+      ]
+    }
+  ],
+  "objects": [
+    {
+      "id": "current_reading",
+      "name": "current_reading",
+      "typeReference": "sensorreading",
+      "kind": "static",
+      "role": "Runtime instance of SensorReading.",
+      "lifetime": {
+        "scope": "firmware",
+        "startsAt": "declaration or initialization",
+        "endsAt": "reset",
+        "createdBy": null,
+        "destroyedBy": null,
+        "persistsAcrossReset": false
       },
+      "ownership": {
+        "model": "static",
+        "owner": {
+          "kind": "source-file",
+          "id": "tests/fixtures/embedded-sample/src/sensor.c"
+        },
+        "transferEvents": []
+      },
+      "storage": {
+        "location": "global-data",
+        "region": "ram",
+        "section": ".bss",
+        "size": null
+      },
+      "creation": {
+        "function": null,
+        "file": "tests/fixtures/embedded-sample/src/sensor.c",
+        "line": 8
+      },
+      "usage": [],
+      "files": [
+        {
+          "path": "tests/fixtures/embedded-sample/src/sensor.c",
+          "role": "definition",
+          "contains": [
+            "current_reading"
+          ],
+          "line": 8
+        }
+      ],
+      "source": "scanner",
+      "confidence": "medium",
+      "evidence": [
+        {
+          "file": "tests/fixtures/embedded-sample/src/sensor.c",
+          "line": 8,
+          "reason": "project-defined object instance"
+        }
+      ]
+    }
+  ],
+  "diagrams": {
+    "classDiagrams": [
       {
-        "from": "api_server",
-        "to": "db",
-        "label": "Query"
+        "id": "user-defined-types",
+        "title": "User-Defined Types",
+        "description": "Project-defined types and roles.",
+        "source": "generated",
+        "mermaid": "classDiagram\n    class SensorReading {\n        <<struct>>\n        +Project-defined struct used by firmware components.\n    }"
+      }
+    ],
+    "sequenceDiagrams": [
+      {
+        "id": "startup",
+        "title": "Firmware Startup",
+        "description": "High-level startup sequence.",
+        "source": "generated",
+        "mermaid": "sequenceDiagram\n    Reset->>Startup: initialize\n    Startup->>Application: start"
+      }
+    ],
+    "interactionDiagrams": [
+      {
+        "id": "components",
+        "title": "Firmware Components",
+        "description": "Detected module boundaries.",
+        "source": "generated",
+        "mermaid": "flowchart LR\n    tests[Tests]"
+      }
+    ],
+    "stateMachines": [
+      {
+        "id": "device-lifecycle",
+        "title": "Device Lifecycle",
+        "description": "Generic lifecycle pending source-specific review.",
+        "source": "generated",
+        "mermaid": "stateDiagram-v2\n    [*] --> Boot\n    Boot --> Running\n    Running --> Sleep\n    Sleep --> Running"
+      }
+    ],
+    "flowCharts": [
+      {
+        "id": "startup",
+        "title": "Firmware Startup",
+        "description": "Generic startup flow.",
+        "source": "generated",
+        "mermaid": "flowchart TD\n    Reset --> Init\n    Init --> Main"
       }
     ]
   },
-  "swaggerSchemas": {
-    "matchStatus": "Verified Parity (0/0 Endpoints)",
-    "openapi": "3.0.0",
-    "servedAt": "/api/docs",
-    "securityScheme": "bearerAuth (JWT Bearer Token)",
-    "servers": [
-      {
-        "url": "http://localhost:3000",
-        "description": "Local Development Server"
-      },
-      {
-        "url": "https://api.arch-wiki.com",
-        "description": "Production"
-      }
-    ],
-    "schemas": []
-  },
-  "modules": [],
-  "systemEndpoints": [
+  "dataPipelines": [
     {
-      "method": "GET",
-      "path": "/health",
-      "auth": false,
-      "description": "Health check endpoint"
+      "id": "firmware-data-flow",
+      "name": "Firmware Data Flow",
+      "description": "Detected flow between firmware modules.",
+      "stages": [
+        {
+          "id": "tests",
+          "name": "Tests",
+          "component": "tests",
+          "inputType": null,
+          "outputType": "sensorreading",
+          "objectLifetime": "module-defined",
+          "ownership": "module-owned"
+        }
+      ],
+      "edges": [],
+      "mermaid": "flowchart LR\n    tests[Tests]\n"
     }
   ],
-  "coreLayer": {
-    "security": [
-      {
-        "name": "Helmet.js",
-        "description": "HTTP security headers protection"
-      },
-      {
-        "name": "CORS",
-        "description": "Cross-Origin Resource Sharing control"
-      },
-      {
-        "name": "JWT Auth",
-        "description": "Bearer token authentication & verification"
-      }
-    ],
-    "middleware": [
-      {
-        "name": "authenticateJWT",
-        "file": "src/middlewares/auth.middleware.ts",
-        "description": "Verifies JWT access tokens in HTTP Authorization headers",
-        "guards": [
-          "JWT Verification"
-        ]
-      },
-      {
-        "name": "authorizeRoles",
-        "file": "src/middlewares/auth.middleware.ts",
-        "description": "Enforces Role-Based Access Control (RBAC) permissions per route",
-        "guards": [
-          "RBAC Check"
-        ]
-      }
-    ],
-    "services": [
-      {
-        "name": "PrismaClient",
-        "file": "src/prisma.ts",
-        "description": "Database ORM client service connection manager",
-        "exports": [
-          "prisma"
-        ]
-      }
-    ]
-  },
-  "dataFlow": {
-    "requestPipeline": [
-      "HTTP Request received",
-      "Security headers applied (Helmet / CORS)",
-      "Route matched \u2014 module router selected",
-      "JWT token validated (authenticateJWT)",
-      "RBAC role checked (authorizeRoles)",
-      "Controller processes request",
-      "ORM executes database query",
-      "JSON response returned to client"
-    ],
-    "tenantIsolation": "Tenant data isolation enforced via middleware scope and schema queries."
-  },
-  "permissions": {
-    "description": "RBAC permission catalog and endpoint mapping.",
-    "catalog": [],
-    "details": []
-  },
-  "sqlQueries": []
+  "build": {
+    "system": {
+      "type": "PlatformIO",
+      "files": [
+        "tests/fixtures/embedded-sample/platformio.ini"
+      ],
+      "buildDirectory": "build",
+      "generator": null
+    },
+    "toolchain": {
+      "compiler": null,
+      "linker": null,
+      "objcopy": null,
+      "objdump": null,
+      "targetTriple": null,
+      "version": null
+    },
+    "profiles": [],
+    "targets": [],
+    "artifacts": [],
+    "linkerScripts": [],
+    "commands": {
+      "configure": null,
+      "build": null,
+      "test": null,
+      "flash": null,
+      "debug": null
+    },
+    "flashAndDebug": {},
+    "staticAnalysis": [],
+    "ci": []
+  }
 }

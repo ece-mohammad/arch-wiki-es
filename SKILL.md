@@ -1,250 +1,48 @@
 ---
 name: arch-wiki
 description: >
-  Scans any project codebase for new/changed modules, endpoints, middleware,
-  infrastructure, Docker topologies, SQL queries, or permissions and updates
-  docs/architecture/architecture.json.
-  Then regenerates docs/architecture/architecture.html by running build_html.py.
-  Use this after any feature addition, module change, route update, SQL query,
-  or architecture modification — for any backend framework (Express, NestJS,
-  FastAPI, Django, Rails, Laravel, Spring, etc.).
+  Scans embedded firmware projects and updates docs/architecture/architecture.json
+  and docs/architecture/architecture.html with hardware, configuration, memory,
+  modules, user-defined types, object ownership, diagrams, data pipelines, and build metadata.
 ---
 
-# arch-wiki — Architecture Map & Interactive Swagger Sync Skill
+# arch-wiki - Embedded Firmware Architecture Skill
 
-> **Framework-agnostic** architecture documentation skill. Works with any project
-> structure. Compatible with Antigravity, Claude Code, Cursor, Codex, OpenCode,
-> and any AI assistant that can read files and run shell commands.
+Use this skill for C, C++, Rust, bare-metal, RTOS, embedded Linux, PlatformIO,
+CMake, Make, Zephyr, ESP-IDF, STM32CubeMX, and similar firmware projects. This
+skill is intentionally embedded-only; do not add API, Swagger, SQL, Docker, or
+backend documentation sections.
 
----
+## Invoke After
 
-## When to invoke
+- Adding or changing a board, MCU, peripheral, sensor, actuator, or driver.
+- Adding or changing a task, interrupt, timer, queue, callback, or state machine.
+- Adding a project-defined struct, enum, class, trait, message, event, or protocol type.
+- Changing object allocation, storage, lifetime, ownership, or cleanup behavior.
+- Changing a linker script, memory partition, build profile, toolchain, or flash method.
+- Changing a data pipeline, README, device-tree overlay, Kconfig, or firmware configuration.
 
-- After adding a **new API module** (new folder/blueprint/controller group)
-- After adding **new endpoints** to an existing module
-- After adding **new middleware** or guards
-- After adding **new core services** (cache, queue, email, logger, etc.)
-- After adding **new Docker services** or updating `docker-compose.yml`
-- After adding **new permissions** or updating permission-to-endpoint/admin-page mappings
-- After writing **new SQL queries** or repository/service query methods
-- After updating **Swagger/OpenAPI 3.0** route annotations or schemas
-- After changing **ports, base paths, or tech stack**
-- After adding a **new workspace** (monorepo app or package)
+## Workflow
 
----
-
-## Step-by-Step Instructions
-
-### STEP 1 — Identify What Changed
-
-Ask the user (or infer from context) exactly what changed:
-
-- **New module?** Name, base path, controller/service/repo/routes files?
-- **New endpoints?** Which module, method (GET/POST/PUT/PATCH/DELETE), path, auth flag, permission slug, description?
-- **New Docker service / Topology change?** Service name, image, internal/external ports, network dependencies (`depends_on`), type?
-- **New SQL query / Repository method?** Repository file, function name, SQL snippet, target tables, purpose, consuming API endpoints?
-- **New permission mapping?** Permission slug, module/action details, mapped protected endpoints, mapped admin dashboard pages?
-- **New Swagger schemas / OpenAPI spec updates?** OpenAPI version, servers, schemas, security scheme?
-- **New middleware / core service?** File path, exported functions, security guards?
-- **Meta changes?** Version bump, updated tech stack, generated date?
-
----
-
-### STEP 2 — Setup & Codebase Execution
-
-**1. Copy Template Script (if not present):**
-Check if `docs/architecture/build_html.py` exists in the target project workspace.
-If missing, ensure directory `docs/architecture` exists and copy `build_html.py` from the `arch-wiki` skill templates directory into `docs/architecture/build_html.py`.
-
-**2. Run Script Execution:**
-
-- **First-Time Setup (or Full Sync):**
-  ```bash
-  python docs/architecture/build_html.py --init
-  ```
-  *Scans project root metadata (`package.json`), Docker topology (`docker-compose.yml`), and API routes to create `architecture.json` and generate `architecture.html`.*
-
-- **Incremental Sync (After Adding Features / Endpoints / Queries):**
-  ```bash
-  python docs/architecture/build_html.py --sync
-  ```
-  *Re-scans codebase for new endpoints, permissions, and SQL queries, updates `architecture.json`, and rebuilds `architecture.html`.*
-
-> [!NOTE]
-> The codebase scanner automatically excludes build artifacts (`dist/`, `build/`, `node_modules/`)
-> to prevent duplicate route modules and sanitizes diagram nodes for error-free Mermaid rendering.
-
----
-
-### STEP 3 — Update architecture.json
-
-Apply targeted edits to `docs/architecture/architecture.json`.
-
-**Rules for each section:**
-
-#### 1. `meta`
-- Bump `version` if significant architecture changes occurred
-- Update `generatedAt` to today's date (`YYYY-MM-DD`)
-- Add new tech stack entries under `techStack` if new dependencies were introduced
-
-#### 2. `workspaces`
-Add a new entry if a new app or package was created:
-```json
-{
-  "id": "unique-id",
-  "name": "apps/<folder>",
-  "type": "backend|frontend|package",
-  "description": "One-line description",
-  "port": 3000,
-  "entrypoint": "apps/<folder>/src/main.ts"
-}
-```
-
-#### 3. `infrastructure`
-Add a new entry for each Docker container/service:
-```json
-{
-  "id": "service-id",
-  "name": "Display Name + version",
-  "type": "database|cache|queue|proxy|monitoring|logging|uptime",
-  "image": "docker-image:tag",
-  "port": 1234,
-  "description": "What it does in this system",
-  "features": ["feature 1", "feature 2"]
-}
-```
-
-#### 4. `dockerDiagram`
-Extracted from `docker-compose.yml` for rendering the container topology Mermaid diagram:
-```json
-{
-  "description": "Container topology extracted from docker-compose.yml. Arrows represent network dependencies.",
-  "nodes": [
-    { "id": "node_id", "label": "Container Name", "type": "app|database|cache|queue|proxy|monitoring|logging|uptime", "port": 3000 }
-  ],
-  "edges": [
-    { "from": "api", "to": "postgres", "label": "TCP 5432" }
-  ]
-}
-```
-
-#### 5. `systemArchitectureDiagram`
-High-level software component and system design diagram rendered via Mermaid:
-```json
-{
-  "description": "System architecture, software boundaries, and component relationships.",
-  "subgraphs": [
-    {
-      "id": "layer_id",
-      "label": "Layer Name",
-      "nodes": [
-        { "id": "node_id", "label": "Node Label", "type": "app|database|cache|queue" }
-      ]
-    }
-  ],
-  "edges": [
-    { "from": "node_a", "to": "node_b", "label": "Protocol / Flow" }
-  ]
-}
-```
-
-#### 6. `swaggerSchemas`
-Spec metadata and match status for the interactive Swagger UI and OpenAPI JSON generator:
-```json
-{
-  "matchStatus": "Verified Parity (67/67 Endpoints)",
-  "openapi": "3.0.0",
-  "servedAt": "/api/docs",
-  "securityScheme": "bearerAuth (JWT Bearer Token)",
-  "servers": [
-    { "url": "http://localhost:3000", "description": "Local Development Server" },
-    { "url": "https://api.example.com", "description": "Production API Gateway" }
-  ],
-  "schemas": [
-    { "name": "AuthTokensResponse", "description": "JWT accessToken and refreshToken pair" }
-  ]
-}
-```
-
-#### 7. `modules`
-**Adding a new module:**
-```json
-{
-  "id": "module-id",
-  "name": "Module Name",
-  "basePath": "/api/v1/<path>",
-  "description": "What this module does",
-  "color": "#6366f1",
-  "icon": "emoji",
-  "files": ["<name>.controller.ts", "<name>.service.ts", "<name>.repository.ts", "<name>.routes.ts"],
-  "permissions": ["module:read", "module:write"],
-  "endpoints": [
-    {
-      "method": "GET|POST|PUT|PATCH|DELETE",
-      "path": "/path",
-      "auth": true,
-      "permission": "module:read or null",
-      "description": "What this endpoint does"
-    }
-  ]
-}
-```
-
-#### 8. `permissions`
-Keep `catalog` array sorted by module prefix.
-Update `details` array with interactive flow connections:
-```json
-{
-  "description": "RBAC permission catalog and permission-to-endpoint & page mapping.",
-  "catalog": ["users:read", "users:write", "users:delete"],
-  "details": [
-    {
-      "slug": "users:write",
-      "module": "Users",
-      "action": "UPDATE",
-      "endpoints": [
-        { "method": "PUT", "path": "/api/v1/users/:id" }
-      ],
-      "adminPages": ["User Management", "Edit User Form"]
-    }
-  ]
-}
-```
-
-#### 9. `sqlQueries`
-Catalog mapping raw SQL statements or query builders to repository functions and endpoints:
-```json
-{
-  "id": "query-id",
-  "label": "Query Title / Summary",
-  "module": "Module Name",
-  "file": "src/modules/module/module.repository.ts",
-  "function": "RepositoryClass.methodName()",
-  "tables": ["table1", "table2"],
-  "purpose": "Detailed explanation of what the query accomplishes",
-  "sql": "SELECT ... FROM table1 JOIN table2 ...",
-  "endpoints": [
-    { "method": "GET", "path": "/api/v1/module/resource" }
-  ]
-}
-```
-
----
-
-### STEP 4 — Regenerate HTML Dashboard
-
-After updating `architecture.json`, execute the generator script from your project root:
+1. Read the target project's `README.md`.
+2. Inspect the existing `docs/architecture/architecture.json` if present.
+3. Identify the board, MCU, build system, toolchain, and RTOS.
+4. Scan hardware configuration, source, headers, linker scripts, map files, and build files.
+5. Scan modules, components, source file roles, and project-defined types.
+6. Exclude primitive, standard-library, vendor SDK, and RTOS types from `dataTypes`.
+7. Record each user-defined type's role, usage, and containing files.
+8. Record created objects, storage, lifetime, owner, transfers, and release paths.
+9. Update diagrams, data pipelines, and build metadata.
+10. Apply `docs/architecture/embedded-overrides.json` when source analysis cannot determine intent.
+11. Run:
 
 ```bash
-python docs/architecture/build_html.py
+python3 docs/architecture/build_html.py --sync
 ```
 
-**Docker is optional.** If `dockerDiagram.nodes` is empty, the Docker Topology tab shows a friendly "No Docker Services Configured" placeholder instead of an empty/broken Mermaid diagram. Add nodes only if your project uses Docker.
+12. Verify the generated HTML contains the README and all embedded sections.
 
-> [!IMPORTANT]
-> Always verify that the top sticky header bar displays the platform title and badges **without navigation links**, and that all section links live in the left **NAVIGATION** sidebar.
-
----
+For a target project outside the current working directory, pass its existing path:
 
 ### STEP 5 — Verify Dashboard in Browser
 
@@ -356,3 +154,79 @@ Run arch-wiki to rescan the codebase and sync the architecture map.
 4. Run: python docs/architecture/build_html.py
 5. Verify parity and report additions/changes
 ```
+```bash
+python3 /path/to/arch-wiki/templates/build_html.py --sync /path/to/firmware-project
+```
+
+The generator writes `docs/architecture/architecture.json` and
+`docs/architecture/architecture.html` in the target project. It rescans and
+regenerates both files on every invocation.
+
+## Generated Sections
+
+- Brief
+- Project README
+- Hardware
+- Configurations
+- Memory Layout
+- Modules & Components
+- Class Diagrams
+- Sequence Diagrams
+- Interaction Diagrams
+- State Machines
+- Flow Charts
+- Data Pipelines
+- Build
+
+## Evidence Rules
+
+Do not invent electrical, timing, power, memory, or ownership facts. Every inferred
+value should include a source file and confidence. C/C++ ownership should be
+`unknown` when creation, transfer, or cleanup cannot be established from evidence.
+
+`dataTypes` contains user-defined project types only. Standard types may appear as
+field or signature labels but must not become independent documentation entries.
+
+## Type and File Rules
+
+- Include project-defined structs, unions, enums, typedefs, classes, traits, callback types, message types, and protocol types.
+- Exclude primitive, standard-library, vendor SDK, HAL, RTOS, and external dependency types.
+- Include a role for each module, component, type, and created object.
+- Use structured file references with path, file role, symbols, and line evidence when available.
+- Record both definition files and meaningful usage files; do not list a header merely because it was included.
+- Link fields to other project-defined types with `typeReference`.
+- Record type usage roles such as `produces`, `consumes`, `queues`, `stores`, `serializes`, `deserializes`, `transmits`, and `receives`.
+
+## Object Lifetime and Ownership Rules
+
+For created objects and resources, inspect:
+
+- Global, static, stack, heap, pool, RTOS, persistent, DMA, and peripheral-handle storage.
+- Creation and initialization functions.
+- Activation, suspension, reset, release, and destruction paths.
+- Module, component, task, or system ownership.
+- Borrowed access, shared access, queue transfer, DMA handoff, and ownership transfer.
+
+Do not treat every pointer argument as an ownership transfer. If creation,
+release, or responsibility cannot be proven, use `unknown` and include a warning
+with the relevant source evidence.
+
+## Override Rules
+
+Use `docs/architecture/embedded-overrides.json` for facts that static scanning
+cannot safely infer, including board details, pin mappings, power constraints,
+memory partitions, module roles, type relationships, object ownership, state
+machines, data pipelines, and flash/debug commands. Preserve `source` and
+`confidence` metadata when applying overrides.
+
+## Verification Checklist
+
+- `architecture.json` contains only the embedded schema.
+- The generated README content matches the target project's README.
+- All requested navigation sections are present in the HTML.
+- No standard or vendor types appear as top-level `dataTypes` entries.
+- Modules, components, and types have roles and source files where detectable.
+- Created objects show lifetime, storage, ownership, and confidence.
+- Unresolved cleanup or ownership is visible as a warning.
+- Mermaid diagrams render or show their source fallback.
+- The dashboard works on desktop and narrow screens.

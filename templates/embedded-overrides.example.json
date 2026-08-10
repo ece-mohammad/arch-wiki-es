@@ -1,0 +1,54 @@
+{
+  "brief": {
+    "constraints": [
+      "Replace this example with verified product constraints."
+    ]
+  },
+  "hardware": {
+    "target": {
+      "board": "Example board",
+      "mcu": "Example MCU"
+    },
+    "pinMappings": [],
+    "power": {
+      "powerBudget": {}
+    }
+  },
+  "modules": [
+    {
+      "id": "example_module",
+      "role": "Describe the firmware responsibility of this module.",
+      "files": []
+    }
+  ],
+  "dataTypes": [
+    {
+      "id": "example_message",
+      "name": "ExampleMessage",
+      "kind": "struct",
+      "userDefined": true,
+      "ownership": "project",
+      "role": "Describe what this project-defined type represents.",
+      "usage": []
+    }
+  ],
+  "objects": [
+    {
+      "id": "example_object",
+      "typeReference": "example_message",
+      "role": "Describe the object's responsibility.",
+      "lifetime": {
+        "scope": "firmware",
+        "startsAt": "system startup",
+        "endsAt": "reset"
+      },
+      "ownership": {
+        "model": "module-owned",
+        "owner": {
+          "kind": "module",
+          "id": "example_module"
+        }
+      }
+    }
+  ]
+}

@@ -9,6 +9,7 @@ console.log('🏛️  Installing arch-wiki AI Skill...\n');
 const rootDir = path.join(__dirname, '..');
 const skillFile = path.join(rootDir, 'SKILL.md');
 const templateFile = path.join(rootDir, 'templates', 'build_html.py');
+const overrideExampleFile = path.join(rootDir, 'templates', 'embedded-overrides.example.json');
 
 if (!fs.existsSync(skillFile)) {
     console.error('❌ Error: SKILL.md not found in package root.');
@@ -50,6 +51,14 @@ targets.forEach(target => {
                 fs.mkdirSync(templatesDir, { recursive: true });
             }
             fs.copyFileSync(templateFile, path.join(templatesDir, 'build_html.py'));
+        }
+
+        if (fs.existsSync(overrideExampleFile)) {
+            const templatesDir = path.join(target.path, 'templates');
+            if (!fs.existsSync(templatesDir)) {
+                fs.mkdirSync(templatesDir, { recursive: true });
+            }
+            fs.copyFileSync(overrideExampleFile, path.join(templatesDir, 'embedded-overrides.example.json'));
         }
 
         console.log(`✅ Installed arch-wiki to ${target.name}:`);

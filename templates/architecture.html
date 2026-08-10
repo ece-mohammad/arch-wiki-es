@@ -782,238 +782,409 @@
     </aside>
 
     <main class="main-content">
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Arch Wiki Embedded Systems - Architecture</title><script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script><style>:root{--bg:#0d1117;--panel:#161b22;--panel2:#21262d;--border:#30363d;--text:#e6edf3;--muted:#8b949e;--accent:#58a6ff}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14px system-ui,sans-serif}header{position:sticky;top:0;z-index:2;background:var(--panel);border-bottom:1px solid var(--border);padding:18px 28px}header h1{margin:0 0 4px}header p{margin:0;color:var(--muted)}.layout{display:flex;min-height:calc(100vh - 78px)}aside{width:250px;flex:none;background:var(--panel);border-right:1px solid var(--border);padding:16px;position:fixed;top:78px;bottom:0;overflow:auto}main{margin-left:250px;padding:28px;max-width:1500px;width:calc(100% - 250px)}.nav-btn{display:block;width:100%;text-align:left;background:none;border:1px solid transparent;color:var(--muted);padding:10px;border-radius:7px;margin:3px 0;cursor:pointer}.nav-btn:hover,.nav-btn.active{background:var(--panel2);border-color:var(--accent);color:var(--text)}.section{display:none}.section.active{display:block}h2{border-bottom:1px solid var(--border);padding-bottom:10px}h3{color:var(--accent)}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:16px}.card{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:18px;margin:0 0 16px;overflow:auto}pre{background:#090c10;border:1px solid var(--border);padding:14px;border-radius:7px;overflow:auto;white-space:pre-wrap;word-break:break-word}code{color:#9cdcfe}.muted{color:var(--muted)}.files span{color:var(--muted);margin-left:8px}.toolbar{display:flex;gap:12px;align-items:center;margin-bottom:14px}button{color:var(--text);background:var(--panel2);border:1px solid var(--border);border-radius:6px;padding:7px 10px;cursor:pointer}.readme{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:24px;line-height:1.6}.readme img{max-width:100%}@media(max-width:750px){aside{position:static;width:100%;border-right:0;border-bottom:1px solid var(--border);display:flex;flex-wrap:wrap;gap:4px}.layout{display:block}main{margin:0;width:100%;padding:16px}.nav-btn{width:auto}}</style></head><body><header><h1>Arch Wiki Embedded Systems</h1><p>Embedded firmware architecture map | rtos | Generated 2026-08-10</p></header><div class="layout"><aside><button class="nav-btn" onclick="showTab('brief',this)">Brief</button><button class="nav-btn" onclick="showTab('readme',this)">Project README</button><button class="nav-btn" onclick="showTab('hardware',this)">Hardware</button><button class="nav-btn" onclick="showTab('configurations',this)">Configurations</button><button class="nav-btn" onclick="showTab('memory-layout',this)">Memory Layout</button><button class="nav-btn" onclick="showTab('modules-components',this)">Modules &amp; Components</button><button class="nav-btn" onclick="showTab('class-diagrams',this)">Class Diagrams</button><button class="nav-btn" onclick="showTab('sequence-diagrams',this)">Sequence Diagrams</button><button class="nav-btn" onclick="showTab('interaction-diagrams',this)">Interaction Diagrams</button><button class="nav-btn" onclick="showTab('state-machines',this)">State Machines</button><button class="nav-btn" onclick="showTab('flow-charts',this)">Flow Charts</button><button class="nav-btn" onclick="showTab('data-pipelines',this)">Data Pipelines</button><button class="nav-btn" onclick="showTab('build',this)">Build</button></aside><main><section class="section" id="sec-brief"><h2>Brief</h2><article class="card"><h3>Purpose</h3><p>arch-wiki is an embedded firmware architecture documentation skill for AI coding assistants. It scans a firmware repository and generates:</p></article><article class="card"><h3>System</h3><pre>{
+  &quot;type&quot;: &quot;rtos&quot;,
+  &quot;markers&quot;: [
+    &quot;PlatformIO&quot;,
+    &quot;Zephyr&quot;
+  ]
+}</pre></article></section>
+<section class="section" id="sec-readme"><h2>Project README</h2><div class="toolbar"><code>README.md</code><button onclick="copyReadme()">Copy Markdown</button></div><article class="readme"><h1>arch-wiki</h1>
+<p><code>arch-wiki</code> is an embedded firmware architecture documentation skill for AI coding assistants. It scans a firmware repository and generates:</p>
+<li><code>docs/architecture/architecture.json</code>: machine-readable architecture metadata.</li>
+<li><code>docs/architecture/architecture.html</code>: interactive architecture dashboard with the project README and generated diagrams embedded in the output.</li>
+<p>The tool is embedded-only. It documents firmware and hardware rather than REST APIs, SQL, Swagger, Docker, or backend services.</p>
+<h2>Documented Architecture</h2>
+<p>The generated files contain:</p>
+<p>0. Brief</p>
+<p>1. Project README</p>
+<p>2. Hardware</p>
+<p>3. Configurations</p>
+<p>4. Memory Layout</p>
+<p>5. Modules &amp; Components</p>
+<p>6. Class Diagrams</p>
+<p>7. Sequence Diagrams</p>
+<p>8. Interaction Diagrams</p>
+<p>9. State Machines</p>
+<p>10. Flow Charts</p>
+<p>11. Data Pipelines</p>
+<p>12. Build</p>
+<p>Modules, components, and user-defined types include their role and structured source-file references. The type catalog excludes primitive, standard-library, vendor SDK, and RTOS types. User-defined types include their fields, usage roles, modules, components, evidence, and source locations.</p>
+<p>Created objects include allocation kind, storage location, lifetime, owner, creator, ownership transfers, and release/destruction information. Unproven C/C++ ownership is reported as unknown with a warning rather than guessed.</p>
+<p>The target project&#x27;s README is embedded in both JSON and HTML at generation time. Regenerate after changing the README. Mermaid is loaded from a CDN when diagrams are rendered, so network access is needed for diagram rendering in a browser.</p>
+<h2>Supported Projects</h2>
+<p>The scanner recognizes common markers for:</p>
+<li>Bare-metal C/C++</li>
+<li>FreeRTOS</li>
+<li>Zephyr</li>
+<li>Embedded Linux/device tree</li>
+<li>PlatformIO</li>
+<li>CMake</li>
+<li>Make</li>
+<li>ESP-IDF</li>
+<li>STM32CubeMX</li>
+<li>Rust embedded projects</li>
+<p>It reads source/header files, build files, linker scripts, map files, device-tree files, Kconfig files, and project README content using only Python&#x27;s standard library.</p>
+<h2>Install</h2>
+<pre><code>npx arch-wiki</code></pre>
+<p>For local development:</p>
+<pre><code>node ./bin/install.js</code></pre>
+<p>The installer registers <code>SKILL.md</code> and the scanner with supported AI assistant skill locations.</p>
+<h2>Generate Documentation</h2>
+<p>From a target firmware project after installing the skill:</p>
+<pre><code>python3 docs/architecture/build_html.py --init</code></pre>
+<p>For subsequent changes:</p>
+<pre><code>python3 docs/architecture/build_html.py --sync</code></pre>
+<p>The script creates <code>docs/architecture/</code> when needed. The first run creates or replaces the generated JSON and HTML files. Subsequent runs rescan the project and regenerate both files.</p>
+<p>To scan a different project from a local checkout:</p>
+<pre><code>python3 /path/to/arch-wiki/templates/build_html.py --init /path/to/firmware-project</code></pre>
+<p>The target project must be passed as an existing path. If no target path is supplied, the current working directory is scanned.</p>
+<p>The generated dashboard can be opened directly in a browser. Mermaid diagrams require access to the Mermaid CDN referenced by the HTML.</p>
+<h2>Manifest Sections</h2>
+<p><code>architecture.json</code> contains these top-level sections:</p>
+<p>| Section | Contents |</p>
+<p>|---|---|</p>
+<p>| <code>meta</code> | Project type, languages, detected markers, and generation date |</p>
+<p>| <code>readme</code> | Embedded project README content and source metadata |</p>
+<p>| <code>brief</code> | System purpose, constraints, and documentation status |</p>
+<p>| <code>hardware</code> | MCU, board, peripherals, interfaces, pins, and power metadata |</p>
+<p>| <code>configurations</code> | Build profiles, feature flags, Kconfig, and device-tree settings |</p>
+<p>| <code>memoryLayout</code> | Linker regions, sections, partitions, stack, heap, and map files |</p>
+<p>| <code>modules</code> | Logical firmware subsystems, roles, files, tasks, and type usage |</p>
+<p>| <code>components</code> | Concrete source-level drivers, services, HALs, and application units |</p>
+<p>| <code>dataTypes</code> | Project-defined structs, enums, unions, typedefs, classes, and traits |</p>
+<p>| <code>objects</code> | Created objects, storage, lifetime, ownership, and cleanup metadata |</p>
+<p>| <code>diagrams</code> | Class, sequence, interaction, state, and flow diagrams |</p>
+<p>| <code>dataPipelines</code> | Detected data movement between firmware modules |</p>
+<p>| <code>build</code> | Build system, toolchain, targets, artifacts, and flash/debug metadata |</p>
+<h2>Types and Source Traceability</h2>
+<p>Only project-defined types are documented as <code>dataTypes</code>. Primitive types, standard-library types, RTOS types, vendor HAL types, and external dependency types are excluded. They can still appear as field or signature labels.</p>
+<p>Each module, component, and user-defined type includes structured file references where detected:</p>
+<pre><code>{
+  &quot;path&quot;: &quot;src/sensors/sensor_manager.c&quot;,
+  &quot;role&quot;: &quot;implementation&quot;,
+  &quot;contains&quot;: [&quot;sensor_manager_init&quot;],
+  &quot;line&quot;: 42
+}</code></pre>
+<p>User-defined type entries include:</p>
+<li>The type&#x27;s firmware role.</li>
+<li>Fields and references to other project-defined types.</li>
+<li>Modules and components that use the type.</li>
+<li>Usage roles such as <code>produces</code>, <code>consumes</code>, <code>queues</code>, <code>serializes</code>, or <code>stores</code>.</li>
+<li>Definition and usage files.</li>
+<li>Evidence and confidence metadata.</li>
+<h2>Object Lifetime and Ownership</h2>
+<p>The <code>objects</code> section documents concrete instances and resources created by firmware, including:</p>
+<li>Global and static objects.</li>
+<li>Stack objects.</li>
+<li>Heap allocations.</li>
+<li>RTOS resources such as tasks and queues.</li>
+<li>Pool-managed objects.</li>
+<li>Peripheral handles and buffers where detectable.</li>
+<p>Each object may include:</p>
+<li>User-defined type reference.</li>
+<li>Runtime role.</li>
+<li>Storage location and memory section.</li>
+<li>Lifetime scope and start/end events.</li>
+<li>Creator and destruction/release path.</li>
+<li>Owner and ownership model.</li>
+<li>Ownership transfers and usage files.</li>
+<p>C and C++ ownership cannot always be proven statically. The scanner reports <code>unknown</code> ownership and low confidence instead of claiming a transfer or cleanup path without evidence.</p>
+<h2>Manual Overrides</h2>
+<p>Static analysis cannot reliably determine every board detail, safety constraint, or ownership policy. Add an optional file at:</p>
+<pre><code>docs/architecture/embedded-overrides.json</code></pre>
+<p>Use it to provide board/MCU details, pin mappings, power and timing requirements, memory partitions, module/component roles, user-defined type relationships, object ownership, diagrams, and flash/debug commands. The example format is in <code>templates/embedded-overrides.example.json</code>.</p>
+<p>Override values are merged after scanner output. Lists containing objects with an <code>id</code> replace matching generated entries; object values extend generated sections. Invalid override JSON is reported in the generated manifest warnings.</p>
+<h2>Project Structure</h2>
+<pre><code>arch-wiki/
+├── SKILL.md
+├── README.md
+├── bin/install.js
+├── templates/
+│   ├── architecture.json
+│   ├── architecture.html
+│   ├── build_html.py
+│   └── embedded-overrides.example.json
+└── plans/
+    └── embedded-arch-wiki.md</code></pre>
+<h2>Limitations</h2>
+<p>The scanner is intentionally dependency-free and evidence-based. It does not replace a compiler, linker, static analyzer, or hardware review. Complex macro-generated types, custom allocators, ownership conventions, electrical constraints, and generated diagrams may require manual overrides.</p>
+<p>Current analysis is intentionally conservative:</p>
+<li>Hardware values are extracted only from recognizable source/configuration markers.</li>
+<li>Detailed pin maps, clock trees, power budgets, and runtime configuration require explicit source evidence or overrides.</li>
+<li>C/C++ ownership is uncertain when custom allocators, callbacks, or pointer conventions obscure responsibility.</li>
+<li>Generated diagrams are starting points and should be reviewed against the firmware.</li>
+<li>The built-in Markdown renderer covers common README constructs, not the complete Markdown specification.</li>
+<li>The generator uses only the Python standard library; no third-party Python package is required.</li>
+<h2>License</h2>
+<p>MIT.</p></article><details><summary>View Markdown source</summary><pre id="readme-source"># arch-wiki
 
-    <!-- 1. OVERVIEW -->
-    <div class="section active" id="sec-overview">
-        <div class="stats">
-            <div class="stat"><div class="stat-num">0</div><div class="stat-lbl">API Modules</div></div>
-            <div class="stat"><div class="stat-num">1</div><div class="stat-lbl">Total Endpoints</div></div>
-            <div class="stat"><div class="stat-num">0</div><div class="stat-lbl">Docker Services</div></div>
-            <div class="stat"><div class="stat-num">0</div><div class="stat-lbl">Permissions</div></div>
-            <div class="stat"><div class="stat-num">0</div><div class="stat-lbl">SQL Queries</div></div>
-            <div class="stat"><div class="stat-num">1</div><div class="stat-lbl">Workspaces</div></div>
-        </div>
+`arch-wiki` is an embedded firmware architecture documentation skill for AI coding assistants. It scans a firmware repository and generates:
 
-        <div class="sec-title">📦 Workspaces</div>
-        <div class="grid3">
+- `docs/architecture/architecture.json`: machine-readable architecture metadata.
+- `docs/architecture/architecture.html`: interactive architecture dashboard with the project README and generated diagrams embedded in the output.
 
-            <div class="card">
-                <div class="chead">
-                    <span style="font-size:22px">⚡</span>
-                    <div>
-                        <div class="card-title">api</div>
-                        <div class="card-sub">BACKEND : 3000</div>
-                    </div>
-                </div>
-                <div class="card-desc">Main REST API</div>
-                <span class="tag tq">src/index.ts</span>
-            </div>
+The tool is embedded-only. It documents firmware and hardware rather than REST APIs, SQL, Swagger, Docker, or backend services.
 
-        </div>
+## Documented Architecture
 
-        <div class="sec-title">🌐 System Endpoints</div>
-        <div class="grid1">
+The generated files contain:
 
-            <div class="endpoint">
-                <span class="method GET">GET</span>
-                <div>
-                    <div class="ep-path">/health</div>
-                    <div class="ep-desc">Health check endpoint</div>
-                </div>
-            </div>
+0. Brief
+1. Project README
+2. Hardware
+3. Configurations
+4. Memory Layout
+5. Modules &amp; Components
+6. Class Diagrams
+7. Sequence Diagrams
+8. Interaction Diagrams
+9. State Machines
+10. Flow Charts
+11. Data Pipelines
+12. Build
 
-        </div>
-    </div>
+Modules, components, and user-defined types include their role and structured source-file references. The type catalog excludes primitive, standard-library, vendor SDK, and RTOS types. User-defined types include their fields, usage roles, modules, components, evidence, and source locations.
 
-    <!-- 2. API MODULES -->
-    <div class="section" id="sec-modules">
-        <input class="search" id="modSearch" placeholder="Search endpoints, paths, permissions, descriptions..." oninput="filterModules()">
-        <div class="grid2" id="modulesGrid">
+Created objects include allocation kind, storage location, lifetime, owner, creator, ownership transfers, and release/destruction information. Unproven C/C++ ownership is reported as unknown with a warning rather than guessed.
 
-        </div>
-    </div>
+The target project&#x27;s README is embedded in both JSON and HTML at generation time. Regenerate after changing the README. Mermaid is loaded from a CDN when diagrams are rendered, so network access is needed for diagram rendering in a browser.
 
-    <!-- 3. SYSTEM ARCHITECTURE & COMPONENTS DIAGRAM -->
-    <div class="section" id="sec-sysarch">
-        <div class="card">
-            <div class="chead">
-                <span style="font-size:24px">🏛️</span>
-                <div>
-                    <div class="card-title">System Design & Component Architecture Diagram</div>
-                    <div class="card-sub">High-level software architecture, layered boundaries, and component relationships</div>
-                </div>
-            </div>
-            <p class="card-desc">System architecture and component relationships.</p>
-            <div class="diagram-box">
-                <div id="sysarchMermaid" style="width: 100%; min-height: 500px; display: flex; justify-content: center; align-items: center;"></div>
-                <script type="text/plain" id="sysarchMermaidSrc">
-flowchart TB
-    classDef proxy fill:#1e293b,stroke:#64748b,stroke-width:2px,color:#fff;
-    classDef app fill:#1e3a8a,stroke:#58a6ff,stroke-width:2px,color:#fff;
-    classDef database fill:#064e3b,stroke:#3fb950,stroke-width:2px,color:#fff;
-    classDef cache fill:#78350f,stroke:#f59e0b,stroke-width:2px,color:#fff;
-    classDef queue fill:#4c1d95,stroke:#8b5cf6,stroke-width:2px,color:#fff;
-    classDef monitoring fill:#7c2d12,stroke:#f97316,stroke-width:2px,color:#fff;
-    classDef logging fill:#831843,stroke:#ec4899,stroke-width:2px,color:#fff;
+## Supported Projects
 
-    subgraph sg_client_layer["Client Layer"]
-        web_client["Web  Mobile Client"]
-    end
+The scanner recognizes common markers for:
 
-    subgraph sg_api_layer["API Layer"]
-        api_server["REST API Server"]
-    end
+- Bare-metal C/C++
+- FreeRTOS
+- Zephyr
+- Embedded Linux/device tree
+- PlatformIO
+- CMake
+- Make
+- ESP-IDF
+- STM32CubeMX
+- Rust embedded projects
 
-    subgraph sg_data_layer["Data  Storage Layer"]
-        db["PostgreSQL Database"]
-    end
+It reads source/header files, build files, linker scripts, map files, device-tree files, Kconfig files, and project README content using only Python&#x27;s standard library.
 
-    web_client -->|"HTTPS REST"| api_server
-    api_server -->|"Query"| db
+## Install
 
-    class web_client,api_server app;
-    class db database;
+```bash
+npx arch-wiki
+```
 
-                </script>
-            </div>
-        </div>
-    </div>
+For local development:
 
-    <!-- 4. DOCKER DIAGRAM -->
-    <div class="section" id="sec-docker">
-        <div class="card">
-            <div class="chead">
-                <span style="font-size:24px">🐳</span>
-                <div>
-                    <div class="card-title">Docker Infrastructure Topology &amp; Dependency Diagram</div>
-                    <div class="card-sub">Rendered live using Mermaid.js from container specifications</div>
-                </div>
-            </div>
-            <p class="card-desc"></p>
+```bash
+node ./bin/install.js
+```
 
-            <div style="text-align:center; padding: 60px 20px; color: var(--muted);">
-                <div style="font-size: 48px; margin-bottom: 16px;">🐳</div>
-                <div style="font-size: 16px; font-weight: 600; color: var(--text); margin-bottom: 8px;">No Docker Services Configured</div>
-                <div style="font-size: 13px; line-height: 1.6; max-width: 480px; margin: 0 auto;">
-                    This project does not use Docker, or container topology has not been added yet.<br><br>
-                    To add Docker topology, update <code style="color:var(--accent)">dockerDiagram.nodes</code> and
-                    <code style="color:var(--accent)">dockerDiagram.edges</code> in <code>architecture.json</code>
-                    and regenerate.
-                </div>
-            </div>
-        </div>
-    </div>
+The installer registers `SKILL.md` and the scanner with supported AI assistant skill locations.
 
-    <!-- 4. SWAGGER & OPENAPI -->
-    <div class="section" id="sec-swagger">
-        <div class="card" style="margin-bottom: 20px;">
-            <div class="chead">
-                <span style="font-size:28px">&#9889;</span>
-                <div>
-                    <div class="card-title">Swagger & OpenAPI 3.0 API Specification & Explorer</div>
-                    <div class="card-sub">Interactive REST API documentation generated from architecture manifest (1 Endpoints)</div>
-                </div>
-                <span class="badge badge-green" style="margin-left:auto; font-size: 12px; padding: 6px 12px;">STATUS: VERIFIED PARITY (0/0 ENDPOINTS)</span>
-            </div>
+## Generate Documentation
 
-            <div class="grid4" style="margin-top: 15px;">
-                <div style="font-size: 12px; color: var(--muted);">
-                    <div style="color: var(--text); font-weight: 600; margin-bottom: 2px;">OpenAPI Version</div>
-                    <code>3.0.0</code>
-                </div>
-                <div style="font-size: 12px; color: var(--muted);">
-                    <div style="color: var(--text); font-weight: 600; margin-bottom: 2px;">Base URL</div>
-                    <code>http://localhost:3000</code>
-                </div>
-                <div style="font-size: 12px; color: var(--muted);">
-                    <div style="color: var(--text); font-weight: 600; margin-bottom: 2px;">Security Scheme</div>
-                    <span class="tag ty">bearerAuth (JWT Bearer Token)</span>
-                </div>
-                <div style="font-size: 12px; color: var(--muted);">
-                    <div style="color: var(--text); font-weight: 600; margin-bottom: 2px;">Live Swagger Route</div>
-                    <code>/api/docs</code>
-                </div>
-            </div>
-        </div>
+From a target firmware project after installing the skill:
 
-        <!-- View Mode Selector -->
-        <div style="display: flex; gap: 8px; margin-bottom: 16px;">
-            <button class="sub-tab-btn active" onclick="switchSwaggerView('ui', this)">&#9889; Interactive Swagger UI</button>
-            <button class="sub-tab-btn" onclick="switchSwaggerView('catalog', this)">&#128216; API Endpoint Catalog & cURL (1)</button>
-            <button class="sub-tab-btn" onclick="switchSwaggerView('json', this)">&#128220; OpenAPI 3.0 JSON Spec</button>
-        </div>
+```bash
+python3 docs/architecture/build_html.py --init
+```
 
-        <!-- Pane 1: Interactive Swagger UI -->
-        <div id="swagger-view-ui" class="swagger-view-pane active">
-            <div class="card" style="padding: 10px;">
-                <div id="swagger-ui-container">
-                    <div style="padding: 40px; text-align: center; color: var(--muted);">
-                        Loading Interactive Swagger UI...
-                    </div>
-                </div>
-            </div>
-        </div>
+For subsequent changes:
 
-        <!-- Pane 2: API Endpoint Catalog & cURL -->
-        <div id="swagger-view-catalog" class="swagger-view-pane">
+```bash
+python3 docs/architecture/build_html.py --sync
+```
 
-        </div>
+The script creates `docs/architecture/` when needed. The first run creates or replaces the generated JSON and HTML files. Subsequent runs rescan the project and regenerate both files.
 
-        <!-- Pane 3: Raw OpenAPI 3.0 JSON Spec -->
-        <div id="swagger-view-json" class="swagger-view-pane">
-            <div class="card">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                    <div style="font-weight: 600; font-size: 14px;">OpenAPI 3.0.0 JSON Specification Source</div>
-                    <button class="sub-tab-btn" onclick="navigator.clipboard.writeText(document.getElementById('swaggerOpenApiJsonSrc').textContent); alert('Copied OpenAPI JSON Spec to clipboard!');">&#128203; Copy OpenAPI Spec</button>
-                </div>
-                <pre style="background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 16px; font-family: var(--font-code); font-size: 12px; color: var(--text); max-height: 600px; overflow-y: auto;"><code id="swaggerOpenApiJsonSrc">{
-  &quot;openapi&quot;: &quot;3.0.0&quot;,
-  &quot;info&quot;: {
-    &quot;title&quot;: &quot;Arch Wiki&quot;,
-    &quot;version&quot;: &quot;1.0.0&quot;,
-    &quot;description&quot;: &quot;Framework-agnostic architecture map &amp; documentation generator skill for AI coding assistants.&quot;
+To scan a different project from a local checkout:
+
+```bash
+python3 /path/to/arch-wiki/templates/build_html.py --init /path/to/firmware-project
+```
+
+The target project must be passed as an existing path. If no target path is supplied, the current working directory is scanned.
+
+The generated dashboard can be opened directly in a browser. Mermaid diagrams require access to the Mermaid CDN referenced by the HTML.
+
+## Manifest Sections
+
+`architecture.json` contains these top-level sections:
+
+| Section | Contents |
+|---|---|
+| `meta` | Project type, languages, detected markers, and generation date |
+| `readme` | Embedded project README content and source metadata |
+| `brief` | System purpose, constraints, and documentation status |
+| `hardware` | MCU, board, peripherals, interfaces, pins, and power metadata |
+| `configurations` | Build profiles, feature flags, Kconfig, and device-tree settings |
+| `memoryLayout` | Linker regions, sections, partitions, stack, heap, and map files |
+| `modules` | Logical firmware subsystems, roles, files, tasks, and type usage |
+| `components` | Concrete source-level drivers, services, HALs, and application units |
+| `dataTypes` | Project-defined structs, enums, unions, typedefs, classes, and traits |
+| `objects` | Created objects, storage, lifetime, ownership, and cleanup metadata |
+| `diagrams` | Class, sequence, interaction, state, and flow diagrams |
+| `dataPipelines` | Detected data movement between firmware modules |
+| `build` | Build system, toolchain, targets, artifacts, and flash/debug metadata |
+
+## Types and Source Traceability
+
+Only project-defined types are documented as `dataTypes`. Primitive types, standard-library types, RTOS types, vendor HAL types, and external dependency types are excluded. They can still appear as field or signature labels.
+
+Each module, component, and user-defined type includes structured file references where detected:
+
+```json
+{
+  &quot;path&quot;: &quot;src/sensors/sensor_manager.c&quot;,
+  &quot;role&quot;: &quot;implementation&quot;,
+  &quot;contains&quot;: [&quot;sensor_manager_init&quot;],
+  &quot;line&quot;: 42
+}
+```
+
+User-defined type entries include:
+
+- The type&#x27;s firmware role.
+- Fields and references to other project-defined types.
+- Modules and components that use the type.
+- Usage roles such as `produces`, `consumes`, `queues`, `serializes`, or `stores`.
+- Definition and usage files.
+- Evidence and confidence metadata.
+
+## Object Lifetime and Ownership
+
+The `objects` section documents concrete instances and resources created by firmware, including:
+
+- Global and static objects.
+- Stack objects.
+- Heap allocations.
+- RTOS resources such as tasks and queues.
+- Pool-managed objects.
+- Peripheral handles and buffers where detectable.
+
+Each object may include:
+
+- User-defined type reference.
+- Runtime role.
+- Storage location and memory section.
+- Lifetime scope and start/end events.
+- Creator and destruction/release path.
+- Owner and ownership model.
+- Ownership transfers and usage files.
+
+C and C++ ownership cannot always be proven statically. The scanner reports `unknown` ownership and low confidence instead of claiming a transfer or cleanup path without evidence.
+
+## Manual Overrides
+
+Static analysis cannot reliably determine every board detail, safety constraint, or ownership policy. Add an optional file at:
+
+```text
+docs/architecture/embedded-overrides.json
+```
+
+Use it to provide board/MCU details, pin mappings, power and timing requirements, memory partitions, module/component roles, user-defined type relationships, object ownership, diagrams, and flash/debug commands. The example format is in `templates/embedded-overrides.example.json`.
+
+Override values are merged after scanner output. Lists containing objects with an `id` replace matching generated entries; object values extend generated sections. Invalid override JSON is reported in the generated manifest warnings.
+
+## Project Structure
+
+```text
+arch-wiki/
+├── SKILL.md
+├── README.md
+├── bin/install.js
+├── templates/
+│   ├── architecture.json
+│   ├── architecture.html
+│   ├── build_html.py
+│   └── embedded-overrides.example.json
+└── plans/
+    └── embedded-arch-wiki.md
+```
+
+## Limitations
+
+The scanner is intentionally dependency-free and evidence-based. It does not replace a compiler, linker, static analyzer, or hardware review. Complex macro-generated types, custom allocators, ownership conventions, electrical constraints, and generated diagrams may require manual overrides.
+
+Current analysis is intentionally conservative:
+
+- Hardware values are extracted only from recognizable source/configuration markers.
+- Detailed pin maps, clock trees, power budgets, and runtime configuration require explicit source evidence or overrides.
+- C/C++ ownership is uncertain when custom allocators, callbacks, or pointer conventions obscure responsibility.
+- Generated diagrams are starting points and should be reviewed against the firmware.
+- The built-in Markdown renderer covers common README constructs, not the complete Markdown specification.
+- The generator uses only the Python standard library; no third-party Python package is required.
+
+## License
+
+MIT.
+</pre></details></section>
+<section class="section" id="sec-hardware"><h2>Hardware</h2><article class="card"><h3>Target</h3><pre>{
+  &quot;mcu&quot;: &quot;STM32CubeMX&quot;
+}</pre></article><article class="card"><h3>Peripherals</h3><div class="grid"><article class="card"><h3>can</h3>can</article><article class="card"><h3>time</h3>timer</article></div></article><article class="card"><h3>Source files</h3><ul><li><code>tests/fixtures/embedded-sample/platformio.ini</code> <span>hardware configuration</span></li></ul></article></section>
+<section class="section" id="sec-configurations"><h2>Configurations</h2><article class="card"><h3>Build profiles</h3><pre>[]</pre></article><article class="card"><h3>Feature flags</h3><pre>[]</pre></article><article class="card"><h3>Configuration sources</h3><ul><li><code>tests/fixtures/embedded-sample/platformio.ini</code> <span>configuration</span></li></ul></article></section>
+<section class="section" id="sec-memory-layout"><h2>Memory Layout</h2><article class="card"><h3>Memory regions</h3><pre>[]</pre></article><article class="card"><h3>Linker/map files</h3><p class="muted">No source files detected.</p></article></section>
+<section class="section" id="sec-modules-components"><h2>Modules &amp; Components</h2><h3>Modules</h3><div class="grid"><article class="card"><h3>Tests</h3><p><b>Role:</b> Firmware subsystem discovered from source layout.</p><ul><li><code>tests/fixtures/embedded-sample/src/sensor.c</code> <span>implementation</span></li></ul></article></div><h3>Components</h3><div class="grid"><article class="card"><h3>Sensor</h3><p><b>Role:</b> Sensor implementation component.</p><ul><li><code>tests/fixtures/embedded-sample/src/sensor.c</code> <span>implementation</span></li></ul></article></div><h3>User-Defined Data Types</h3><div class="grid"><article class="card"><h3>SensorReading</h3><p><b>Role:</b> Project-defined struct used by firmware components.</p><p><b>Usage:</b> consumes, consumes</p><ul><li><code>tests/fixtures/embedded-sample/src/sensor.c</code> <span>definition</span> line 3</li></ul></article></div><h3>Objects, Lifetime & Ownership</h3><div class="grid"><article class="card"><h3>current_reading</h3><p><b>Role:</b> Runtime instance of SensorReading.</p><pre>{
+  &quot;type&quot;: &quot;sensorreading&quot;,
+  &quot;lifetime&quot;: {
+    &quot;scope&quot;: &quot;firmware&quot;,
+    &quot;startsAt&quot;: &quot;declaration or initialization&quot;,
+    &quot;endsAt&quot;: &quot;reset&quot;,
+    &quot;createdBy&quot;: null,
+    &quot;destroyedBy&quot;: null,
+    &quot;persistsAcrossReset&quot;: false
   },
-  &quot;servers&quot;: [
-    {
-      &quot;url&quot;: &quot;http://localhost:3000&quot;,
-      &quot;description&quot;: &quot;Local Development Server&quot;
+  &quot;ownership&quot;: {
+    &quot;model&quot;: &quot;static&quot;,
+    &quot;owner&quot;: {
+      &quot;kind&quot;: &quot;source-file&quot;,
+      &quot;id&quot;: &quot;tests/fixtures/embedded-sample/src/sensor.c&quot;
     },
-    {
-      &quot;url&quot;: &quot;https://api.arch-wiki.com&quot;,
-      &quot;description&quot;: &quot;Production&quot;
-    }
-  ],
-  &quot;tags&quot;: [
-    {
-      &quot;name&quot;: &quot;System&quot;,
-      &quot;description&quot;: &quot;System health and telemetry endpoints&quot;
-    }
-  ],
-  &quot;paths&quot;: {
-    &quot;/health&quot;: {
-      &quot;get&quot;: {
-        &quot;tags&quot;: [
-          &quot;System&quot;
-        ],
-        &quot;summary&quot;: &quot;Health check endpoint&quot;,
-        &quot;responses&quot;: {
-          &quot;200&quot;: {
-            &quot;description&quot;: &quot;System Operational&quot;
-          }
-        }
-      }
-    }
+    &quot;transferEvents&quot;: []
   },
-  &quot;components&quot;: {
-    &quot;securitySchemes&quot;: {
-      &quot;bearerAuth&quot;: {
-        &quot;type&quot;: &quot;http&quot;,
-        &quot;scheme&quot;: &quot;bearer&quot;,
-        &quot;bearerFormat&quot;: &quot;JWT&quot;,
-        &quot;description&quot;: &quot;Provide your JWT Access Token (Header: Authorization: Bearer &lt;token&gt;)&quot;
+  &quot;storage&quot;: {
+    &quot;location&quot;: &quot;global-data&quot;,
+    &quot;region&quot;: &quot;ram&quot;,
+    &quot;section&quot;: &quot;.bss&quot;,
+    &quot;size&quot;: null
+  }
+}</pre><ul><li><code>tests/fixtures/embedded-sample/src/sensor.c</code> <span>definition</span> line 8</li></ul></article></div></section>
+<section class="section" id="sec-class-diagrams"><h2>Class Diagrams</h2><article class="card"><h3>User-Defined Types</h3><p>Project-defined types and roles.</p><pre class="mermaid">classDiagram
+    class SensorReading {
+        &lt;&lt;struct&gt;&gt;
+        +Project-defined struct used by firmware components.
+    }</pre></article></section>
+<section class="section" id="sec-sequence-diagrams"><h2>Sequence Diagrams</h2><article class="card"><h3>Firmware Startup</h3><p>High-level startup sequence.</p><pre class="mermaid">sequenceDiagram
+    Reset-&gt;&gt;Startup: initialize
+    Startup-&gt;&gt;Application: start</pre></article></section>
+<section class="section" id="sec-interaction-diagrams"><h2>Interaction Diagrams</h2><article class="card"><h3>Firmware Components</h3><p>Detected module boundaries.</p><pre class="mermaid">flowchart LR
+    tests[Tests]</pre></article></section>
+<section class="section" id="sec-state-machines"><h2>State Machines</h2><article class="card"><h3>Device Lifecycle</h3><p>Generic lifecycle pending source-specific review.</p><pre class="mermaid">stateDiagram-v2
+    [*] --&gt; Boot
+    Boot --&gt; Running
+    Running --&gt; Sleep
+    Sleep --&gt; Running</pre></article></section>
+<section class="section" id="sec-flow-charts"><h2>Flow Charts</h2><article class="card"><h3>Firmware Startup</h3><p>Generic startup flow.</p><pre class="mermaid">flowchart TD
+    Reset --&gt; Init
+    Init --&gt; Main</pre></article></section>
+<section class="section" id="sec-data-pipelines"><h2>Data Pipelines</h2><article class="card"><h3>Pipelines</h3><pre>[
+  {
+    &quot;id&quot;: &quot;firmware-data-flow&quot;,
+    &quot;name&quot;: &quot;Firmware Data Flow&quot;,
+    &quot;description&quot;: &quot;Detected flow between firmware modules.&quot;,
+    &quot;stages&quot;: [
+      {
+        &quot;id&quot;: &quot;tests&quot;,
+        &quot;name&quot;: &quot;Tests&quot;,
+        &quot;component&quot;: &quot;tests&quot;,
+        &quot;inputType&quot;: null,
+        &quot;outputType&quot;: &quot;sensorreading&quot;,
+        &quot;objectLifetime&quot;: &quot;module-defined&quot;,
+        &quot;ownership&quot;: &quot;module-owned&quot;
       }
-    },
-    &quot;schemas&quot;: {}
+    ],
+    &quot;edges&quot;: [],
+    &quot;mermaid&quot;: &quot;flowchart LR\n    tests[Tests]\n&quot;
   }
 }</code></pre>
             </div>
@@ -1329,3 +1500,36 @@ flowchart TB
 </script>
 </body>
 </html>
+]</pre></article></section>
+<section class="section" id="sec-build"><h2>Build</h2><article class="card"><h3>Build system</h3><pre>{
+  &quot;system&quot;: {
+    &quot;type&quot;: &quot;PlatformIO&quot;,
+    &quot;files&quot;: [
+      &quot;tests/fixtures/embedded-sample/platformio.ini&quot;
+    ],
+    &quot;buildDirectory&quot;: &quot;build&quot;,
+    &quot;generator&quot;: null
+  },
+  &quot;toolchain&quot;: {
+    &quot;compiler&quot;: null,
+    &quot;linker&quot;: null,
+    &quot;objcopy&quot;: null,
+    &quot;objdump&quot;: null,
+    &quot;targetTriple&quot;: null,
+    &quot;version&quot;: null
+  },
+  &quot;profiles&quot;: [],
+  &quot;targets&quot;: [],
+  &quot;artifacts&quot;: [],
+  &quot;linkerScripts&quot;: [],
+  &quot;commands&quot;: {
+    &quot;configure&quot;: null,
+    &quot;build&quot;: null,
+    &quot;test&quot;: null,
+    &quot;flash&quot;: null,
+    &quot;debug&quot;: null
+  },
+  &quot;flashAndDebug&quot;: {},
+  &quot;staticAnalysis&quot;: [],
+  &quot;ci&quot;: []
+}</pre></article></section></main></div><script>function showTab(id,b){document.querySelectorAll('.section').forEach(x=>x.classList.remove('active'));var x=document.getElementById('sec-'+id);if(x)x.classList.add('active');document.querySelectorAll('.nav-btn').forEach(x=>x.classList.remove('active'));if(b)b.classList.add('active');if(window.mermaid)mermaid.run()}function copyReadme(){navigator.clipboard.writeText(document.getElementById('readme-source').textContent)}document.querySelector('.section').classList.add('active');document.querySelector('.nav-btn').classList.add('active');if(window.mermaid)mermaid.initialize({startOnLoad:false,theme:'dark'})</script></body></html>

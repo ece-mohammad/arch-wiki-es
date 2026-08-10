@@ -1,26 +1,32 @@
-# arch-wiki 🏛️
+# arch-wiki
 
-> **Framework-agnostic architecture documentation skill** — Automatically sync your API modules, endpoints, Docker topology, SQL queries, permissions, and Swagger spec into a beautiful interactive HTML dashboard.
+`arch-wiki` is an embedded firmware architecture documentation skill for AI coding assistants. It scans a firmware repository and generates:
 
-[![Works with Antigravity](https://img.shields.io/badge/Antigravity-✓-blue)](#setup-in-antigravity)
-[![Works with Claude Code](https://img.shields.io/badge/Claude_Code-✓-orange)](#setup-in-claude-code--cursor)
-[![Works with Cursor](https://img.shields.io/badge/Cursor-✓-purple)](#setup-in-claude-code--cursor)
-[![Works with Codex](https://img.shields.io/badge/Codex-✓-green)](#setup-in-openai-codex)
-[![Works with OpenCode](https://img.shields.io/badge/OpenCode-✓-teal)](#setup-in-opencode)
-[![Python 3.8+](https://img.shields.io/badge/Python-3.8+-yellow)](https://python.org)
+- `docs/architecture/architecture.json`: machine-readable architecture metadata.
+- `docs/architecture/architecture.html`: interactive architecture dashboard with the project README and generated diagrams embedded in the output.
 
----
+The tool is embedded-only. It documents firmware and hardware rather than REST APIs, SQL, Swagger, Docker, or backend services.
 
-## What is arch-wiki?
+## Documented Architecture
 
 Turn any backend codebase into an interactive architecture wiki that both developers and AI coding assistants can use.
 
 `arch-wiki` is an AI skill (agent instruction set) that keeps your **living architecture documentation** in perfect sync with your codebase. Every time you add a module, endpoint, permission, SQL query, or Docker service — you invoke the skill, and it:
+The generated files contain:
 
-1. **Reads** your `architecture.json` manifest
-2. **Scans** the changed source files
-3. **Updates** the JSON manifest with new entries
-4. **Regenerates** a fully interactive HTML dashboard
+0. Brief
+1. Project README
+2. Hardware
+3. Configurations
+4. Memory Layout
+5. Modules & Components
+6. Class Diagrams
+7. Sequence Diagrams
+8. Interaction Diagrams
+9. State Machines
+10. Flow Charts
+11. Data Pipelines
+12. Build
 
 The output is a **single self-contained HTML file** with:
 - 📊 Overview stats dashboard
@@ -35,19 +41,26 @@ The output is a **single self-contained HTML file** with:
 - 🗃️ SQL Queries catalog with syntax highlighting
 - 🖥️ Infrastructure services catalog
 - 🛡️ Core Layer & Request Pipeline docs
+Modules, components, and user-defined types include their role and structured source-file references. The type catalog excludes primitive, standard-library, vendor SDK, and RTOS types. User-defined types include their fields, usage roles, modules, components, evidence, and source locations.
 
----
+Created objects include allocation kind, storage location, lifetime, owner, creator, ownership transfers, and release/destruction information. Unproven C/C++ ownership is reported as unknown with a warning rather than guessed.
 
-## 🤖 AI Token & Context Optimization
+The target project's README is embedded in both JSON and HTML at generation time. Regenerate after changing the README. Mermaid is loaded from a CDN when diagrams are rendered, so network access is needed for diagram rendering in a browser.
 
-Beyond serving as an interactive dashboard, `architecture.json` acts as a **machine-readable context index** specifically designed for AI coding assistants (Antigravity, Claude Code, Cursor, Codex, OpenCode, etc.):
+## Supported Projects
 
-- ⚡ **Fast Code Reading:** AI tools can read `docs/architecture/architecture.json` in a **single file view** to immediately understand all API modules, endpoints, database queries, RBAC permissions, and container topologies.
-- 🪙 **Massive Token Savings:** Eliminates the need for AI agents to make dozens of `grep` or file-reading calls across hundreds of source files, saving thousands of prompt tokens and drastically lowering API context consumption.
-- 🎯 **Pinpoint Navigation:** Every endpoint and SQL query in `architecture.json` links directly to its underlying file path (`controller.ts`, `router.py`, `repository.ts`), allowing AI agents to navigate straight to relevant files without scanning the entire repo.
-- 🧠 **Living System Blueprint:** Gives AI models a structured, top-down mental model of your architecture that persists across chat sessions.
+The scanner recognizes common markers for:
 
----
+- Bare-metal C/C++
+- FreeRTOS
+- Zephyr
+- Embedded Linux/device tree
+- PlatformIO
+- CMake
+- Make
+- ESP-IDF
+- STM32CubeMX
+- Rust embedded projects
 
 ## Project Structure
 
@@ -80,52 +93,23 @@ your-project/
 ---
 
 ## Quick Start (Installation & Setup)
+It reads source/header files, build files, linker scripts, map files, device-tree files, Kconfig files, and project README content using only Python's standard library.
 
-### Option A: Install via `npx`
+## Install
 
-#### 1. From Git Repository (Hosted on GitHub/GitLab)
-```bash
-npx github:your-username/arch-wiki
-```
-
-#### 2. From Local Directory (Local Development without publishing)
-```bash
-# Point npx to your local folder:
-npx ./path/to/arch-wiki
-
-# OR run the installer directly with node:
-node ./path/to/arch-wiki/bin/install.js
-
-# OR use npm link for a global 'arch-wiki' command:
-cd path/to/arch-wiki && npm link
-```
-
-#### 3. From NPM Registry (Once published)
 ```bash
 npx arch-wiki
 ```
 
-This automatically registers the `arch-wiki` skill into your AI assistant environment (`Antigravity`, `Claude Code`, `Cursor`, etc.).
-
----
-
-### Option B: Manual File Copy
-
-Copy `SKILL.md` into your AI tool's skills folder:
+For local development:
 
 ```bash
-# Antigravity AI Agent
-mkdir -p ~/.gemini/antigravity/skills/arch-wiki
-cp SKILL.md ~/.gemini/antigravity/skills/arch-wiki/SKILL.md
-
-# Claude Code
-mkdir -p ~/.claude/skills/arch-wiki
-cp SKILL.md ~/.claude/skills/arch-wiki/SKILL.md
+node ./bin/install.js
 ```
 
----
+The installer registers `SKILL.md` and the scanner with supported AI assistant skill locations.
 
-## How to Use
+## Generate Documentation
 
 Once installed, **you never need to run python scripts manually**. Simply open your AI coding assistant and ask:
 
@@ -144,105 +128,106 @@ The AI Assistant will autonomously:
 ### Setup in Antigravity
 
 Copy `SKILL.md` into your Antigravity skills directory:
+From a target firmware project after installing the skill:
 
 ```bash
-# Option A: Copy as a named skill
-cp arch-wiki/SKILL.md ~/.gemini/antigravity/skills/arch-wiki/SKILL.md
-
-# Option B: Use directly from any project folder
-# Just ensure the AI can access this SKILL.md file
+python3 docs/architecture/build_html.py --init
 ```
 
-Then invoke it by referencing the skill in your prompt:
-
-```
-Use the arch-wiki skill. I just added a new [module/endpoint/service].
-```
-
----
-
-### Setup in Claude Code / Cursor
-
-Add `SKILL.md` to your project as a context file. You can either:
-
-**Option A: Add to `.claude/` directory (Claude Code)**
-```bash
-mkdir -p your-project/.claude
-cp arch-wiki/SKILL.md your-project/.claude/arch-wiki.md
-```
-
-**Option B: Add to `.cursor/rules/` (Cursor)**
-```bash
-mkdir -p your-project/.cursor/rules
-cp arch-wiki/SKILL.md your-project/.cursor/rules/arch-wiki.md
-```
-
-Then prompt your AI:
-
-```
-Follow the instructions in .claude/arch-wiki.md / .cursor/rules/arch-wiki.md.
-I just added a new module called [X].
-```
-
----
-
-### Setup in OpenAI Codex
-
-Add the skill as a system instruction or paste it into the Codex context window:
+For subsequent changes:
 
 ```bash
-# Print the skill content to paste into Codex
-cat arch-wiki/SKILL.md
+python3 docs/architecture/build_html.py --sync
 ```
 
-Or reference it as a file in your project and tell Codex:
+The script creates `docs/architecture/` when needed. The first run creates or replaces the generated JSON and HTML files. Subsequent runs rescan the project and regenerate both files.
 
-```
-Read and follow the instructions in arch-wiki/SKILL.md to update
-my architecture documentation.
-```
-
----
-
-### Setup in OpenCode
-
-Add `SKILL.md` to your OpenCode project context:
+To scan a different project from a local checkout:
 
 ```bash
-cp arch-wiki/SKILL.md your-project/arch-wiki.md
+python3 /path/to/arch-wiki/templates/build_html.py --init /path/to/firmware-project
 ```
 
-Then in your OpenCode session:
+The target project must be passed as an existing path. If no target path is supplied, the current working directory is scanned.
 
+The generated dashboard can be opened directly in a browser. Mermaid diagrams require access to the Mermaid CDN referenced by the HTML.
+
+## Manifest Sections
+
+`architecture.json` contains these top-level sections:
+
+| Section | Contents |
+|---|---|
+| `meta` | Project type, languages, detected markers, and generation date |
+| `readme` | Embedded project README content and source metadata |
+| `brief` | System purpose, constraints, and documentation status |
+| `hardware` | MCU, board, peripherals, interfaces, pins, and power metadata |
+| `configurations` | Build profiles, feature flags, Kconfig, and device-tree settings |
+| `memoryLayout` | Linker regions, sections, partitions, stack, heap, and map files |
+| `modules` | Logical firmware subsystems, roles, files, tasks, and type usage |
+| `components` | Concrete source-level drivers, services, HALs, and application units |
+| `dataTypes` | Project-defined structs, enums, unions, typedefs, classes, and traits |
+| `objects` | Created objects, storage, lifetime, ownership, and cleanup metadata |
+| `diagrams` | Class, sequence, interaction, state, and flow diagrams |
+| `dataPipelines` | Detected data movement between firmware modules |
+| `build` | Build system, toolchain, targets, artifacts, and flash/debug metadata |
+
+## Types and Source Traceability
+
+Only project-defined types are documented as `dataTypes`. Primitive types, standard-library types, RTOS types, vendor HAL types, and external dependency types are excluded. They can still appear as field or signature labels.
+
+Each module, component, and user-defined type includes structured file references where detected:
+
+```json
+{
+  "path": "src/sensors/sensor_manager.c",
+  "role": "implementation",
+  "contains": ["sensor_manager_init"],
+  "line": 42
+}
 ```
-Read arch-wiki.md and follow its instructions to update docs/architecture/
-after my recent changes to [module/service/endpoint].
+
+User-defined type entries include:
+
+- The type's firmware role.
+- Fields and references to other project-defined types.
+- Modules and components that use the type.
+- Usage roles such as `produces`, `consumes`, `queues`, `serializes`, or `stores`.
+- Definition and usage files.
+- Evidence and confidence metadata.
+
+## Object Lifetime and Ownership
+
+The `objects` section documents concrete instances and resources created by firmware, including:
+
+- Global and static objects.
+- Stack objects.
+- Heap allocations.
+- RTOS resources such as tasks and queues.
+- Pool-managed objects.
+- Peripheral handles and buffers where detectable.
+
+Each object may include:
+
+- User-defined type reference.
+- Runtime role.
+- Storage location and memory section.
+- Lifetime scope and start/end events.
+- Creator and destruction/release path.
+- Owner and ownership model.
+- Ownership transfers and usage files.
+
+C and C++ ownership cannot always be proven statically. The scanner reports `unknown` ownership and low confidence instead of claiming a transfer or cleanup path without evidence.
+
+## Manual Overrides
+
+Static analysis cannot reliably determine every board detail, safety constraint, or ownership policy. Add an optional file at:
+
+```text
+docs/architecture/embedded-overrides.json
 ```
 
----
-
-### Setup for Any Other AI Tool
-
-The skill is a plain Markdown file. Any AI assistant that can:
-- Read files (`view_file` / `read_file`)
-- Edit JSON files
-- Execute shell commands (`python docs/architecture/build_html.py`)
-
-...can use this skill. Simply provide the contents of `SKILL.md` as the system/context instruction.
-
----
-
-## Simple Usage Examples
-
-Because `arch-wiki` has a zero-dependency codebase scanner, you don't need to write long prompts or manually list your endpoints. Just tell your AI:
-
-### Initial Setup
-> 💬 *"Run `@arch-wiki` to generate architecture documentation for this project."*
-
-### After Codebase Changes
-> 💬 *"Run `@arch-wiki` to sync my architecture documentation with recent changes."*
-
-The AI assistant will automatically run the codebase scanner, detect any new or updated endpoints, permissions, SQL queries, or Docker containers, and re-render `architecture.html`.
+Use it to provide board/MCU details, pin mappings, power and timing requirements, memory partitions, module/component roles, user-defined type relationships, object ownership, diagrams, and flash/debug commands. The example format is in `templates/embedded-overrides.example.json`.
 
 ### 🤖 Interactive Senior Developer Endpoint Analysis Prompts
 
@@ -257,8 +242,9 @@ The prompt is dynamically formatted for the selected endpoint (e.g. `POST /api/v
 Includes a 1-click **📋 Copy to Clipboard** button directly on every endpoint card and inside the modal for instant integration with AI assistants.
 
 ---
+Override values are merged after scanner output. Lists containing objects with an `id` replace matching generated entries; object values extend generated sections. Invalid override JSON is reported in the generated manifest warnings.
 
-## architecture.json Schema Reference
+## Project Structure
 
 | Section | Purpose |
 |---|---|
@@ -313,8 +299,21 @@ The generated `architecture.html` includes 11 navigation sections:
 | 🔄 **Request Pipeline** | Step-by-step request flow visualization |
 | 📄 **PDF Export** | 1-click PDF generator that forces pre-rendering of diagrams, Swagger views, and scope mappings |
 
+```text
+arch-wiki/
+├── SKILL.md
+├── README.md
+├── bin/install.js
+├── templates/
+│   ├── architecture.json
+│   ├── architecture.html
+│   ├── build_html.py
+│   └── embedded-overrides.example.json
+└── plans/
+    └── embedded-arch-wiki.md
+```
 
----
+## Limitations
 
 ## Benchmark
 
@@ -373,28 +372,17 @@ Therefore, the next step is to measure **accuracy**, not just exploration reduct
 
 
 ## Requirements
+The scanner is intentionally dependency-free and evidence-based. It does not replace a compiler, linker, static analyzer, or hardware review. Complex macro-generated types, custom allocators, ownership conventions, electrical constraints, and generated diagrams may require manual overrides.
 
-- **Python 3.8+** (only standard library — `json`, `re`, `os`, `sys`, `datetime` — no `pip install` needed)
-- **Any AI assistant** that can read/write files and run shell commands
-- **Docker is optional** — if `dockerDiagram.nodes` is empty, the Docker tab shows a friendly placeholder
+Current analysis is intentionally conservative:
 
----
+- Hardware values are extracted only from recognizable source/configuration markers.
+- Detailed pin maps, clock trees, power budgets, and runtime configuration require explicit source evidence or overrides.
+- C/C++ ownership is uncertain when custom allocators, callbacks, or pointer conventions obscure responsibility.
+- Generated diagrams are starting points and should be reviewed against the firmware.
+- The built-in Markdown renderer covers common README constructs, not the complete Markdown specification.
+- The generator uses only the Python standard library; no third-party Python package is required.
 
 ## License
 
-MIT — Use freely in any project.
-
----
-
-## Contributing
-
-To extend or adapt this skill:
-
-1. Edit `SKILL.md` to add new sections or update instructions
-2. Edit `templates/build_html.py` to add new dashboard sections
-3. Update `templates/architecture.json` with new schema fields
-4. Update this `README.md`
-
----
-
-*Built with ❤️ for developers who want their architecture docs to stay alive.*
+MIT.

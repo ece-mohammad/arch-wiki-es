@@ -1,5 +1,8 @@
-import json
+#!/usr/bin/env python3
+"""Embedded firmware architecture scanner and dashboard generator."""
+import datetime
 import html
+import json
 import os
 import re
 import sys
@@ -288,21 +291,12 @@ def _scan_express(root):
             fp = os.path.join(src, fn)
             if not os.path.isfile(fp): continue
             txt = open(fp, encoding='utf-8', errors='ignore').read()
+from pathlib import Path
 
-            # Find imports: import authRoutes from './routes/auth.routes.js';
-            for m in re.finditer(r"import\s+(\w+)\s+from\s+['\"]([^'\"]+)['\"]", txt):
-                var_name, import_path = m.group(1), m.group(2)
-                file_key = os.path.basename(import_path).replace('.js','').replace('.ts','').replace('.routes','')
-                var_to_file[var_name] = file_key
+SKIP = {".git", "node_modules", "build", "dist", "target", "out", "__pycache__", ".venv", "venv"}
+EXTENSIONS = {".c", ".h", ".cc", ".cpp", ".cxx", ".hpp", ".rs", ".S", ".s"}
+STANDARD = {"void", "bool", "char", "short", "int", "long", "float", "double", "size_t", "ptrdiff_t", "intptr_t", "uintptr_t", "int8_t", "uint8_t", "int16_t", "uint16_t", "int32_t", "uint32_t", "int64_t", "uint64_t", "usize", "isize", "String", "str", "Option", "Result", "Vec", "Box", "Rc", "Arc", "TaskHandle_t", "QueueHandle_t", "SemaphoreHandle_t", "BaseType_t", "TickType_t", "HAL_StatusTypeDef", "GPIO_TypeDef", "UART_HandleTypeDef", "SPI_HandleTypeDef", "k_tid_t", "esp_err_t"}
 
-            # Find app.use('/api/v1/auth', authRoutes)
-            for m in re.finditer(r"app\.use\(['\"]([^'\"]+)['\"]\s*,\s*(\w+)\)", txt):
-                bpath, var_name = m.group(1).rstrip('/'), m.group(2)
-                if var_name in var_to_file:
-                    base_paths[var_to_file[var_name]] = bpath
-                else:
-                    file_key = var_name.replace('Routes','').replace('Router','').lower()
-                    base_paths[file_key] = bpath
 
     # Walk directory to collect all route files (exclude dist, build, node_modules)
     route_files = []
@@ -388,196 +382,240 @@ def _scan_express(root):
             'permissions': perms, 'endpoints': eps
         })
     return modules
+def text(path):
+    try:
+        return path.read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return ""
 
-def _scan_fastapi(root):
-    app_prefixes = {}
-    for r, _, fls in os.walk(root):
-        norm_r = r.replace('\\', '/')
-        if any(x in norm_r for x in ['/__pycache__/', '/venv/', '/.git/', '/tests/', '/test/', '/node_modules/']):
+
+def rel(path, root):
+    return str(path.relative_to(root)).replace(os.sep, "/")
+
+
+def files(root):
+    for current, dirs, names in os.walk(root):
+        dirs[:] = [d for d in dirs if d not in SKIP and not d.startswith(".")]
+        for name in names:
+            path = Path(current) / name
+            if path.suffix in EXTENSIONS or path.name in {"README.md", "platformio.ini", "CMakeLists.txt", "Makefile", "Kconfig", "prj.conf", "sdkconfig", "sdkconfig.defaults", "Cargo.toml", "west.yml"} or path.suffix in {".ld", ".dts", ".dtsi", ".overlay", ".ioc", ".map"}:
+                yield path
+
+
+def source_file(path, root, role="source", contains=None, line=None):
+    result = {"path": rel(path, root), "role": role}
+    if contains:
+        result["contains"] = sorted(set(contains))
+    if line:
+        result["line"] = line
+    return result
+
+
+def unique(items):
+    result, seen = [], set()
+    for item in items:
+        key = json.dumps(item, sort_keys=True)
+        if key not in seen:
+            result.append(item)
+            seen.add(key)
+    return result
+
+
+def by_id(items):
+    return list({item["id"]: item for item in items}.values())
+
+
+def safe_id(value):
+    value = re.sub(r"[^A-Za-z0-9_]", "_", str(value))
+    return value if value and value[0].isalpha() else "node_" + value
+
+
+def readme(root):
+    path = next((root / name for name in ("README.md", "readme.md", "README.rst", "README.txt") if (root / name).is_file()), None)
+    if not path:
+        return {"path": "README.md", "title": root.name, "content": "", "exists": False, "source": "project-readme"}
+    content = text(path)
+    title = re.search(r"^#\s+(.+)$", content, re.MULTILINE)
+    return {"path": rel(path, root), "title": title.group(1).strip() if title else root.name, "content": content, "exists": True, "lastModified": datetime.date.fromtimestamp(path.stat().st_mtime).isoformat(), "source": "project-readme"}
+
+
+def detect(records):
+    names = {path.name for path, _ in records}
+    joined = "\n".join(content for _, content in records)
+    markers = []
+    checks = (("PlatformIO", "platformio.ini" in names), ("CMake", "CMakeLists.txt" in names), ("Make", "Makefile" in names), ("Zephyr", "west.yml" in names or "zephyr" in joined.lower()), ("ESP-IDF", "sdkconfig" in names or "idf.py" in joined), ("FreeRTOS", "FreeRTOS.h" in joined or "xTaskCreate" in joined), ("STM32CubeMX", any(p.suffix == ".ioc" for p, _ in records)), ("Device Tree", any(p.suffix in {".dts", ".dtsi", ".overlay"} for p, _ in records)), ("Embedded toolchain", "arm-none-eabi" in joined or "riscv" in joined.lower()), ("Rust", "Cargo.toml" in names))
+    markers = [name for name, present in checks if present]
+    kind = "rtos" if "FreeRTOS" in markers or "Zephyr" in markers else "embedded-linux" if "Device Tree" in markers else "bare-metal" if markers else "unknown"
+    return {"projectType": kind, "markers": markers, "isEmbedded": bool(markers)}
+
+
+def brief(readme_data, project):
+    paragraphs = [re.sub(r"[`*_#]", "", part).strip() for part in readme_data.get("content", "").split("\n\n") if part.strip() and not part.lstrip().startswith("#")]
+    summary = paragraphs[0][:1000] if paragraphs else "Embedded firmware architecture"
+    return {"purpose": summary[:300], "systemType": project["projectType"], "summary": summary, "operatingEnvironment": [], "primaryResponsibilities": [], "constraints": [], "safetyAndReliability": [], "powerRequirements": [], "timingRequirements": [], "documentationStatus": "generated", "sourceFiles": [readme_data["path"]] if readme_data["exists"] else []}
+
+
+def hardware(records, root):
+    joined = "\n".join(content for _, content in records)
+    target = {}
+    for key, pattern in (("mcu", r"\b(STM32[A-Z0-9]+|ESP32[A-Z0-9-]*|nRF\w+|RP2040|SAMD\w+|MSP430\w+)\b"), ("architecture", r"\b(ARM Cortex-M[0-9A-Za-z]*|Cortex-A\w*|RISC-V|AVR|Xtensa)\b")):
+        match = re.search(pattern, joined, re.I)
+        if match:
+            target[key] = match.group(1)
+    peripheral_patterns = {"i2c": r"\b(I2C\w*)\b", "spi": r"\b(SPI\w*)\b", "uart": r"\b(UART\w*|USART\w*)\b", "can": r"\b(CAN\w*)\b", "adc": r"\b(ADC\w*)\b", "pwm": r"\b(PWM\w*)\b", "usb": r"\b(USB\w*)\b", "gpio": r"\b(GPIO\w*)\b", "dma": r"\b(DMA\w*)\b", "timer": r"\b(TIM\w*|TIMER\w*)\b"}
+    peripherals, seen = [], set()
+    for kind, pattern in peripheral_patterns.items():
+        match = re.search(pattern, joined, re.I)
+        if match and match.group(1).upper() not in seen:
+            seen.add(match.group(1).upper())
+            peripherals.append({"id": match.group(1).lower(), "name": match.group(1), "type": kind, "source": "scanner"})
+    config_files = [rel(path, root) for path, _ in records if path.name in {"platformio.ini", "CMakeLists.txt", "prj.conf", "sdkconfig"} or path.suffix in {".ioc", ".dts", ".overlay"}]
+    return {"target": target, "power": {"operatingVoltage": None, "sleepModes": [], "powerBudget": {}}, "peripherals": peripherals, "pinMappings": [], "sensors": [], "actuators": [], "communication": [], "debugInterfaces": [], "clockTree": {}, "sourceFiles": config_files}
+
+
+def configurations(records, root):
+    sources, flags = [], []
+    for path, content in records:
+        if path.name in {"platformio.ini", "CMakeLists.txt", "Makefile", "Kconfig", "prj.conf", "sdkconfig", "sdkconfig.defaults", "Cargo.toml"} or path.suffix in {".cmake", ".config"}:
+            sources.append(rel(path, root))
+        for match in re.finditer(r"(?:-D|#define\s+)([A-Z][A-Z0-9_]+)(?:\s+([^\s]+))?", content):
+            if match.group(1) not in {"NULL", "TRUE", "FALSE"}:
+                flags.append({"id": safe_id(match.group(1)).lower(), "name": match.group(1), "value": match.group(2), "source": rel(path, root), "role": "feature flag or compile definition"})
+    profiles = []
+    for name, label in (("platformio.ini", "PlatformIO environment"), ("CMakeLists.txt", "CMake build"), ("Makefile", "Make build"), ("west.yml", "Zephyr west build"), ("Cargo.toml", "Cargo build")):
+        if (root / name).exists():
+            profiles.append({"id": safe_id(label.lower()), "name": label, "source": name})
+    return {"buildProfiles": profiles, "featureFlags": by_id(flags), "runtimeConfiguration": [], "kconfigOptions": [], "deviceTreeOverlays": [rel(p, root) for p, _ in records if p.suffix == ".overlay"], "generatedFiles": [], "configurationSources": sorted(set(sources))}
+
+
+def memory_layout(records, root):
+    regions, scripts, maps = [], [], []
+    for path, content in records:
+        if path.suffix == ".ld":
+            scripts.append(rel(path, root))
+            for match in re.finditer(r"(FLASH|RAM|SRAM|EEPROM)\s*\([^)]*ORIGIN\s*=\s*([^,]+),\s*LENGTH\s*=\s*([^\)]+)", content, re.I):
+                regions.append({"id": match.group(1).lower(), "name": match.group(1), "type": "flash" if "flash" in match.group(1).lower() else "ram", "origin": match.group(2).strip(), "length": match.group(3).strip(), "source": rel(path, root)})
+        if path.suffix == ".map":
+            maps.append(rel(path, root))
+    return {"addressWidth": 32, "regions": regions, "sections": [], "partitions": [], "stack": {}, "heap": {}, "specialAreas": [], "linkerScripts": scripts, "mapFiles": maps, "usage": {}}
+
+
+def type_is_project(name, path):
+    return bool(re.match(r"^[A-Za-z_]\w*$", name)) and name not in STANDARD and not any(h in name for h in ("HAL_", "_TypeDef", "FreeRTOS", "esp_", "k_", "nrfx", "nrf_")) and path.name not in {"stdint.h", "stddef.h", "stdbool.h"}
+
+
+def data_types(records, root):
+    result, definitions = {}, []
+    patterns = (("struct", r"\btypedef\s+struct(?:\s+\w+)?\s*\{[^}]*\}\s*(\w+)\s*;|\bstruct\s+(\w+)\s*\{"), ("union", r"\btypedef\s+union(?:\s+\w+)?\s*\{[^}]*\}\s*(\w+)\s*;|\bunion\s+(\w+)\s*\{"), ("enum", r"\btypedef\s+enum(?:\s+\w+)?\s*\{[^}]*\}\s*(\w+)\s*;|\benum\s+(\w+)\s*\{"), ("typedef", r"\btypedef\s+[A-Za-z_]\w*\s+(\w+)\s*;"), ("class", r"\bclass\s+(\w+)\s*[:{]"), ("struct", r"\bstruct\s+(\w+)\s*[<{]"), ("enum", r"\benum\s+(\w+)\s*[<{]"), ("trait", r"\btrait\s+(\w+)\s*[<{]"))
+    for path, content in records:
+        if path.suffix not in EXTENSIONS:
             continue
-        for f in fls:
-            if f.endswith('.py'):
-                fp = os.path.join(r, f)
-                txt = open(fp, encoding='utf-8', errors='ignore').read()
-                for m in re.finditer(r"include_router\s*\(\s*(\w+)\s*,[\s\S]*?prefix=['\"]([^'\"]+)['\"]", txt):
-                    router_var, pfx = m.group(1), m.group(2)
-                    key = router_var.replace('_router', '').replace('router', '').lower()
-                    app_prefixes[key] = pfx
+        for kind, pattern in patterns:
+            for match in re.finditer(pattern, content, re.S):
+                name = next((group for group in reversed(match.groups()) if group), None)
+                if not name or not type_is_project(name, path):
+                    continue
+                line = content.count("\n", 0, match.start()) + 1
+                item = result.setdefault(name, {"id": safe_id(name).lower(), "name": name, "kind": kind, "language": "Rust" if path.suffix == ".rs" else "C/C++", "userDefined": True, "ownership": "project", "role": f"Project-defined {kind} used by firmware components.", "description": "", "files": [], "fields": [], "usedByModules": [], "usedByComponents": [], "usage": [], "objectInstances": [], "source": "scanner", "confidence": "medium", "evidence": []})
+                item["files"].append(source_file(path, root, "definition", [name], line)); item["evidence"].append({"file": rel(path, root), "line": line, "reason": "user-defined type declaration"}); definitions.append((name, path, content, line))
+    names = set(result)
+    for name, path, content, _ in definitions:
+        item = result[name]
+        for other in names - {name}:
+            for match in re.finditer(r"\b" + re.escape(other) + r"\b", content):
+                line = content.count("\n", 0, match.start()) + 1
+                item["usage"].append({"role": "references", "usageType": "source-reference", "type": "user-defined", "files": [source_file(path, root, "usage", [other], line)]})
+        start = content.rfind("{", 0, content.find(name))
+        end = content.find("}", start) if start >= 0 else -1
+        if end > start:
+            for field in re.finditer(r"(?:^|;)\s*([A-Za-z_]\w*)\s+([A-Za-z_]\w*)\s*(?=;|$)", content[start:end], re.M):
+                field_type, field_name = field.groups()
+                item["fields"].append({"name": field_name, "type": field_type, "typeReference": result.get(field_type, {}).get("id"), "role": "User-defined field" if field_type in result else "Field"})
+    for item in result.values():
+        item["files"], item["usage"], item["evidence"] = unique(item["files"]), unique(item["usage"]), unique(item["evidence"])
+    return list(result.values())
 
-    route_files = []
-    for r, _, files in os.walk(root):
-        norm_r = r.replace('\\', '/')
-        if any(x in norm_r for x in ['/__pycache__/', '/venv/', '/.git/', '/tests/', '/test/', '/node_modules/']):
+
+def modules(records, root, types):
+    groups = {}
+    for path, content in records:
+        if path.suffix not in EXTENSIONS:
             continue
-        for f in files:
-            if f.endswith('.py') and not f.startswith('test_') and f != '__init__.py':
-                route_files.append(os.path.join(r, f))
+        parts = Path(rel(path, root)).parts
+        module = parts[1] if len(parts) > 2 and parts[0] in {"src", "app", "lib", "firmware", "components"} else parts[0] if len(parts) > 1 else "firmware"
+        module = safe_id(module).lower()
+        item = groups.setdefault(module, {"id": module, "name": module.replace("_", " ").title(), "type": "application", "role": "Firmware subsystem discovered from source layout.", "description": "", "files": [], "components": [], "dataTypes": [], "dependencies": [], "configurationRefs": [], "tasks": [], "interrupts": [], "timers": [], "queues": [], "objects": [], "source": "scanner", "confidence": "medium", "evidence": []})
+        symbols = re.findall(r"\b(?:void|bool|int|uint\w*|int\w*|static\s+\w+)\s+(\w+)\s*\(", content)
+        item["files"].append(source_file(path, root, "implementation", symbols[:30])); item["evidence"].append({"file": rel(path, root), "line": 1, "reason": "source layout"})
+        for type_item in types:
+            if re.search(r"\b" + re.escape(type_item["name"]) + r"\b", content):
+                item["dataTypes"].append({"id": type_item["id"], "role": "uses"})
+        for match in re.finditer(r"\b(xTaskCreate(?:Static)?|k_thread_create)\b", content):
+            item["tasks"].append({"name": match.group(1), "file": rel(path, root), "line": content.count("\n", 0, match.start()) + 1})
+    for item in groups.values():
+        item["files"], item["dataTypes"], item["evidence"] = unique(item["files"]), unique(item["dataTypes"]), unique(item["evidence"])
+    return list(groups.values())
 
-    modules = []
-    for idx, rf in enumerate(sorted(set(route_files))):
-        txt = open(rf, encoding='utf-8', errors='ignore').read()
-        if not re.search(r"@(?:router|app|api)\.(get|post|put|patch|delete)", txt, re.IGNORECASE):
+
+def components(modules_data):
+    output = []
+    for module in modules_data:
+        for item in module["files"]:
+            stem = Path(item["path"]).stem
+            lower = stem.lower()
+            kind = "driver" if any(x in lower for x in ("driver", "hal", "gpio", "uart", "spi", "i2c")) else "service" if any(x in lower for x in ("manager", "service", "storage")) else "application"
+            output.append({"id": safe_id(stem).lower(), "name": stem.replace("_", " ").title(), "type": kind, "language": "Rust" if stem.endswith("rs") else "C/C++", "role": f"{stem.replace('_', ' ').title()} implementation component.", "description": "", "files": [item], "publicHeaders": [], "provides": item.get("contains", []), "consumes": [], "dependencies": [], "dataTypes": module["dataTypes"], "objects": [], "interrupts": [], "configurationRefs": [], "source": "scanner", "confidence": "medium", "evidence": module["evidence"][:3], "module": module["id"]})
+    return by_id(output)
+
+
+def objects(records, root, types):
+    known = {item["name"]: item for item in types}; output = []
+    for path, content in records:
+        if path.suffix not in EXTENSIONS:
             continue
-        fn = os.path.basename(rf)
-        raw = re.sub(r'\.py$', '', fn)
-        name = raw.replace('_', ' ').title()
-        mid = raw.lower().replace('-', '_')
-
-        pm = re.search(r"APIRouter\([\s\S]*?prefix=['\"]([^'\"]+)['\"]", txt)
-        bp = pm.group(1) if pm else app_prefixes.get(mid, f"/api/{raw.replace('_', '-')}")
-
-        eps = []
-        seen = set()
-        for m in re.finditer(r"@(?:router|app|api)\.(get|post|put|patch|delete)\s*\(\s*['\"]([^'\"]*)['\"]", txt, re.IGNORECASE):
-            method, path = m.group(1).upper(), m.group(2) or '/'
-            key_ep = f"{method}:{path}"
-            if key_ep in seen:
+        for match in re.finditer(r"\b(static\s+)?([A-Z][A-Za-z0-9_]*)\s+(\w+)\s*(?:[=;{])", content):
+            type_name, name = match.group(2), match.group(3)
+            if type_name not in known:
                 continue
-            seen.add(key_ep)
-
-            auth = ('Depends' in txt or 'get_current_user' in txt or 'require_' in txt or 'Security' in txt)
-            eps.append({
-                'method': method,
-                'path': path,
-                'auth': auth,
-                'permission': None,
-                'description': _infer_desc(method, path, name)
-            })
-
-        if eps:
-            modules.append({
-                'id': mid,
-                'name': name,
-                'basePath': bp,
-                'description': f"{name} API — {len(eps)} endpoint(s)",
-                'color': _color(raw, idx),
-                'icon': _icon(raw),
-                'files': [fn],
-                'permissions': [],
-                'endpoints': eps
-            })
-    return modules
-
-def _detect_arch_type(root, fw):
-    """
-    Determines whether the codebase architecture is:
-      - 'monolith': Single-module project (e.g. standard Spring MVC war/jar with single src/main/java)
-      - 'modular_monolith': Multi-module repo (e.g. Maven pom.xml with <modules> or subfolder services without docker)
-      - 'microservice': Multi-service project with docker-compose or microservices architecture
-    """
-    # Check docker-compose first
-    for name in ['docker-compose.yml', 'docker-compose.yaml', 'compose.yml', 'compose.yaml']:
-        if os.path.isfile(os.path.join(root, name)):
-            try:
-                txt = open(os.path.join(root, name), encoding='utf-8', errors='ignore').read()
-                if 'services:' in txt:
-                    return 'microservice'
-            except: pass
-
-    # Check Maven pom.xml for <modules>
-    pom_path = os.path.join(root, 'pom.xml')
-    if os.path.isfile(pom_path):
-        try:
-            txt = open(pom_path, encoding='utf-8', errors='ignore').read()
-            if '<modules>' in txt and '</modules>' in txt:
-                return 'modular_monolith'
-        except: pass
-
-    # Check Gradle build.gradle / settings.gradle
-    settings_gradle = os.path.join(root, 'settings.gradle')
-    if os.path.isfile(settings_gradle):
-        try:
-            txt = open(settings_gradle, encoding='utf-8', errors='ignore').read()
-            if 'include ' in txt or 'include(' in txt:
-                return 'modular_monolith'
-        except: pass
-
-    # Check top-level directories for multiple src/main/java sub-projects
-    subdirs_with_src = 0
-    for item in os.listdir(root):
-        item_path = os.path.join(root, item)
-        if os.path.isdir(item_path) and item not in ('src', 'target', 'docs', 'templates', '.git', '.idea', '.settings', 'workflow_Alfresco', 'model', 'scanner'):
-            if os.path.isfile(os.path.join(item_path, 'pom.xml')) or os.path.isdir(os.path.join(item_path, 'src', 'main', 'java')):
-                subdirs_with_src += 1
-
-    if subdirs_with_src > 1:
-        return 'modular_monolith'
-
-    return 'monolith'
+            line = content.count("\n", 0, match.start()) + 1; is_static = bool(match.group(1))
+            output.append({"id": safe_id(name).lower(), "name": name, "typeReference": known[type_name]["id"], "kind": "static" if is_static else "stack", "role": f"Runtime instance of {type_name}.", "lifetime": {"scope": "firmware" if is_static else "function", "startsAt": "declaration or initialization", "endsAt": "reset" if is_static else "function return", "createdBy": None, "destroyedBy": None, "persistsAcrossReset": False}, "ownership": {"model": "static" if is_static else "stack-owned", "owner": {"kind": "source-file", "id": rel(path, root)}, "transferEvents": []}, "storage": {"location": "global-data" if is_static else "stack", "region": "ram", "section": ".bss" if is_static else "stack", "size": None}, "creation": {"function": None, "file": rel(path, root), "line": line}, "usage": [], "files": [source_file(path, root, "definition", [name], line)], "source": "scanner", "confidence": "medium", "evidence": [{"file": rel(path, root), "line": line, "reason": "project-defined object instance"}]})
+        for match in re.finditer(r"\b(malloc|calloc|realloc|xQueueCreate(?:Static)?|xTaskCreate(?:Static)?)\s*\(", content):
+            line = content.count("\n", 0, match.start()) + 1; dynamic = match.group(1) in {"malloc", "calloc", "realloc"}
+            output.append({"id": f"{match.group(1).lower()}_{line}", "name": match.group(1), "typeReference": None, "kind": "heap" if dynamic else "rtos", "role": f"Created resource from {match.group(1)}.", "lifetime": {"scope": "heap-allocation" if dynamic else "task", "startsAt": "creation call", "endsAt": "unknown", "createdBy": None, "destroyedBy": None, "persistsAcrossReset": False}, "ownership": {"model": "unknown", "owner": {"kind": "unknown", "id": "unknown"}, "transferEvents": []}, "storage": {"location": "heap" if dynamic else "rtos-managed", "region": "ram", "section": None, "size": None}, "creation": {"function": None, "file": rel(path, root), "line": line}, "usage": [], "files": [source_file(path, root, "creation", [match.group(1)], line)], "source": "scanner", "confidence": "low", "evidence": [{"file": rel(path, root), "line": line, "reason": "allocation or RTOS creation call"}]})
+    return by_id(output)
 
 
-def _scan_screens_java(root):
-    """Scan webapp, templates, static, public for HTML/JSP screen files."""
-    screens = []
-    scan_dirs = []
-    for sub in ['src/main/webapp', 'src/main/resources/templates', 'src/main/resources/static', 'src/main/resources/public', 'webapp', 'public']:
-        p = os.path.join(root, sub)
-        if os.path.isdir(p):
-            scan_dirs.append(p)
-    
-    for sdir in scan_dirs:
-        for r, _, fls in os.walk(sdir):
-            norm_r = r.replace('\\', '/')
-            if any(x in norm_r for x in ['/node_modules/', '/WEB-INF/lib/', '/WEB-INF/classes/']):
-                continue
-            for f in fls:
-                if f.endswith(('.html', '.jsp', '.xhtml', '.ftl', '.vm')):
-                    rf = os.path.join(r, f)
-                    rel = os.path.relpath(rf, root).replace('\\', '/')
-                    screens.append({'name': f, 'path': rel, 'dir': os.path.basename(r)})
-    return screens
+def pipelines(modules_data, types_data):
+    if not modules_data:
+        return []
+    stages = []
+    for module in modules_data[:8]:
+        type_ref = module.get("dataTypes", [{}])[0].get("id") if module.get("dataTypes") else None
+        stages.append({"id": safe_id(module["id"]).lower(), "name": module["name"], "component": module["id"], "inputType": None, "outputType": type_ref, "objectLifetime": "module-defined", "ownership": "module-owned"})
+    edges = [{"from": stages[index]["id"], "to": stages[index + 1]["id"], "label": "data flow"} for index in range(len(stages) - 1)]
+    mermaid = "flowchart LR\n" + "\n".join(f"    {safe_id(stage['id'])}[{stage['name']}]" for stage in stages)
+    mermaid += "\n" + "\n".join(f"    {edge['from']} -->|{edge['label']}| {edge['to']}" for edge in edges)
+    return [{"id": "firmware-data-flow", "name": "Firmware Data Flow", "description": "Detected flow between firmware modules.", "stages": stages, "edges": edges, "mermaid": mermaid}]
 
 
-def _scan_java_spring(root, arch_type=None):
-    if not arch_type:
-        arch_type = _detect_arch_type(root, 'spring')
+def link_type_usage(types_data, modules_data, components_data):
+    for item in types_data:
+        module_ids = [module["id"] for module in modules_data if any(ref.get("id") == item["id"] for ref in module.get("dataTypes", []))]
+        component_ids = [component["id"] for component in components_data if any(ref.get("id") == item["id"] for ref in component.get("dataTypes", []))]
+        item["usedByModules"] = [{"id": module_id, "role": "uses"} for module_id in module_ids]
+        item["usedByComponents"] = [{"id": component_id, "role": "uses"} for component_id in component_ids]
+        item["usage"] = unique(item.get("usage", []) + [{"role": "consumes", "module": module_id, "description": "Referenced by module source files."} for module_id in module_ids] + [{"role": "consumes", "component": component_id, "description": "Referenced by component source files."} for component_id in component_ids])
 
-    all_screens = _scan_screens_java(root)
-    files = []
-    for r, _, fls in os.walk(root):
-        norm_r = r.replace('\\', '/')
-        if '/target/' in norm_r or '/.idea/' in norm_r or '/build/' in norm_r or '/.git/' in norm_r or '/test/' in norm_r:
-            continue
-        for f in fls:
-            if f.endswith('.java'):
-                files.append(os.path.join(r, f))
 
-    mod_map = {}
-    for rf in sorted(files):
-        txt = open(rf, encoding='utf-8', errors='ignore').read()
-        if not ('@RestController' in txt or '@Controller' in txt):
-            continue
+def build(records, root):
+    names = {p.name for p, _ in records}; system = "PlatformIO" if "platformio.ini" in names else "CMake" if "CMakeLists.txt" in names else "Make" if "Makefile" in names else "west" if "west.yml" in names else "Cargo" if "Cargo.toml" in names else "custom"
+    build_files = [rel(p, root) for p, _ in records if p.name in {"platformio.ini", "CMakeLists.txt", "Makefile", "west.yml", "Cargo.toml"} or p.suffix == ".ld"]
+    return {"system": {"type": system, "files": build_files, "buildDirectory": "build", "generator": None}, "toolchain": {"compiler": None, "linker": None, "objcopy": None, "objdump": None, "targetTriple": None, "version": None}, "profiles": [], "targets": [], "artifacts": [], "linkerScripts": [x for x in build_files if x.endswith(".ld")], "commands": {"configure": None, "build": None, "test": None, "flash": None, "debug": None}, "flashAndDebug": {}, "staticAnalysis": [], "ci": []}
 
-        fn = os.path.basename(rf)
-        raw_name = fn.replace('Controller.java', '').replace('.java', '')
-        
-        rel = os.path.relpath(rf, root).replace('\\', '/')
-        top_folder = rel.split('/')[0] if '/' in rel else raw_name.lower()
-        is_monolith = (arch_type == 'monolith') or (top_folder in ('src', 'main', 'java', 'app', 'backend', 'server', '.'))
 
-        if is_monolith:
-            mid = raw_name.lower().replace('-', '_')
-            svc_title = re.sub(r'([a-z])([A-Z])', r'\1 \2', raw_name).title()
-        else:
-            mid = top_folder
-            svc_title = mid.replace('-service', '').replace('_service', '').replace('-', ' ').title()
-
-        name = svc_title
-
-        bp_match = re.search(r'public\s+class\s+\w+[\s\S]*', txt)
-        header_part = txt[:bp_match.start()] if bp_match else txt
-        bp_m = re.search(r'@RequestMapping\s*\(\s*(?:value\s*=\s*|path\s*=\s*)?["\']([^"\']+)["\']', header_part)
-
-        if is_monolith:
-            base_path = bp_m.group(1) if bp_m else f"/{raw_name.lower()}"
-        else:
-            base_path = bp_m.group(1) if bp_m else (f"/{raw_name.lower()}" if mid != top_folder else f"/{top_folder.replace('-service','')}")
-
-        if not base_path.startswith('/'):
-            base_path = '/' + base_path
-
-        eps = []
-        seen = set()
+def diagrams(types, modules):
+    classes = "classDiagram\n" + "\n".join(f"    class {safe_id(t['name'])} {{\n        <<{t['kind']}>>\n        +{t['role'][:60]}\n    }}" for t in types[:40])
+    return {"classDiagrams": [{"id": "user-defined-types", "title": "User-Defined Types", "description": "Project-defined types and roles.", "source": "generated", "mermaid": classes}], "sequenceDiagrams": [{"id": "startup", "title": "Firmware Startup", "description": "High-level startup sequence.", "source": "generated", "mermaid": "sequenceDiagram\n    Reset->>Startup: initialize\n    Startup->>Application: start"}], "interactionDiagrams": [{"id": "components", "title": "Firmware Components", "description": "Detected module boundaries.", "source": "generated", "mermaid": "flowchart LR\n" + "\n".join(f"    {safe_id(m['id'])}[{m['name']}]" for m in modules[:30])}], "stateMachines": [{"id": "device-lifecycle", "title": "Device Lifecycle", "description": "Generic lifecycle pending source-specific review.", "source": "generated", "mermaid": "stateDiagram-v2\n    [*] --> Boot\n    Boot --> Running\n    Running --> Sleep\n    Sleep --> Running"}], "flowCharts": [{"id": "startup", "title": "Firmware Startup", "description": "Generic startup flow.", "source": "generated", "mermaid": "flowchart TD\n    Reset --> Init\n    Init --> Main"}]}
 
         def _get_perm(snip):
             pm = re.search(r'@PreAuthorize\s*\(\s*"([^"]+)"\s*\)', snip) or re.search(r"@PreAuthorize\s*\(\s*'([^']+)'\s*\)", snip)
@@ -3863,3 +3901,88 @@ if __name__ == '__main__':
 
     generate_html(data, arch_dir)
     print(f"[arch-wiki] Done. Open {os.path.join(arch_dir, 'architecture.html')} in your browser.")
+
+def init_architecture(target_root=None):
+    root = Path(target_root or os.getcwd()).resolve(); records = [(p, text(p)) for p in files(root)]; project = detect(records); readme_data = readme(root); types = data_types(records, root); module_data = modules(records, root, types); component_data = components(module_data)
+    link_type_usage(types, module_data, component_data)
+    data = {"meta": {"displayName": root.name.replace("-", " ").replace("_", " ").title(), "version": "1.0.0", "description": "Embedded firmware architecture map.", "generatedAt": datetime.date.today().isoformat(), **project, "languages": sorted({"Rust" if p.suffix == ".rs" else "C/C++" for p, _ in records if p.suffix in EXTENSIONS}), "buildSystems": []}, "readme": readme_data, "brief": brief(readme_data, project), "hardware": hardware(records, root), "configurations": configurations(records, root), "memoryLayout": memory_layout(records, root), "modules": module_data, "components": component_data, "dataTypes": types, "objects": objects(records, root, types), "diagrams": diagrams(types, module_data), "dataPipelines": pipelines(module_data, types), "build": build(records, root)}
+    data["meta"]["buildSystems"] = [data["build"]["system"]["type"]]
+    override = root / "docs" / "architecture" / "embedded-overrides.json"
+    if override.is_file():
+        try:
+            extra = json.loads(text(override))
+            for key, value in extra.items():
+                if isinstance(value, list) and isinstance(data.get(key), list) and all(isinstance(x, dict) and "id" in x for x in value + data[key]): data[key] = by_id(data[key] + value)
+                elif isinstance(value, dict) and isinstance(data.get(key), dict): data[key].update(value)
+                else: data[key] = value
+        except json.JSONDecodeError:
+            data.setdefault("warnings", []).append({"type": "invalid-override", "file": str(override)})
+    return data
+
+
+def inline(value):
+    value = html.escape(value, quote=True); value = re.sub(r"`([^`]+)`", r"<code>\1</code>", value); value = re.sub(r"\*\*([^*]+)\*\*", r"<strong>\1</strong>", value); value = re.sub(r"\*([^*]+)\*", r"<em>\1</em>", value)
+    return re.sub(r"\[([^]]+)\]\((https?://[^)]+)\)", r'<a href="\2" rel="noopener">\1</a>', value)
+
+
+def markdown(value):
+    if not value: return '<p class="muted">No README.md found.</p>'
+    output, code, inside = [], [], False
+    for line in value.splitlines():
+        if line.startswith("```"):
+            if inside: output.append("<pre><code>" + html.escape("\n".join(code)) + "</code></pre>"); code = []
+            inside = not inside; continue
+        if inside: code.append(line); continue
+        match = re.match(r"^(#{1,6})\s+(.+)$", line)
+        if match: output.append(f"<h{len(match.group(1))}>{inline(match.group(2))}</h{len(match.group(1))}>")
+        elif re.match(r"^[-*+]\s+", line): output.append("<li>" + inline(re.sub(r"^[-*+]\s+", "", line)) + "</li>")
+        elif line.startswith("> "): output.append("<blockquote>" + inline(line[2:]) + "</blockquote>")
+        elif line.strip(): output.append("<p>" + inline(line) + "</p>")
+    if inside: output.append("<pre><code>" + html.escape("\n".join(code)) + "</code></pre>")
+    return "\n".join(output)
+
+
+def value(data):
+    return html.escape(json.dumps(data, indent=2) if isinstance(data, (dict, list)) else "" if data is None else str(data))
+
+
+def file_list(items):
+    if not items: return '<p class="muted">No source files detected.</p>'
+    return "<ul>" + "".join(f"<li><code>{html.escape(str(item.get('path', item)))}</code> <span>{html.escape(str(item.get('role', 'source')))}</span>{(' line ' + str(item['line'])) if isinstance(item, dict) and item.get('line') else ''}</li>" for item in items) + "</ul>"
+
+
+def card(title, body):
+    return f'<article class="card"><h3>{html.escape(str(title))}</h3>{body}</article>'
+
+
+def render(data):
+    meta, readme_data = data["meta"], data["readme"]
+    nav = [("brief", "Brief"), ("readme", "Project README"), ("hardware", "Hardware"), ("configurations", "Configurations"), ("memory-layout", "Memory Layout"), ("modules-components", "Modules & Components"), ("class-diagrams", "Class Diagrams"), ("sequence-diagrams", "Sequence Diagrams"), ("interaction-diagrams", "Interaction Diagrams"), ("state-machines", "State Machines"), ("flow-charts", "Flow Charts"), ("data-pipelines", "Data Pipelines"), ("build", "Build")]
+    nav_html = "".join(f'<button class="nav-btn" onclick="showTab(\'{key}\',this)">{html.escape(label)}</button>' for key, label in nav)
+    def section(identifier, title, body): return f'<section class="section" id="sec-{identifier}"><h2>{html.escape(title)}</h2>{body}</section>'
+    brief_body = card("Purpose", f"<p>{html.escape(data['brief'].get('summary', ''))}</p>") + card("System", f"<pre>{value({'type': data['brief'].get('systemType'), 'markers': meta.get('markers', [])})}</pre>")
+    readme_body = f'<div class="toolbar"><code>{html.escape(readme_data.get("path", "README.md"))}</code><button onclick="copyReadme()">Copy Markdown</button></div><article class="readme">{markdown(readme_data.get("content", ""))}</article><details><summary>View Markdown source</summary><pre id="readme-source">{html.escape(readme_data.get("content", ""))}</pre></details>'
+    hardware_body = card("Target", f"<pre>{value(data['hardware'].get('target', {}))}</pre>") + card("Peripherals", "<div class=\"grid\">" + "".join(card(x.get("name", x.get("id")), html.escape(x.get("type", ""))) for x in data["hardware"].get("peripherals", [])) + "</div>") + card("Source files", file_list([{"path": x, "role": "hardware configuration"} for x in data["hardware"].get("sourceFiles", [])]))
+    configurations_body = card("Build profiles", f"<pre>{value(data['configurations'].get('buildProfiles', []))}</pre>") + card("Feature flags", f"<pre>{value(data['configurations'].get('featureFlags', []))}</pre>") + card("Configuration sources", file_list([{"path": x, "role": "configuration"} for x in data["configurations"].get("configurationSources", [])]))
+    memory_body = card("Memory regions", f"<pre>{value(data['memoryLayout'].get('regions', []))}</pre>") + card("Linker/map files", file_list([{"path": x, "role": "linker/map file"} for x in data["memoryLayout"].get('linkerScripts', []) + data["memoryLayout"].get('mapFiles', [])]))
+    module_body = "<h3>Modules</h3><div class=\"grid\">" + "".join(card(x["name"], f"<p><b>Role:</b> {html.escape(x.get('role', ''))}</p>{file_list(x.get('files', []))}") for x in data["modules"]) + "</div><h3>Components</h3><div class=\"grid\">" + "".join(card(x["name"], f"<p><b>Role:</b> {html.escape(x.get('role', ''))}</p>{file_list(x.get('files', []))}") for x in data["components"]) + "</div><h3>User-Defined Data Types</h3><div class=\"grid\">" + "".join(card(x["name"], f"<p><b>Role:</b> {html.escape(x.get('role', ''))}</p><p><b>Usage:</b> {html.escape(', '.join(u.get('role', '') for u in x.get('usage', [])))}</p>{file_list(x.get('files', []))}") for x in data["dataTypes"]) + "</div><h3>Objects, Lifetime & Ownership</h3><div class=\"grid\">" + "".join(card(x["name"], f"<p><b>Role:</b> {html.escape(x.get('role', ''))}</p><pre>{value({'type': x.get('typeReference'), 'lifetime': x.get('lifetime'), 'ownership': x.get('ownership'), 'storage': x.get('storage')})}</pre>{file_list(x.get('files', []))}") for x in data["objects"]) + "</div>"
+    sections = [section("brief", "Brief", brief_body), section("readme", "Project README", readme_body), section("hardware", "Hardware", hardware_body), section("configurations", "Configurations", configurations_body), section("memory-layout", "Memory Layout", memory_body), section("modules-components", "Modules & Components", module_body)]
+    diagram_ids = {"classDiagrams": ("class-diagrams", "Class Diagrams"), "sequenceDiagrams": ("sequence-diagrams", "Sequence Diagrams"), "interactionDiagrams": ("interaction-diagrams", "Interaction Diagrams"), "stateMachines": ("state-machines", "State Machines"), "flowCharts": ("flow-charts", "Flow Charts")}
+    for key, (identifier, title) in diagram_ids.items():
+        body = "".join(card(x.get("title", "Diagram"), f"<p>{html.escape(x.get('description', ''))}</p><pre class=\"mermaid\">{html.escape(x.get('mermaid', ''))}</pre>") for x in data["diagrams"].get(key, [])) or '<p class="muted">No diagrams detected.</p>'
+        sections.append(section(identifier, title, body))
+    sections += [section("data-pipelines", "Data Pipelines", card("Pipelines", f"<pre>{value(data.get('dataPipelines', []))}</pre>")), section("build", "Build", card("Build system", f"<pre>{value(data['build'])}</pre>"))]
+    css = ":root{--bg:#0d1117;--panel:#161b22;--panel2:#21262d;--border:#30363d;--text:#e6edf3;--muted:#8b949e;--accent:#58a6ff}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14px system-ui,sans-serif}header{position:sticky;top:0;z-index:2;background:var(--panel);border-bottom:1px solid var(--border);padding:18px 28px}header h1{margin:0 0 4px}header p{margin:0;color:var(--muted)}.layout{display:flex;min-height:calc(100vh - 78px)}aside{width:250px;flex:none;background:var(--panel);border-right:1px solid var(--border);padding:16px;position:fixed;top:78px;bottom:0;overflow:auto}main{margin-left:250px;padding:28px;max-width:1500px;width:calc(100% - 250px)}.nav-btn{display:block;width:100%;text-align:left;background:none;border:1px solid transparent;color:var(--muted);padding:10px;border-radius:7px;margin:3px 0;cursor:pointer}.nav-btn:hover,.nav-btn.active{background:var(--panel2);border-color:var(--accent);color:var(--text)}.section{display:none}.section.active{display:block}h2{border-bottom:1px solid var(--border);padding-bottom:10px}h3{color:var(--accent)}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:16px}.card{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:18px;margin:0 0 16px;overflow:auto}pre{background:#090c10;border:1px solid var(--border);padding:14px;border-radius:7px;overflow:auto;white-space:pre-wrap;word-break:break-word}code{color:#9cdcfe}.muted{color:var(--muted)}.files span{color:var(--muted);margin-left:8px}.toolbar{display:flex;gap:12px;align-items:center;margin-bottom:14px}button{color:var(--text);background:var(--panel2);border:1px solid var(--border);border-radius:6px;padding:7px 10px;cursor:pointer}.readme{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:24px;line-height:1.6}.readme img{max-width:100%}@media(max-width:750px){aside{position:static;width:100%;border-right:0;border-bottom:1px solid var(--border);display:flex;flex-wrap:wrap;gap:4px}.layout{display:block}main{margin:0;width:100%;padding:16px}.nav-btn{width:auto}}"
+    script = "function showTab(id,b){document.querySelectorAll('.section').forEach(x=>x.classList.remove('active'));var x=document.getElementById('sec-'+id);if(x)x.classList.add('active');document.querySelectorAll('.nav-btn').forEach(x=>x.classList.remove('active'));if(b)b.classList.add('active');if(window.mermaid)mermaid.run()}function copyReadme(){navigator.clipboard.writeText(document.getElementById('readme-source').textContent)}document.querySelector('.section').classList.add('active');document.querySelector('.nav-btn').classList.add('active');if(window.mermaid)mermaid.initialize({startOnLoad:false,theme:'dark'})"
+    return "<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><title>" + html.escape(meta.get("displayName", "Embedded Architecture")) + " - Architecture</title><script src=\"https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js\"></script><style>" + css + "</style></head><body><header><h1>" + html.escape(meta.get("displayName", "Embedded Architecture")) + "</h1><p>Embedded firmware architecture map | " + html.escape(meta.get("projectType", "unknown")) + " | Generated " + html.escape(meta.get("generatedAt", "")) + "</p></header><div class=\"layout\"><aside>" + nav_html + "</aside><main>" + "\n".join(sections) + "</main></div><script>" + script + "</script></body></html>"
+
+
+def main():
+    target = next((Path(arg).resolve() for arg in sys.argv[1:] if not arg.startswith("--") and Path(arg).exists()), Path.cwd().resolve())
+    arch = target if target.name == "architecture" else target / "docs" / "architecture"; arch.mkdir(parents=True, exist_ok=True)
+    data = init_architecture(str(target)); (arch / "architecture.json").write_text(json.dumps(data, indent=2), encoding="utf-8"); (arch / "architecture.html").write_text(render(data), encoding="utf-8")
+    print(f"[arch-wiki] Generated embedded architecture files in {arch}")
+
+
+if __name__ == "__main__":
+    main()
