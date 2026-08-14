@@ -13,6 +13,8 @@
 
 ## What is arch-wiki?
 
+Turn any backend codebase into an interactive architecture wiki that both developers and AI coding assistants can use.
+
 `arch-wiki` is an AI skill (agent instruction set) that keeps your **living architecture documentation** in perfect sync with your codebase. Every time you add a module, endpoint, permission, SQL query, or Docker service — you invoke the skill, and it:
 
 1. **Reads** your `architecture.json` manifest
