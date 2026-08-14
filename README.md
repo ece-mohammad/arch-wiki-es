@@ -358,26 +358,6 @@ The benchmark also exposed an important limitation:
 
 Therefore, the next step is to measure **accuracy**, not just exploration reduction.
 
-### 5. What I Want to Measure Next
-
-For future benchmark runs, the main metrics will be:
-
-| Metric | What it measures |
-|---|---|
-| Exploration | Files and folders inspected |
-| Time | Time required to produce the answer |
-| Accuracy | Correct architectural facts |
-| Hallucinations | Incorrect facts or unsupported assumptions |
-| Coverage | How much of the requested architecture was correctly identified |
-| Usefulness | How useful the result is for a senior developer onboarding into the project |
-
-The benchmark should compare the **same prompt, same repository, and same AI model** with and without `arch-wiki`.
-
-The objective is not to prove that `arch-wiki` replaces source-code analysis.
-
-The objective is to prove that it can provide the AI with an **architecture map that reduces unnecessary exploration while maintaining useful and accurate results**.
-
----
 
 ## Requirements
 
