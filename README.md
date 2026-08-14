@@ -301,6 +301,82 @@ The generated `architecture.html` includes 11 navigation sections:
 
 ---
 
+## Benchmark
+
+The benchmark compares the same software understanding tasks using two approaches:
+
+1. Direct AI exploration of the repository.
+2. AI using `arch-wiki` and `architecture.json`.
+
+The goal is not to measure token consumption only. The main goal is to evaluate whether `arch-wiki` can reduce repository exploration while producing a more accurate and useful architecture understanding.
+
+### 1. Benchmark Prompts
+
+| # | Task | Prompt |
+|---|---|---|
+| 1 | General Architecture | `Understand this project and explain: 1. Main architecture 2. Main modules 3. How an Order request flows through the system 4. Database interaction 5. External services. Do not modify anything.` |
+| 2 | General Architecture with arch-wiki | Same prompt, with: `Use arch-wiki and architecture.json. Do not modify anything.` |
+| 3 | Authentication Understanding | `You are joining this project as a new senior developer. You need to understand how authentication works. Explain: 1. Login flow 2. JWT generation 3. Refresh token flow 4. Database interaction 5. Redis interaction 6. Relevant files.` |
+| 4 | Authentication with arch-wiki | Same prompt, with: `Use arch-wiki and architecture.json.` |
+| 5 | Change Impact Analysis | `You need to add a new authentication feature. Find where this functionality should be implemented and explain which files would need to change and why. Do not modify anything.` |
+| 6 | Change Impact Analysis with arch-wiki | Same prompt, with: `Use arch-wiki and architecture.json. Do not modify anything.` |
+
+### 2. Results
+
+| # | Approach | Exploration | Time | Result |
+|---|---|---:|---:|---|
+| 1 | Direct repository exploration | 17 files / 14 folders | ~2 min | Detailed architecture analysis with strong source-level details, but some conclusions were inaccurate or inferred. |
+| 2 | `arch-wiki` + `architecture.json` | 1 file / 3 folders | ~1 min | Much faster and significantly less exploration. Produced a comprehensive architecture overview, but some details were inferred incorrectly. |
+| 3 | Direct repository exploration | 7 files / 10 folders | ~1 min | Strong authentication analysis with detailed login, JWT, refresh token, DB and Redis flows. |
+| 4 | `arch-wiki` + `architecture.json` | 7 files / 7 folders | ~1 min | Similar quality to direct exploration while using the architecture documentation to guide the investigation. |
+| 5 | Direct repository exploration | 11 files / 20 folders | ~1 min | Good change impact analysis, but explored a relatively large part of the repository for an authentication-related task. |
+| 6 | `arch-wiki` + `architecture.json` | 1 file / 6 folders | ~1 min | Much more focused exploration and produced a useful change-impact map based on the existing architecture. |
+
+### 3. Opinion
+
+| # | Task | Opinion |
+|---|---|---|
+| 1 vs 2 | General Architecture | **Major improvement.** `arch-wiki` reduced exploration from 17 files / 14 folders to 1 file / 3 folders while still producing a comprehensive architecture overview. The main weakness is that the AI may trust documented information too much and infer details that are not actually present in the source code. |
+| 3 vs 4 | Authentication | **Very similar quality.** The direct approach explored 7 files / 10 folders, while the `arch-wiki` approach explored 7 files / 7 folders. This shows that the generated architecture information can guide the AI without sacrificing much accuracy. |
+| 5 vs 6 | Change Impact | **Strong improvement.** The direct approach explored 11 files / 20 folders, while the `arch-wiki` approach explored only 1 file / 6 folders. The architecture manifest helped the AI identify the relevant architectural boundaries and affected files much faster. |
+
+### 4. Initial Benchmark Conclusion
+
+The most interesting result is not simply that `arch-wiki` makes the AI faster.
+
+The important observation is:
+
+> **The AI can use a pre-generated architecture representation as a map of the system instead of rediscovering the architecture from scratch for every question.**
+
+In the tested scenarios, `arch-wiki` significantly reduced repository exploration, especially for high-level architecture and change-impact questions.
+
+The benchmark also exposed an important limitation:
+
+> **Architecture documentation must be accurate. If `architecture.json` contains incorrect or inferred information, the AI can propagate those mistakes instead of discovering the truth directly from the source code.**
+
+Therefore, the next step is to measure **accuracy**, not just exploration reduction.
+
+### 5. What I Want to Measure Next
+
+For future benchmark runs, the main metrics will be:
+
+| Metric | What it measures |
+|---|---|
+| Exploration | Files and folders inspected |
+| Time | Time required to produce the answer |
+| Accuracy | Correct architectural facts |
+| Hallucinations | Incorrect facts or unsupported assumptions |
+| Coverage | How much of the requested architecture was correctly identified |
+| Usefulness | How useful the result is for a senior developer onboarding into the project |
+
+The benchmark should compare the **same prompt, same repository, and same AI model** with and without `arch-wiki`.
+
+The objective is not to prove that `arch-wiki` replaces source-code analysis.
+
+The objective is to prove that it can provide the AI with an **architecture map that reduces unnecessary exploration while maintaining useful and accurate results**.
+
+---
+
 ## Requirements
 
 - **Python 3.8+** (only standard library — `json`, `re`, `os`, `sys`, `datetime` — no `pip install` needed)
