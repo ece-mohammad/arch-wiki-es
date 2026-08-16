@@ -3715,7 +3715,12 @@ flowchart TD
 
 <script>
     function getApiPromptText(method, path) {{
-        return "You are joining this project as a senior developer.\\n\\n" +
+        var cleanFileName = (method.toLowerCase() + '_' + path)
+            .replace(/[^a-zA-Z0-9_]/g, '_')
+            .replace(/_+/g, '_')
+            .replace(/^_|_$/g, '') + '_analysis.md';
+
+        return "Use @arch-wiki skill. You are joining this project as a senior developer.\\n\\n" +
             "Analyze this API endpoint:\\n\\n" +
             method + " " + path + "\\n\\n" +
             "Use:\\n" +
@@ -3728,7 +3733,8 @@ flowchart TD
             "2. Mermaid flowchart\\n\\n" +
             "Include only components and interactions that actually exist in the code.\\n\\n" +
             "Do not infer missing components.\\n" +
-            "Do not modify anything.";
+            "Do not modify anything.\\n\\n" +
+            "Save the analysis output in " + cleanFileName;
     }}
 
     function openApiPromptFromEl(el) {{
