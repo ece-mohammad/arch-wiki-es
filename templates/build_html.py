@@ -3729,8 +3729,8 @@ flowchart TD
             "3. the project source code\\n\\n" +
             "Discover the actual implementation flow.\\n\\n" +
             "Generate:\\n\\n" +
-            "1. Sequence diagram (provide BOTH a visual ASCII text diagram and the Mermaid format code block)\\n" +
-            "2. Flowchart (provide BOTH a visual ASCII text flowchart and the Mermaid format code block)\\n\\n" +
+            "1. Mermaid sequence diagram (both Mermaid code format and rendered visual diagram image)\\n" +
+            "2. Mermaid flowchart (both Mermaid code format and rendered visual diagram image)\\n\\n" +
             "Include only components and interactions that actually exist in the code.\\n\\n" +
             "Do not infer missing components.\\n" +
             "Do not modify anything.\\n\\n" +
