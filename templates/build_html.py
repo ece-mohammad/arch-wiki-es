@@ -2566,6 +2566,111 @@ def generate_html(data, target_dir=None):
                 text-shadow: none !important;
             }}
         }}
+
+        /* API Endpoint Prompt Modal Styles */
+        .clickable-ep {{
+            cursor: pointer !important;
+            transition: all 0.2s ease !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            gap: 12px !important;
+        }}
+        .clickable-ep:hover {{
+            border-color: var(--accent) !important;
+            background: rgba(88, 166, 255, 0.06) !important;
+            transform: translateY(-1px) !important;
+        }}
+        .btn-prompt-copy {{
+            background: var(--bg3) !important;
+            border: 1px solid var(--border) !important;
+            color: var(--muted) !important;
+            font-size: 11px !important;
+            font-weight: 600 !important;
+            padding: 4px 10px !important;
+            border-radius: 6px !important;
+            cursor: pointer !important;
+            transition: all 0.15s ease !important;
+            white-space: nowrap !important;
+            margin-left: auto !important;
+        }}
+        .btn-prompt-copy:hover {{
+            background: var(--accent) !important;
+            color: #0d1117 !important;
+            border-color: var(--accent) !important;
+        }}
+        .custom-modal-backdrop {{
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(5px);
+            z-index: 99999;
+            align-items: center;
+            justify-content: center;
+        }}
+        .custom-modal-backdrop.active {{
+            display: flex;
+        }}
+        .custom-modal-content {{
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            width: 90%;
+            max-width: 680px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+            overflow: hidden;
+            animation: modalFadeIn 0.2s ease-out;
+        }}
+        @keyframes modalFadeIn {{
+            from {{ opacity: 0; transform: scale(0.95); }}
+            to {{ opacity: 1; transform: scale(1); }}
+        }}
+        .custom-modal-header {{
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--bg3);
+        }}
+        .custom-modal-close {{
+            background: transparent;
+            border: none;
+            color: var(--muted);
+            font-size: 24px;
+            cursor: pointer;
+            line-height: 1;
+            transition: color 0.15s ease;
+        }}
+        .custom-modal-close:hover {{
+            color: var(--text);
+        }}
+        .custom-modal-body {{
+            padding: 20px;
+        }}
+        .btn-copy-prompt {{
+            background: linear-gradient(135deg, var(--accent) 0%, #3b82f6 100%) !important;
+            color: #0d1117 !important;
+            font-weight: 700 !important;
+            font-size: 12px !important;
+            border: none !important;
+            padding: 6px 14px !important;
+            border-radius: 6px !important;
+            cursor: pointer !important;
+            transition: all 0.2s ease !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 6px !important;
+            box-shadow: 0 2px 8px rgba(88, 166, 255, 0.3) !important;
+        }}
+        .btn-copy-prompt:hover {{
+            opacity: 0.9 !important;
+            transform: translateY(-1px) !important;
+        }}
     </style>
 </head>
 <body>
@@ -2682,12 +2787,13 @@ def generate_html(data, target_dir=None):
     for se in system_endpoints:
         m = se.get('method', 'GET').upper()
         html_content += f"""
-            <div class="endpoint">
+            <div class="endpoint clickable-ep" data-method="{m}" data-path="{html.escape(se.get('path', ''))}" onclick="openApiPromptFromEl(this)" title="Click to view AI Senior Developer prompt">
                 <span class="method {m}">{m}</span>
-                <div>
+                <div style="flex:1">
                     <div class="ep-path">{html.escape(se.get('path', ''))}</div>
                     <div class="ep-desc">{html.escape(se.get('description', ''))}</div>
                 </div>
+                <button class="btn-prompt-copy" onclick="event.stopPropagation(); copyApiPromptDirectFromEl(this.parentElement)" title="Copy AI Prompt">📋 Prompt</button>
             </div>
 """
 
@@ -2780,16 +2886,30 @@ def generate_html(data, target_dir=None):
     for mod in modules:
         perms_html = "".join([f'<span class="tag tp">{html.escape(p)}</span>' for p in mod.get('permissions', [])])
         eps_html = ""
+        mod_base = mod.get('basePath', '').strip()
         for ep in mod.get('endpoints', []):
             m = ep.get('method', 'GET').upper()
+            raw_p = ep.get('path', '').strip()
+            if raw_p.startswith('http://') or raw_p.startswith('https://') or (mod_base and raw_p.startswith(mod_base)):
+                full_path = raw_p
+            else:
+                if mod_base:
+                    if raw_p == '/' or not raw_p:
+                        full_path = mod_base
+                    else:
+                        full_path = mod_base.rstrip('/') + '/' + raw_p.lstrip('/')
+                else:
+                    full_path = raw_p if raw_p else '/'
+
             perm_str = f'<span class="lock">🔒 {html.escape(ep["permission"])}</span>' if ep.get('permission') else ('<span class="lock">🔑</span>' if ep.get('auth') else '')
             eps_html += f"""
-                <div class="endpoint">
+                <div class="endpoint clickable-ep" data-method="{m}" data-path="{html.escape(full_path)}" onclick="openApiPromptFromEl(this)" title="Click to view AI Senior Developer prompt">
                     <span class="method {m}">{m}</span>
-                    <div>
+                    <div style="flex:1">
                         <div class="ep-path">{html.escape(ep.get('path', ''))}{perm_str}</div>
                         <div class="ep-desc">{html.escape(ep.get('description', ''))}</div>
                     </div>
+                    <button class="btn-prompt-copy" onclick="event.stopPropagation(); copyApiPromptDirectFromEl(this.parentElement)" title="Copy AI Prompt">📋 Prompt</button>
                 </div>
 """
         html_content += f"""
@@ -3568,6 +3688,137 @@ flowchart TD
     }}
 
     mermaid.initialize({{ startOnLoad: false, theme: 'dark' }});
+</script>
+
+<!-- API Endpoint Prompt Modal -->
+<div id="apiPromptModal" class="custom-modal-backdrop" onclick="closeApiPromptModal(event)">
+    <div class="custom-modal-content" onclick="event.stopPropagation()">
+        <div class="custom-modal-header">
+            <div style="display:flex; align-items:center; gap:10px;">
+                <span style="font-size:22px;">🤖</span>
+                <div>
+                    <h3 style="margin:0; font-size:16px; font-weight:700; color:var(--text);">AI Senior Developer Prompt</h3>
+                    <div style="font-size:12px; color:var(--accent); font-family:var(--font-code); font-weight:600; margin-top:2px;" id="apiPromptModalSub">Endpoint Architecture Analysis Prompt</div>
+                </div>
+            </div>
+            <button class="custom-modal-close" onclick="closeApiPromptModal()">&times;</button>
+        </div>
+        <div class="custom-modal-body">
+            <div style="margin-bottom:12px; display:flex; align-items:center; justify-content:space-between;">
+                <span style="font-size:12px; font-weight:600; color:var(--muted);">COPY &amp; PASTE THIS PROMPT TO YOUR AI ASSISTANT:</span>
+                <button id="modalCopyBtn" class="btn-copy-prompt" onclick="copyModalPromptText()">📋 Copy Prompt</button>
+            </div>
+            <textarea id="apiPromptTextarea" readonly rows="16" style="width:100%; background:var(--bg); color:var(--text); border:1px solid var(--border); border-radius:8px; padding:14px; font-family:var(--font-code); font-size:12px; line-height:1.6; resize:vertical; outline:none;"></textarea>
+        </div>
+    </div>
+</div>
+
+<script>
+    function getApiPromptText(method, path) {{
+        return "You are joining this project as a senior developer.\\n\\n" +
+            "Analyze this API endpoint:\\n\\n" +
+            method + " " + path + "\\n\\n" +
+            "Use:\\n" +
+            "1. architecture.json\\n" +
+            "2. arch-wiki documentation\\n" +
+            "3. the project source code\\n\\n" +
+            "Discover the actual implementation flow.\\n\\n" +
+            "Generate:\\n\\n" +
+            "1. Mermaid sequence diagram\\n" +
+            "2. Mermaid flowchart\\n\\n" +
+            "Include only components and interactions that actually exist in the code.\\n\\n" +
+            "Do not infer missing components.\\n" +
+            "Do not modify anything.";
+    }}
+
+    function openApiPromptFromEl(el) {{
+        var method = el.getAttribute('data-method') || 'GET';
+        var path = el.getAttribute('data-path') || '/';
+        openApiPromptModal(method, path);
+    }}
+
+    function copyApiPromptDirectFromEl(el) {{
+        var method = el.getAttribute('data-method') || 'GET';
+        var path = el.getAttribute('data-path') || '/';
+        var btn = el.querySelector('.btn-prompt-copy');
+        copyApiPromptDirect(method, path, btn);
+    }}
+
+    function openApiPromptModal(method, path) {{
+        var modal = document.getElementById('apiPromptModal');
+        var sub = document.getElementById('apiPromptModalSub');
+        var ta = document.getElementById('apiPromptTextarea');
+        var btn = document.getElementById('modalCopyBtn');
+
+        if (!modal || !ta) return;
+
+        var promptText = getApiPromptText(method, path);
+        ta.value = promptText;
+        if (sub) sub.innerText = method + ' ' + path;
+        if (btn) {{
+            btn.innerHTML = '📋 Copy Prompt';
+            btn.style.background = '';
+        }}
+
+        modal.classList.add('active');
+    }}
+
+    function closeApiPromptModal(e) {{
+        if (e && e.target !== e.currentTarget && !e.target.classList.contains('custom-modal-close')) return;
+        var modal = document.getElementById('apiPromptModal');
+        if (modal) modal.classList.remove('active');
+    }}
+
+    function copyModalPromptText() {{
+        var ta = document.getElementById('apiPromptTextarea');
+        var btn = document.getElementById('modalCopyBtn');
+        if (!ta) return;
+
+        navigator.clipboard.writeText(ta.value).then(function() {{
+            if (btn) {{
+                btn.innerHTML = '✅ Copied!';
+                setTimeout(function() {{
+                    btn.innerHTML = '📋 Copy Prompt';
+                }}, 2000);
+            }}
+        }}).catch(function() {{
+            ta.select();
+            document.execCommand('copy');
+            if (btn) {{
+                btn.innerHTML = '✅ Copied!';
+                setTimeout(function() {{
+                    btn.innerHTML = '📋 Copy Prompt';
+                }}, 2000);
+            }}
+        }});
+    }}
+
+    function copyApiPromptDirect(method, path, btnElement) {{
+        var promptText = getApiPromptText(method, path);
+        navigator.clipboard.writeText(promptText).then(function() {{
+            if (btnElement) {{
+                var orig = btnElement.innerHTML;
+                btnElement.innerHTML = '✅ Copied!';
+                setTimeout(function() {{
+                    btnElement.innerHTML = orig;
+                }}, 2000);
+            }}
+        }}).catch(function() {{
+            if (btnElement) {{
+                var orig = btnElement.innerHTML;
+                btnElement.innerHTML = '✅ Copied!';
+                setTimeout(function() {{
+                    btnElement.innerHTML = orig;
+                }}, 2000);
+            }}
+        }});
+    }}
+
+    document.addEventListener('keydown', function(e) {{
+        if (e.key === 'Escape') {{
+            closeApiPromptModal();
+        }}
+    }});
 </script>
 </body>
 </html>

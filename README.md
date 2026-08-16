@@ -25,7 +25,8 @@ Turn any backend codebase into an interactive architecture wiki that both develo
 The output is a **single self-contained HTML file** with:
 - 📊 Overview stats dashboard
 - 📋 System Prerequisites & Setup Pipeline
-- 📦 API Modules catalog with all endpoints
+- 📦 API Modules catalog with all endpoints & 1-click AI Analysis Prompts
+- 🤖 Interactive Senior Developer Analysis Prompts modal for every API endpoint
 - 🏗️ System Architecture diagram with pan/zoom & hand cursor (Mermaid)
 - 🐋 Docker Topology diagram with pan/zoom & hand cursor (Mermaid)
 - 📄 One-click PDF Export (exports all 11 sections into a single formatted PDF document)
@@ -243,6 +244,18 @@ Because `arch-wiki` has a zero-dependency codebase scanner, you don't need to wr
 
 The AI assistant will automatically run the codebase scanner, detect any new or updated endpoints, permissions, SQL queries, or Docker containers, and re-render `architecture.html`.
 
+### 🤖 Interactive Senior Developer Endpoint Analysis Prompts
+
+Clicking on **any API endpoint** in the **API Modules** view (or using its **📋 Prompt** button) opens an interactive modal with a tailor-made **Senior Developer Analysis Prompt**.
+
+The prompt is dynamically formatted for the selected endpoint (e.g. `POST /api/v1/orders`), instructing an AI coding assistant to:
+1. Act as a senior developer joining the project.
+2. Analyze the endpoint using `architecture.json`, `arch-wiki` documentation, and project source code.
+3. Discover the actual implementation flow and generate accurate **Mermaid sequence** and **flowchart** diagrams.
+4. Adhere to strict boundaries (only include components and interactions that actually exist in code, do not infer missing components, do not modify code).
+
+Includes a 1-click **📋 Copy to Clipboard** button directly on every endpoint card and inside the modal for instant integration with AI assistants.
+
 ---
 
 ## architecture.json Schema Reference
@@ -289,7 +302,7 @@ The generated `architecture.html` includes 11 navigation sections:
 |---|---|
 | 📌 **Overview** | Stats cards + workspace list + system endpoints |
 | 📋 **Prerequisites** | Developer tools, database runtimes, & step-by-step setup commands |
-| 📦 **API Modules** | Searchable module cards with all endpoints |
+| 📦 **API Modules** | Searchable module cards with all endpoints & 1-click Senior Developer AI analysis prompt modals |
 | 🏗️ **System Architecture** | Mermaid component diagram with pan/zoom toolbar & hand cursor |
 | 🐋 **Docker Topology** | Mermaid container dependency graph with pan/zoom toolbar & hand cursor |
 | ⚡ **Swagger & OpenAPI** | Live Swagger UI (Dark Theme), API catalog with cURL snippets, & OpenAPI JSON spec |
