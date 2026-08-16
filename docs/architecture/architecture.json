@@ -1,0 +1,236 @@
+{
+  "meta": {
+    "displayName": "Arch Wiki",
+    "version": "1.0.0",
+    "description": "Framework-agnostic architecture map & documentation generator skill for AI coding assistants.",
+    "generatedAt": "2026-08-17",
+    "techStack": {
+      "language": "Python",
+      "framework": "FastAPI",
+      "database": "PostgreSQL",
+      "auth": "JWT / Bearer Token"
+    }
+  },
+  "prerequisites": {
+    "description": "Software runtimes, system dependencies, and step-by-step initialization commands required to run the project.",
+    "tools": [
+      {
+        "name": "Python",
+        "version": ">= 3.10",
+        "required": true,
+        "category": "runtime",
+        "description": "Python runtime interpreter for backend API execution and virtual environments."
+      }
+    ],
+    "setupSteps": [
+      {
+        "step": 1,
+        "title": "Configure Environment Variables",
+        "command": "touch .env",
+        "description": "Set up environment variables (PORT, DB_HOST, DB_PASSWORD, JWT_SECRET)."
+      },
+      {
+        "step": 2,
+        "title": "Install Python Virtual Environment",
+        "command": "python -m venv venv && source venv/bin/activate && pip install -r requirements.txt",
+        "description": "Initialize virtual environment and install dependencies."
+      },
+      {
+        "step": 3,
+        "title": "Run Schema Migrations & Database Seeds",
+        "command": "alembic upgrade head",
+        "description": "Execute database schema migrations and populate initial seed records."
+      },
+      {
+        "step": 4,
+        "title": "Launch Development Server",
+        "command": "uvicorn main:app --reload",
+        "description": "Start backend API in watch mode."
+      }
+    ]
+  },
+  "workspaces": [
+    {
+      "id": "api",
+      "name": "api",
+      "type": "backend",
+      "description": "Main REST API",
+      "port": 3000,
+      "entrypoint": "src/index.ts"
+    }
+  ],
+  "infrastructure": [],
+  "dockerDiagram": {
+    "description": "",
+    "nodes": [],
+    "edges": []
+  },
+  "systemArchitectureDiagram": {
+    "description": "System architecture, module boundaries, and infrastructure component relationships.",
+    "subgraphs": [
+      {
+        "id": "client_layer",
+        "label": "Client & Consumer Layer",
+        "nodes": [
+          {
+            "id": "web_client",
+            "label": "Web Application / Client",
+            "type": "app"
+          },
+          {
+            "id": "mobile_client",
+            "label": "Mobile App / API Consumer",
+            "type": "app"
+          }
+        ]
+      },
+      {
+        "id": "api_layer",
+        "label": "Application & Service Layer",
+        "nodes": [
+          {
+            "id": "api_server",
+            "label": "REST API Gateway / Server",
+            "type": "app"
+          }
+        ]
+      },
+      {
+        "id": "data_layer",
+        "label": "Data & Infrastructure Layer",
+        "nodes": [
+          {
+            "id": "db",
+            "label": "PostgreSQL Database",
+            "type": "database"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "from": "web_client",
+        "to": "api_server",
+        "label": "HTTPS REST"
+      },
+      {
+        "from": "mobile_client",
+        "to": "api_server",
+        "label": "HTTPS REST"
+      },
+      {
+        "from": "api_server",
+        "to": "db",
+        "label": "Query"
+      }
+    ]
+  },
+  "swaggerSchemas": {
+    "matchStatus": "Verified Parity (0/0 Endpoints)",
+    "openapi": "3.0.0",
+    "servedAt": "/api/docs",
+    "securityScheme": "bearerAuth (JWT Bearer Token)",
+    "servers": [
+      {
+        "url": "http://localhost:3000",
+        "description": "Local Development Server"
+      },
+      {
+        "url": "https://api.arch-wiki.com",
+        "description": "Production"
+      }
+    ],
+    "schemas": []
+  },
+  "modules": [],
+  "systemEndpoints": [
+    {
+      "method": "GET",
+      "path": "/health",
+      "auth": false,
+      "description": "Health check endpoint"
+    }
+  ],
+  "coreLayer": {
+    "security": [
+      {
+        "name": "build_html",
+        "file": "templates/build_html.py",
+        "description": "Security & Authentication module"
+      }
+    ],
+    "middleware": [
+      {
+        "name": "build_html",
+        "file": "templates/build_html.py",
+        "description": "HTTP Middleware component (build_html.py)",
+        "guards": [
+          "Request Pipeline"
+        ]
+      }
+    ],
+    "services": [
+      {
+        "name": "build_html",
+        "file": "templates/build_html.py",
+        "description": "Data service / Model repository (build_html.py)",
+        "exports": [
+          "build_html"
+        ]
+      }
+    ]
+  },
+  "dataFlow": {
+    "requestPipeline": [
+      {
+        "step": "HTTP request received by ASGI/WSGI server (Uvicorn / Gunicorn)",
+        "detail": "Entry point of the Python application server."
+      },
+      {
+        "step": "Middleware stack processes request (CORS, rate limit, request ID)",
+        "detail": "Starlette / Django middleware chain runs top-to-bottom.",
+        "coreRef": "middleware"
+      },
+      {
+        "step": "Route matched \u2014 endpoint function resolved",
+        "detail": "Path operation matched. Path and query parameters extracted and type-checked."
+      },
+      {
+        "step": "Dependency injection resolved (Depends / auth guards)",
+        "detail": "FastAPI Depends chain runs \u2014 current user fetched, auth token validated.",
+        "coreRef": "security"
+      },
+      {
+        "step": "Request body deserialized and validated (Pydantic / serializers)",
+        "detail": "Schema validation runs. Invalid payloads return 422 before the handler is called."
+      },
+      {
+        "step": "Endpoint handler executes \u2014 business logic runs",
+        "detail": "Service / CRUD functions called. Database session used.",
+        "coreRef": "services"
+      },
+      {
+        "step": "ORM query executed (SQLAlchemy / Django ORM)",
+        "detail": "SQL generated and run against the database. Results mapped to schema models.",
+        "coreRef": "services"
+      },
+      {
+        "step": "JSON response returned to client",
+        "detail": "Pydantic model serialized to JSON. HTTP 200 returned."
+      }
+    ],
+    "errorPipeline": [
+      "Exception raised in handler or service",
+      "Exception handler / middleware intercepts (HTTPException or custom handler)",
+      "Error response structured (detail, status_code)",
+      "HTTP error returned to client (400 / 401 / 403 / 422 / 500)"
+    ],
+    "tenantIsolation": "Request isolation enforced via dependency-injected database sessions and user-scoped queries."
+  },
+  "permissions": {
+    "description": "RBAC permission catalog and endpoint mapping.",
+    "catalog": [],
+    "details": []
+  },
+  "sqlQueries": []
+}
