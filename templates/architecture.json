@@ -1,13 +1,16 @@
 {
   "meta": {
-    "displayName": "Arch Wiki Embedded Systems",
+    "displayName": "Embedded Sample",
     "version": "1.0.0",
     "description": "Embedded firmware architecture map.",
-    "generatedAt": "2026-08-10",
-    "projectType": "rtos",
+    "generatedAt": "2026-09-03",
+    "primaryType": "PlatformIO",
+    "projectType": "bare-metal",
+    "systemType": "bare-metal",
+    "topology": "single-mcu",
     "markers": [
       "PlatformIO",
-      "Zephyr"
+      "Make"
     ],
     "isEmbedded": true,
     "languages": [
@@ -19,16 +22,39 @@
   },
   "readme": {
     "path": "README.md",
-    "title": "arch-wiki",
-    "content": "# arch-wiki\n\n`arch-wiki` is an embedded firmware architecture documentation skill for AI coding assistants. It scans a firmware repository and generates:\n\n- `docs/architecture/architecture.json`: machine-readable architecture metadata.\n- `docs/architecture/architecture.html`: interactive architecture dashboard with the project README and generated diagrams embedded in the output.\n\nThe tool is embedded-only. It documents firmware and hardware rather than REST APIs, SQL, Swagger, Docker, or backend services.\n\n## Documented Architecture\n\nThe generated files contain:\n\n0. Brief\n1. Project README\n2. Hardware\n3. Configurations\n4. Memory Layout\n5. Modules & Components\n6. Class Diagrams\n7. Sequence Diagrams\n8. Interaction Diagrams\n9. State Machines\n10. Flow Charts\n11. Data Pipelines\n12. Build\n\nModules, components, and user-defined types include their role and structured source-file references. The type catalog excludes primitive, standard-library, vendor SDK, and RTOS types. User-defined types include their fields, usage roles, modules, components, evidence, and source locations.\n\nCreated objects include allocation kind, storage location, lifetime, owner, creator, ownership transfers, and release/destruction information. Unproven C/C++ ownership is reported as unknown with a warning rather than guessed.\n\nThe target project's README is embedded in both JSON and HTML at generation time. Regenerate after changing the README. Mermaid is loaded from a CDN when diagrams are rendered, so network access is needed for diagram rendering in a browser.\n\n## Supported Projects\n\nThe scanner recognizes common markers for:\n\n- Bare-metal C/C++\n- FreeRTOS\n- Zephyr\n- Embedded Linux/device tree\n- PlatformIO\n- CMake\n- Make\n- ESP-IDF\n- STM32CubeMX\n- Rust embedded projects\n\nIt reads source/header files, build files, linker scripts, map files, device-tree files, Kconfig files, and project README content using only Python's standard library.\n\n## Install\n\n```bash\nnpx arch-wiki\n```\n\nFor local development:\n\n```bash\nnode ./bin/install.js\n```\n\nThe installer registers `SKILL.md` and the scanner with supported AI assistant skill locations.\n\n## Generate Documentation\n\nFrom a target firmware project after installing the skill:\n\n```bash\npython3 docs/architecture/build_html.py --init\n```\n\nFor subsequent changes:\n\n```bash\npython3 docs/architecture/build_html.py --sync\n```\n\nThe script creates `docs/architecture/` when needed. The first run creates or replaces the generated JSON and HTML files. Subsequent runs rescan the project and regenerate both files.\n\nTo scan a different project from a local checkout:\n\n```bash\npython3 /path/to/arch-wiki/templates/build_html.py --init /path/to/firmware-project\n```\n\nThe target project must be passed as an existing path. If no target path is supplied, the current working directory is scanned.\n\nThe generated dashboard can be opened directly in a browser. Mermaid diagrams require access to the Mermaid CDN referenced by the HTML.\n\n## Manifest Sections\n\n`architecture.json` contains these top-level sections:\n\n| Section | Contents |\n|---|---|\n| `meta` | Project type, languages, detected markers, and generation date |\n| `readme` | Embedded project README content and source metadata |\n| `brief` | System purpose, constraints, and documentation status |\n| `hardware` | MCU, board, peripherals, interfaces, pins, and power metadata |\n| `configurations` | Build profiles, feature flags, Kconfig, and device-tree settings |\n| `memoryLayout` | Linker regions, sections, partitions, stack, heap, and map files |\n| `modules` | Logical firmware subsystems, roles, files, tasks, and type usage |\n| `components` | Concrete source-level drivers, services, HALs, and application units |\n| `dataTypes` | Project-defined structs, enums, unions, typedefs, classes, and traits |\n| `objects` | Created objects, storage, lifetime, ownership, and cleanup metadata |\n| `diagrams` | Class, sequence, interaction, state, and flow diagrams |\n| `dataPipelines` | Detected data movement between firmware modules |\n| `build` | Build system, toolchain, targets, artifacts, and flash/debug metadata |\n\n## Types and Source Traceability\n\nOnly project-defined types are documented as `dataTypes`. Primitive types, standard-library types, RTOS types, vendor HAL types, and external dependency types are excluded. They can still appear as field or signature labels.\n\nEach module, component, and user-defined type includes structured file references where detected:\n\n```json\n{\n  \"path\": \"src/sensors/sensor_manager.c\",\n  \"role\": \"implementation\",\n  \"contains\": [\"sensor_manager_init\"],\n  \"line\": 42\n}\n```\n\nUser-defined type entries include:\n\n- The type's firmware role.\n- Fields and references to other project-defined types.\n- Modules and components that use the type.\n- Usage roles such as `produces`, `consumes`, `queues`, `serializes`, or `stores`.\n- Definition and usage files.\n- Evidence and confidence metadata.\n\n## Object Lifetime and Ownership\n\nThe `objects` section documents concrete instances and resources created by firmware, including:\n\n- Global and static objects.\n- Stack objects.\n- Heap allocations.\n- RTOS resources such as tasks and queues.\n- Pool-managed objects.\n- Peripheral handles and buffers where detectable.\n\nEach object may include:\n\n- User-defined type reference.\n- Runtime role.\n- Storage location and memory section.\n- Lifetime scope and start/end events.\n- Creator and destruction/release path.\n- Owner and ownership model.\n- Ownership transfers and usage files.\n\nC and C++ ownership cannot always be proven statically. The scanner reports `unknown` ownership and low confidence instead of claiming a transfer or cleanup path without evidence.\n\n## Manual Overrides\n\nStatic analysis cannot reliably determine every board detail, safety constraint, or ownership policy. Add an optional file at:\n\n```text\ndocs/architecture/embedded-overrides.json\n```\n\nUse it to provide board/MCU details, pin mappings, power and timing requirements, memory partitions, module/component roles, user-defined type relationships, object ownership, diagrams, and flash/debug commands. The example format is in `templates/embedded-overrides.example.json`.\n\nOverride values are merged after scanner output. Lists containing objects with an `id` replace matching generated entries; object values extend generated sections. Invalid override JSON is reported in the generated manifest warnings.\n\n## Project Structure\n\n```text\narch-wiki/\n\u251c\u2500\u2500 SKILL.md\n\u251c\u2500\u2500 README.md\n\u251c\u2500\u2500 bin/install.js\n\u251c\u2500\u2500 templates/\n\u2502   \u251c\u2500\u2500 architecture.json\n\u2502   \u251c\u2500\u2500 architecture.html\n\u2502   \u251c\u2500\u2500 build_html.py\n\u2502   \u2514\u2500\u2500 embedded-overrides.example.json\n\u2514\u2500\u2500 plans/\n    \u2514\u2500\u2500 embedded-arch-wiki.md\n```\n\n## Limitations\n\nThe scanner is intentionally dependency-free and evidence-based. It does not replace a compiler, linker, static analyzer, or hardware review. Complex macro-generated types, custom allocators, ownership conventions, electrical constraints, and generated diagrams may require manual overrides.\n\nCurrent analysis is intentionally conservative:\n\n- Hardware values are extracted only from recognizable source/configuration markers.\n- Detailed pin maps, clock trees, power budgets, and runtime configuration require explicit source evidence or overrides.\n- C/C++ ownership is uncertain when custom allocators, callbacks, or pointer conventions obscure responsibility.\n- Generated diagrams are starting points and should be reviewed against the firmware.\n- The built-in Markdown renderer covers common README constructs, not the complete Markdown specification.\n- The generator uses only the Python standard library; no third-party Python package is required.\n\n## License\n\nMIT.\n",
+    "title": "Embedded Sample",
+    "content": "# Embedded Sample\n\nFirmware for a sensor node.\n",
     "exists": true,
     "lastModified": "2026-08-10",
     "source": "project-readme"
   },
+  "readmes": [
+    {
+      "path": "README.md",
+      "title": "Embedded Sample",
+      "summary": "Firmware for a sensor node.",
+      "directory": ".",
+      "isRoot": true,
+      "lines": 3,
+      "lastModified": "2026-08-10",
+      "source": "scanner"
+    },
+    {
+      "path": "docs/README.md",
+      "title": "Sample Documentation",
+      "summary": "Architecture and design notes for the embedded sample project.",
+      "directory": "docs",
+      "isRoot": false,
+      "lines": 3,
+      "lastModified": "2026-09-03",
+      "source": "scanner"
+    }
+  ],
   "brief": {
-    "purpose": "arch-wiki is an embedded firmware architecture documentation skill for AI coding assistants. It scans a firmware repository and generates:",
-    "systemType": "rtos",
-    "summary": "arch-wiki is an embedded firmware architecture documentation skill for AI coding assistants. It scans a firmware repository and generates:",
+    "purpose": "Firmware for a sensor node.",
+    "systemType": "bare-metal",
+    "architectureTopology": "single-mcu",
+    "summary": "Firmware for a sensor node.",
     "operatingEnvironment": [],
     "primaryResponsibilities": [],
     "constraints": [],
@@ -42,46 +68,167 @@
   },
   "hardware": {
     "target": {
-      "mcu": "STM32CubeMX"
+      "mcu": "STM32F411RE",
+      "family": "STM32F4",
+      "vendor": "STMicroelectronics",
+      "architecture": "ARM Cortex-M4",
+      "frequencyMHz": 84
+    },
+    "board": {
+      "name": "nucleo_f411re"
+    },
+    "clockConfig": {
+      "sysclk": "84MHz"
     },
     "power": {
-      "operatingVoltage": null,
+      "operatingVoltage": "3.3V",
       "sleepModes": [],
       "powerBudget": {}
     },
-    "peripherals": [
-      {
-        "id": "can",
-        "name": "can",
-        "type": "can",
-        "source": "scanner"
-      },
-      {
-        "id": "time",
-        "name": "time",
-        "type": "timer",
-        "source": "scanner"
-      }
-    ],
+    "peripherals": [],
     "pinMappings": [],
     "sensors": [],
     "actuators": [],
     "communication": [],
     "debugInterfaces": [],
-    "clockTree": {},
     "sourceFiles": [
-      "tests/fixtures/embedded-sample/platformio.ini"
+      "platformio.ini"
     ]
   },
   "configurations": {
-    "buildProfiles": [],
-    "featureFlags": [],
+    "buildProfiles": [
+      {
+        "id": "platformio_environment",
+        "name": "PlatformIO environment",
+        "source": "platformio.ini"
+      },
+      {
+        "id": "make_build",
+        "name": "Make build",
+        "source": "Makefile"
+      }
+    ],
+    "parameters": [
+      {
+        "id": "enable_sensor",
+        "name": "ENABLE_SENSOR",
+        "value": null,
+        "category": "feature",
+        "file": "platformio.ini",
+        "line": 5,
+        "source": "platformio.ini build_flags"
+      },
+      {
+        "id": "sys_clock_hz",
+        "name": "SYS_CLOCK_HZ",
+        "value": "84000000",
+        "category": "clock",
+        "file": "src/main.c",
+        "line": 4,
+        "source": "source definition"
+      },
+      {
+        "id": "sensor_calibration_offset",
+        "name": "SENSOR_CALIBRATION_OFFSET",
+        "value": "12",
+        "category": "application",
+        "file": "src/sensor.c",
+        "line": 4,
+        "source": "source definition"
+      },
+      {
+        "id": "sensor_max_channels",
+        "name": "SENSOR_MAX_CHANNELS",
+        "value": "8",
+        "category": "application",
+        "file": "src/sensor.h",
+        "line": 6,
+        "source": "source definition"
+      },
+      {
+        "id": "sensor_timeout_ms",
+        "name": "SENSOR_TIMEOUT_MS",
+        "value": "100",
+        "category": "peripheral",
+        "file": "src/sensor.h",
+        "line": 7,
+        "source": "source definition"
+      }
+    ],
+    "parametersByCategory": {
+      "feature": [
+        {
+          "id": "enable_sensor",
+          "name": "ENABLE_SENSOR",
+          "value": null,
+          "category": "feature",
+          "file": "platformio.ini",
+          "line": 5,
+          "source": "platformio.ini build_flags"
+        }
+      ],
+      "clock": [
+        {
+          "id": "sys_clock_hz",
+          "name": "SYS_CLOCK_HZ",
+          "value": "84000000",
+          "category": "clock",
+          "file": "src/main.c",
+          "line": 4,
+          "source": "source definition"
+        }
+      ],
+      "application": [
+        {
+          "id": "sensor_calibration_offset",
+          "name": "SENSOR_CALIBRATION_OFFSET",
+          "value": "12",
+          "category": "application",
+          "file": "src/sensor.c",
+          "line": 4,
+          "source": "source definition"
+        },
+        {
+          "id": "sensor_max_channels",
+          "name": "SENSOR_MAX_CHANNELS",
+          "value": "8",
+          "category": "application",
+          "file": "src/sensor.h",
+          "line": 6,
+          "source": "source definition"
+        }
+      ],
+      "peripheral": [
+        {
+          "id": "sensor_timeout_ms",
+          "name": "SENSOR_TIMEOUT_MS",
+          "value": "100",
+          "category": "peripheral",
+          "file": "src/sensor.h",
+          "line": 7,
+          "source": "source definition"
+        }
+      ]
+    },
+    "featureFlags": [
+      {
+        "id": "enable_sensor",
+        "name": "ENABLE_SENSOR",
+        "value": null,
+        "category": "feature",
+        "file": "platformio.ini",
+        "line": 5,
+        "source": "platformio.ini build_flags"
+      }
+    ],
     "runtimeConfiguration": [],
     "kconfigOptions": [],
     "deviceTreeOverlays": [],
     "generatedFiles": [],
     "configurationSources": [
-      "tests/fixtures/embedded-sample/platformio.ini"
+      "Makefile",
+      "platformio.ini",
+      "src/sensor.h"
     ]
   },
   "memoryLayout": {
@@ -98,24 +245,45 @@
   },
   "modules": [
     {
-      "id": "tests",
-      "name": "Tests",
+      "id": "src",
+      "name": "Src",
       "type": "application",
-      "role": "Firmware subsystem discovered from source layout.",
+      "role": "Src firmware subsystem.",
       "description": "",
       "files": [
         {
-          "path": "tests/fixtures/embedded-sample/src/sensor.c",
+          "path": "src/main.c",
           "role": "implementation",
           "contains": [
-            "sensor_init"
+            "bsp_init",
+            "main",
+            "system_clock_config"
           ]
+        },
+        {
+          "path": "src/sensor.c",
+          "role": "implementation",
+          "contains": [
+            "sensor_get_state",
+            "sensor_hw_reset",
+            "sensor_init",
+            "sensor_process",
+            "sensor_read"
+          ]
+        },
+        {
+          "path": "src/sensor.h",
+          "role": "implementation"
         }
       ],
       "components": [],
       "dataTypes": [
         {
           "id": "sensorreading",
+          "role": "uses"
+        },
+        {
+          "id": "sensorstate",
           "role": "uses"
         }
       ],
@@ -130,7 +298,17 @@
       "confidence": "medium",
       "evidence": [
         {
-          "file": "tests/fixtures/embedded-sample/src/sensor.c",
+          "file": "src/main.c",
+          "line": 1,
+          "reason": "source layout"
+        },
+        {
+          "file": "src/sensor.c",
+          "line": 1,
+          "reason": "source layout"
+        },
+        {
+          "file": "src/sensor.h",
           "line": 1,
           "reason": "source layout"
         }
@@ -139,30 +317,42 @@
   ],
   "components": [
     {
-      "id": "sensor",
-      "name": "Sensor",
+      "id": "main",
+      "name": "Main",
       "type": "application",
       "language": "C/C++",
-      "role": "Sensor implementation component.",
+      "role": "Main application component.",
       "description": "",
       "files": [
         {
-          "path": "tests/fixtures/embedded-sample/src/sensor.c",
+          "path": "src/main.c",
           "role": "implementation",
           "contains": [
-            "sensor_init"
+            "bsp_init",
+            "main",
+            "system_clock_config"
           ]
         }
       ],
       "publicHeaders": [],
       "provides": [
-        "sensor_init"
+        "main"
       ],
-      "consumes": [],
+      "consumes": [
+        "bsp_init",
+        "sensor_init",
+        "sensor_process",
+        "sensor_read",
+        "system_clock_config"
+      ],
       "dependencies": [],
       "dataTypes": [
         {
           "id": "sensorreading",
+          "role": "uses"
+        },
+        {
+          "id": "sensorstate",
           "role": "uses"
         }
       ],
@@ -173,12 +363,81 @@
       "confidence": "medium",
       "evidence": [
         {
-          "file": "tests/fixtures/embedded-sample/src/sensor.c",
+          "file": "src/main.c",
+          "line": 1,
+          "reason": "source layout"
+        },
+        {
+          "file": "src/sensor.c",
+          "line": 1,
+          "reason": "source layout"
+        },
+        {
+          "file": "src/sensor.h",
           "line": 1,
           "reason": "source layout"
         }
       ],
-      "module": "tests"
+      "module": "src"
+    },
+    {
+      "id": "sensor",
+      "name": "Sensor",
+      "type": "application",
+      "language": "C/C++",
+      "role": "Sensor application component.",
+      "description": "",
+      "files": [
+        {
+          "path": "src/sensor.h",
+          "role": "implementation"
+        }
+      ],
+      "publicHeaders": [],
+      "provides": [
+        "sensor_init",
+        "sensor_read",
+        "sensor_get_state",
+        "sensor_process"
+      ],
+      "consumes": [
+        "sensor_hw_reset",
+        "sensor_init"
+      ],
+      "dependencies": [],
+      "dataTypes": [
+        {
+          "id": "sensorreading",
+          "role": "uses"
+        },
+        {
+          "id": "sensorstate",
+          "role": "uses"
+        }
+      ],
+      "objects": [],
+      "interrupts": [],
+      "configurationRefs": [],
+      "source": "scanner",
+      "confidence": "medium",
+      "evidence": [
+        {
+          "file": "src/main.c",
+          "line": 1,
+          "reason": "source layout"
+        },
+        {
+          "file": "src/sensor.c",
+          "line": 1,
+          "reason": "source layout"
+        },
+        {
+          "file": "src/sensor.h",
+          "line": 1,
+          "reason": "source layout"
+        }
+      ],
+      "module": "src"
     }
   ],
   "dataTypes": [
@@ -193,12 +452,12 @@
       "description": "",
       "files": [
         {
-          "path": "tests/fixtures/embedded-sample/src/sensor.c",
+          "path": "src/sensor.h",
           "role": "definition",
           "contains": [
             "SensorReading"
           ],
-          "line": 3
+          "line": 16
         }
       ],
       "fields": [
@@ -215,13 +474,18 @@
           "role": "Field"
         }
       ],
+      "members": [],
       "usedByModules": [
         {
-          "id": "tests",
+          "id": "src",
           "role": "uses"
         }
       ],
       "usedByComponents": [
+        {
+          "id": "main",
+          "role": "uses"
+        },
         {
           "id": "sensor",
           "role": "uses"
@@ -230,13 +494,18 @@
       "usage": [
         {
           "role": "consumes",
-          "module": "tests",
-          "description": "Referenced by module source files."
+          "module": "src",
+          "description": "Referenced by module."
+        },
+        {
+          "role": "consumes",
+          "component": "main",
+          "description": "Referenced by component."
         },
         {
           "role": "consumes",
           "component": "sensor",
-          "description": "Referenced by component source files."
+          "description": "Referenced by component."
         }
       ],
       "objectInstances": [],
@@ -244,14 +513,150 @@
       "confidence": "medium",
       "evidence": [
         {
-          "file": "tests/fixtures/embedded-sample/src/sensor.c",
-          "line": 3,
+          "file": "src/sensor.h",
+          "line": 16,
+          "reason": "user-defined type declaration"
+        }
+      ]
+    },
+    {
+      "id": "sensorstate",
+      "name": "SensorState",
+      "kind": "enum",
+      "language": "C/C++",
+      "userDefined": true,
+      "ownership": "project",
+      "role": "Project-defined enum used by firmware components.",
+      "description": "",
+      "files": [
+        {
+          "path": "src/sensor.h",
+          "role": "definition",
+          "contains": [
+            "SensorState"
+          ],
+          "line": 9
+        }
+      ],
+      "fields": [],
+      "members": [
+        {
+          "name": "SENSOR_STATE_IDLE",
+          "value": "0"
+        },
+        {
+          "name": "SENSOR_STATE_SAMPLING",
+          "value": null
+        },
+        {
+          "name": "SENSOR_STATE_READY",
+          "value": null
+        },
+        {
+          "name": "SENSOR_STATE_ERROR",
+          "value": null
+        }
+      ],
+      "usedByModules": [
+        {
+          "id": "src",
+          "role": "uses"
+        }
+      ],
+      "usedByComponents": [
+        {
+          "id": "main",
+          "role": "uses"
+        },
+        {
+          "id": "sensor",
+          "role": "uses"
+        }
+      ],
+      "usage": [
+        {
+          "role": "consumes",
+          "module": "src",
+          "description": "Referenced by module."
+        },
+        {
+          "role": "consumes",
+          "component": "main",
+          "description": "Referenced by component."
+        },
+        {
+          "role": "consumes",
+          "component": "sensor",
+          "description": "Referenced by component."
+        }
+      ],
+      "objectInstances": [],
+      "source": "scanner",
+      "confidence": "medium",
+      "evidence": [
+        {
+          "file": "src/sensor.h",
+          "line": 9,
           "reason": "user-defined type declaration"
         }
       ]
     }
   ],
   "objects": [
+    {
+      "id": "r",
+      "name": "r",
+      "typeReference": "sensorreading",
+      "kind": "global",
+      "role": "Runtime instance of SensorReading.",
+      "lifetime": {
+        "scope": "firmware",
+        "startsAt": "declaration or initialization",
+        "endsAt": "reset",
+        "createdBy": null,
+        "destroyedBy": null,
+        "persistsAcrossReset": false
+      },
+      "ownership": {
+        "model": "global",
+        "owner": {
+          "kind": "source-file",
+          "id": "src/main.c"
+        },
+        "transferEvents": []
+      },
+      "storage": {
+        "location": "global-data",
+        "region": "ram",
+        "section": ".bss",
+        "size": null
+      },
+      "creation": {
+        "function": null,
+        "file": "src/main.c",
+        "line": 18
+      },
+      "usage": [],
+      "files": [
+        {
+          "path": "src/main.c",
+          "role": "definition",
+          "contains": [
+            "r"
+          ],
+          "line": 18
+        }
+      ],
+      "source": "scanner",
+      "confidence": "medium",
+      "evidence": [
+        {
+          "file": "src/main.c",
+          "line": 18,
+          "reason": "project-defined object instance"
+        }
+      ]
+    },
     {
       "id": "current_reading",
       "name": "current_reading",
@@ -270,7 +675,7 @@
         "model": "static",
         "owner": {
           "kind": "source-file",
-          "id": "tests/fixtures/embedded-sample/src/sensor.c"
+          "id": "src/sensor.c"
         },
         "transferEvents": []
       },
@@ -282,26 +687,80 @@
       },
       "creation": {
         "function": null,
-        "file": "tests/fixtures/embedded-sample/src/sensor.c",
-        "line": 8
+        "file": "src/sensor.c",
+        "line": 6
       },
       "usage": [],
       "files": [
         {
-          "path": "tests/fixtures/embedded-sample/src/sensor.c",
+          "path": "src/sensor.c",
           "role": "definition",
           "contains": [
             "current_reading"
           ],
-          "line": 8
+          "line": 6
         }
       ],
       "source": "scanner",
       "confidence": "medium",
       "evidence": [
         {
-          "file": "tests/fixtures/embedded-sample/src/sensor.c",
-          "line": 8,
+          "file": "src/sensor.c",
+          "line": 6,
+          "reason": "project-defined object instance"
+        }
+      ]
+    },
+    {
+      "id": "current_state",
+      "name": "current_state",
+      "typeReference": "sensorstate",
+      "kind": "static",
+      "role": "Runtime instance of SensorState.",
+      "lifetime": {
+        "scope": "firmware",
+        "startsAt": "declaration or initialization",
+        "endsAt": "reset",
+        "createdBy": null,
+        "destroyedBy": null,
+        "persistsAcrossReset": false
+      },
+      "ownership": {
+        "model": "static",
+        "owner": {
+          "kind": "source-file",
+          "id": "src/sensor.c"
+        },
+        "transferEvents": []
+      },
+      "storage": {
+        "location": "global-data",
+        "region": "ram",
+        "section": ".bss",
+        "size": null
+      },
+      "creation": {
+        "function": null,
+        "file": "src/sensor.c",
+        "line": 7
+      },
+      "usage": [],
+      "files": [
+        {
+          "path": "src/sensor.c",
+          "role": "definition",
+          "contains": [
+            "current_state"
+          ],
+          "line": 7
+        }
+      ],
+      "source": "scanner",
+      "confidence": "medium",
+      "evidence": [
+        {
+          "file": "src/sensor.c",
+          "line": 7,
           "reason": "project-defined object instance"
         }
       ]
@@ -314,16 +773,16 @@
         "title": "User-Defined Types",
         "description": "Project-defined types and roles.",
         "source": "generated",
-        "mermaid": "classDiagram\n    class SensorReading {\n        <<struct>>\n        +Project-defined struct used by firmware components.\n    }"
+        "mermaid": "classDiagram\n    class SensorReading {\n        <<struct>>\n        +Project-defined struct used by firmware components.\n    }\n    class SensorState {\n        <<enum>>\n        +Project-defined enum used by firmware components.\n    }"
       }
     ],
     "sequenceDiagrams": [
       {
         "id": "startup",
         "title": "Firmware Startup",
-        "description": "High-level startup sequence.",
-        "source": "generated",
-        "mermaid": "sequenceDiagram\n    Reset->>Startup: initialize\n    Startup->>Application: start"
+        "description": "Boot and initialization sequence derived from main() call hierarchy.",
+        "source": "scanner",
+        "mermaid": "sequenceDiagram\n    autonumber\n    actor Hardware\n    Hardware->>main: Reset Handler\n    main->>bsp_init: bsp_init()\n    bsp_init->>system_clock_config: system_clock_config()\n    main->>sensor_init: sensor_init()\n    sensor_init->>sensor_hw_reset: sensor_hw_reset()\n    main->>sensor_process: sensor_process()\n    sensor_process->>sensor_init: sensor_init()\n    main->>sensor_read: sensor_read()"
       }
     ],
     "interactionDiagrams": [
@@ -332,16 +791,36 @@
         "title": "Firmware Components",
         "description": "Detected module boundaries.",
         "source": "generated",
-        "mermaid": "flowchart LR\n    tests[Tests]"
+        "mermaid": "flowchart LR\n    src[Src]"
       }
     ],
     "stateMachines": [
       {
-        "id": "device-lifecycle",
-        "title": "Device Lifecycle",
-        "description": "Generic lifecycle pending source-specific review.",
-        "source": "generated",
-        "mermaid": "stateDiagram-v2\n    [*] --> Boot\n    Boot --> Running\n    Running --> Sleep\n    Sleep --> Running"
+        "id": "sensorstate",
+        "title": "SensorState Machine",
+        "description": "State machine derived from SensorState and switch-case transitions.",
+        "states": [
+          "SENSOR_STATE_IDLE",
+          "SENSOR_STATE_SAMPLING",
+          "SENSOR_STATE_READY",
+          "SENSOR_STATE_ERROR"
+        ],
+        "transitions": [
+          {
+            "from": "SENSOR_STATE_IDLE",
+            "to": "SENSOR_STATE_SAMPLING"
+          },
+          {
+            "from": "SENSOR_STATE_SAMPLING",
+            "to": "SENSOR_STATE_READY"
+          },
+          {
+            "from": "SENSOR_STATE_READY",
+            "to": "SENSOR_STATE_IDLE"
+          }
+        ],
+        "source": "scanner",
+        "mermaid": "stateDiagram-v2\n    [*] --> SENSOR_STATE_IDLE\n    SENSOR_STATE_IDLE --> SENSOR_STATE_SAMPLING\n    SENSOR_STATE_SAMPLING --> SENSOR_STATE_READY\n    SENSOR_STATE_READY --> SENSOR_STATE_IDLE"
       }
     ],
     "flowCharts": [
@@ -361,9 +840,9 @@
       "description": "Detected flow between firmware modules.",
       "stages": [
         {
-          "id": "tests",
-          "name": "Tests",
-          "component": "tests",
+          "id": "src",
+          "name": "Src",
+          "component": "src",
           "inputType": null,
           "outputType": "sensorreading",
           "objectLifetime": "module-defined",
@@ -371,16 +850,17 @@
         }
       ],
       "edges": [],
-      "mermaid": "flowchart LR\n    tests[Tests]\n"
+      "mermaid": "flowchart LR\n    src[Src]"
     }
   ],
   "build": {
     "system": {
       "type": "PlatformIO",
       "files": [
-        "tests/fixtures/embedded-sample/platformio.ini"
+        "Makefile",
+        "platformio.ini"
       ],
-      "buildDirectory": "build",
+      "buildDirectory": ".pio",
       "generator": null
     },
     "toolchain": {
@@ -391,19 +871,525 @@
       "targetTriple": null,
       "version": null
     },
+    "makefiles": [
+      {
+        "path": "Makefile",
+        "role": "wrapper",
+        "targets": [
+          {
+            "name": "all",
+            "recipe": "@echo \"Use platformio to build\"",
+            "category": "build"
+          },
+          {
+            "name": "flash",
+            "recipe": "openocd -f board.cfg -c \"program build/firmware.elf verify reset exit\"",
+            "category": "flash"
+          },
+          {
+            "name": "monitor",
+            "recipe": "minicom -D $(PORT) -b $(BAUD)",
+            "category": "debug"
+          },
+          {
+            "name": "clean",
+            "recipe": "rm -rf .pio build",
+            "category": "clean"
+          }
+        ],
+        "variables": {
+          "PORT": "/dev/ttyACM0",
+          "BAUD": "115200"
+        }
+      }
+    ],
     "profiles": [],
-    "targets": [],
+    "targets": [
+      "all",
+      "flash",
+      "monitor",
+      "clean"
+    ],
     "artifacts": [],
     "linkerScripts": [],
     "commands": {
       "configure": null,
-      "build": null,
+      "build": "pio run",
       "test": null,
-      "flash": null,
+      "flash": "make flash",
       "debug": null
     },
     "flashAndDebug": {},
     "staticAnalysis": [],
     "ci": []
-  }
+  },
+  "functions": [
+    {
+      "id": "system_clock_config",
+      "name": "system_clock_config",
+      "file": "src/main.c",
+      "line": 6,
+      "signature": "void system_clock_config(void)",
+      "returnType": "void",
+      "parameters": [],
+      "static": true,
+      "visibility": "private",
+      "callers": [
+        "bsp_init"
+      ],
+      "callees": [],
+      "referencedTypes": [],
+      "module": "src",
+      "component": "main",
+      "source": "scanner",
+      "confidence": "medium"
+    },
+    {
+      "id": "bsp_init",
+      "name": "bsp_init",
+      "file": "src/main.c",
+      "line": 9,
+      "signature": "void bsp_init(void)",
+      "returnType": "void",
+      "parameters": [],
+      "static": true,
+      "visibility": "private",
+      "callers": [
+        "main"
+      ],
+      "callees": [
+        "system_clock_config"
+      ],
+      "referencedTypes": [],
+      "module": "src",
+      "component": "main",
+      "source": "scanner",
+      "confidence": "medium"
+    },
+    {
+      "id": "main",
+      "name": "main",
+      "file": "src/main.c",
+      "line": 13,
+      "signature": "int main(void)",
+      "returnType": "int",
+      "parameters": [],
+      "static": false,
+      "visibility": "public",
+      "callers": [],
+      "callees": [
+        "bsp_init",
+        "sensor_init",
+        "sensor_process",
+        "sensor_read"
+      ],
+      "referencedTypes": [],
+      "module": "src",
+      "component": "main",
+      "source": "scanner",
+      "confidence": "medium"
+    },
+    {
+      "id": "sensor_hw_reset",
+      "name": "sensor_hw_reset",
+      "file": "src/sensor.c",
+      "line": 9,
+      "signature": "void sensor_hw_reset(void)",
+      "returnType": "void",
+      "parameters": [],
+      "static": true,
+      "visibility": "private",
+      "callers": [
+        "sensor_init"
+      ],
+      "callees": [],
+      "referencedTypes": [],
+      "module": "src",
+      "component": "sensor",
+      "source": "scanner",
+      "confidence": "medium"
+    },
+    {
+      "id": "sensor_init",
+      "name": "sensor_init",
+      "file": "src/sensor.c",
+      "line": 12,
+      "signature": "void sensor_init(void)",
+      "returnType": "void",
+      "parameters": [],
+      "static": false,
+      "visibility": "public",
+      "callers": [
+        "main",
+        "sensor_process"
+      ],
+      "callees": [
+        "sensor_hw_reset"
+      ],
+      "referencedTypes": [],
+      "module": "src",
+      "component": "sensor",
+      "source": "scanner",
+      "confidence": "medium"
+    },
+    {
+      "id": "sensor_read",
+      "name": "sensor_read",
+      "file": "src/sensor.c",
+      "line": 17,
+      "signature": "SensorReading sensor_read(void)",
+      "returnType": "SensorReading",
+      "parameters": [],
+      "static": false,
+      "visibility": "public",
+      "callers": [
+        "main"
+      ],
+      "callees": [],
+      "referencedTypes": [
+        "sensorreading"
+      ],
+      "module": "src",
+      "component": "sensor",
+      "source": "scanner",
+      "confidence": "medium"
+    },
+    {
+      "id": "sensor_get_state",
+      "name": "sensor_get_state",
+      "file": "src/sensor.c",
+      "line": 21,
+      "signature": "SensorState sensor_get_state(void)",
+      "returnType": "SensorState",
+      "parameters": [],
+      "static": false,
+      "visibility": "public",
+      "callers": [],
+      "callees": [],
+      "referencedTypes": [
+        "sensorstate"
+      ],
+      "module": "src",
+      "component": "sensor",
+      "source": "scanner",
+      "confidence": "medium"
+    },
+    {
+      "id": "sensor_process",
+      "name": "sensor_process",
+      "file": "src/sensor.c",
+      "line": 25,
+      "signature": "void sensor_process(void)",
+      "returnType": "void",
+      "parameters": [],
+      "static": false,
+      "visibility": "public",
+      "callers": [
+        "main"
+      ],
+      "callees": [
+        "sensor_init"
+      ],
+      "referencedTypes": [],
+      "module": "src",
+      "component": "sensor",
+      "source": "scanner",
+      "confidence": "medium"
+    }
+  ],
+  "macros": [
+    {
+      "id": "sys_clock_hz",
+      "name": "SYS_CLOCK_HZ",
+      "value": "84000000",
+      "file": "src/main.c",
+      "line": 4,
+      "parameterized": false,
+      "parameters": [],
+      "category": "clock",
+      "source": "scanner"
+    },
+    {
+      "id": "sensor_calibration_offset",
+      "name": "SENSOR_CALIBRATION_OFFSET",
+      "value": "12",
+      "file": "src/sensor.c",
+      "line": 4,
+      "parameterized": false,
+      "parameters": [],
+      "category": "application",
+      "source": "scanner"
+    },
+    {
+      "id": "sensor_max_channels",
+      "name": "SENSOR_MAX_CHANNELS",
+      "value": "8",
+      "file": "src/sensor.h",
+      "line": 6,
+      "parameterized": false,
+      "parameters": [],
+      "category": "application",
+      "source": "scanner"
+    },
+    {
+      "id": "sensor_timeout_ms",
+      "name": "SENSOR_TIMEOUT_MS",
+      "value": "100",
+      "file": "src/sensor.h",
+      "line": 7,
+      "parameterized": false,
+      "parameters": [],
+      "category": "peripheral",
+      "source": "scanner"
+    }
+  ],
+  "callGraph": {
+    "edges": [
+      {
+        "caller": "bsp_init",
+        "callee": "system_clock_config",
+        "file": "src/main.c",
+        "line": 9
+      },
+      {
+        "caller": "main",
+        "callee": "bsp_init",
+        "file": "src/main.c",
+        "line": 13
+      },
+      {
+        "caller": "main",
+        "callee": "sensor_init",
+        "file": "src/main.c",
+        "line": 13
+      },
+      {
+        "caller": "main",
+        "callee": "sensor_read",
+        "file": "src/main.c",
+        "line": 13
+      },
+      {
+        "caller": "main",
+        "callee": "sensor_process",
+        "file": "src/main.c",
+        "line": 13
+      },
+      {
+        "caller": "sensor_init",
+        "callee": "sensor_hw_reset",
+        "file": "src/sensor.c",
+        "line": 12
+      },
+      {
+        "caller": "sensor_process",
+        "callee": "sensor_init",
+        "file": "src/sensor.c",
+        "line": 25
+      }
+    ],
+    "mermaid": "flowchart LR\n    bsp_init[bsp_init] --> system_clock_config[system_clock_config]\n    main[main] --> bsp_init[bsp_init]\n    main[main] --> sensor_init[sensor_init]\n    main[main] --> sensor_read[sensor_read]\n    main[main] --> sensor_process[sensor_process]\n    sensor_init[sensor_init] --> sensor_hw_reset[sensor_hw_reset]\n    sensor_process[sensor_process] --> sensor_init[sensor_init]"
+  },
+  "fileIndex": [
+    {
+      "path": "src/main.c",
+      "language": "C/C++",
+      "lines": 22,
+      "functions": [
+        "bsp_init",
+        "main",
+        "system_clock_config"
+      ],
+      "types": [],
+      "macros": [
+        "SYS_CLOCK_HZ"
+      ],
+      "globals": [
+        "r"
+      ],
+      "module": "src"
+    },
+    {
+      "path": "src/sensor.c",
+      "language": "C/C++",
+      "lines": 43,
+      "functions": [
+        "sensor_get_state",
+        "sensor_hw_reset",
+        "sensor_init",
+        "sensor_process",
+        "sensor_read"
+      ],
+      "types": [],
+      "macros": [
+        "SENSOR_CALIBRATION_OFFSET"
+      ],
+      "globals": [
+        "current_reading",
+        "current_state"
+      ],
+      "module": "src"
+    },
+    {
+      "path": "src/sensor.h",
+      "language": "C/C++",
+      "lines": 26,
+      "functions": [],
+      "types": [
+        "SensorReading",
+        "SensorState"
+      ],
+      "macros": [
+        "SENSOR_MAX_CHANNELS",
+        "SENSOR_TIMEOUT_MS"
+      ],
+      "globals": [],
+      "module": "src"
+    }
+  ],
+  "symbolIndex": [
+    {
+      "name": "bsp_init",
+      "kind": "function",
+      "file": "src/main.c",
+      "line": 9,
+      "detail": "void bsp_init(void)"
+    },
+    {
+      "name": "current_reading",
+      "kind": "object",
+      "file": "src/sensor.c",
+      "line": 6,
+      "detail": "static instance (Runtime instance of SensorReading.)"
+    },
+    {
+      "name": "current_state",
+      "kind": "object",
+      "file": "src/sensor.c",
+      "line": 7,
+      "detail": "static instance (Runtime instance of SensorState.)"
+    },
+    {
+      "name": "main",
+      "kind": "function",
+      "file": "src/main.c",
+      "line": 13,
+      "detail": "int main(void)"
+    },
+    {
+      "name": "r",
+      "kind": "object",
+      "file": "src/main.c",
+      "line": 18,
+      "detail": "global instance (Runtime instance of SensorReading.)"
+    },
+    {
+      "name": "SENSOR_CALIBRATION_OFFSET",
+      "kind": "macro",
+      "file": "src/sensor.c",
+      "line": 4,
+      "detail": "12"
+    },
+    {
+      "name": "sensor_get_state",
+      "kind": "function",
+      "file": "src/sensor.c",
+      "line": 21,
+      "detail": "SensorState sensor_get_state(void)"
+    },
+    {
+      "name": "sensor_hw_reset",
+      "kind": "function",
+      "file": "src/sensor.c",
+      "line": 9,
+      "detail": "void sensor_hw_reset(void)"
+    },
+    {
+      "name": "sensor_init",
+      "kind": "function",
+      "file": "src/sensor.c",
+      "line": 12,
+      "detail": "void sensor_init(void)"
+    },
+    {
+      "name": "SENSOR_MAX_CHANNELS",
+      "kind": "macro",
+      "file": "src/sensor.h",
+      "line": 6,
+      "detail": "8"
+    },
+    {
+      "name": "sensor_process",
+      "kind": "function",
+      "file": "src/sensor.c",
+      "line": 25,
+      "detail": "void sensor_process(void)"
+    },
+    {
+      "name": "sensor_read",
+      "kind": "function",
+      "file": "src/sensor.c",
+      "line": 17,
+      "detail": "SensorReading sensor_read(void)"
+    },
+    {
+      "name": "SENSOR_TIMEOUT_MS",
+      "kind": "macro",
+      "file": "src/sensor.h",
+      "line": 7,
+      "detail": "100"
+    },
+    {
+      "name": "SensorReading",
+      "kind": "struct",
+      "file": "src/sensor.h",
+      "line": 16,
+      "detail": "Project-defined struct used by firmware components."
+    },
+    {
+      "name": "SensorState",
+      "kind": "enum",
+      "file": "src/sensor.h",
+      "line": 9,
+      "detail": "Project-defined enum used by firmware components."
+    },
+    {
+      "name": "SYS_CLOCK_HZ",
+      "kind": "macro",
+      "file": "src/main.c",
+      "line": 4,
+      "detail": "84000000"
+    },
+    {
+      "name": "system_clock_config",
+      "kind": "function",
+      "file": "src/main.c",
+      "line": 6,
+      "detail": "void system_clock_config(void)"
+    }
+  ],
+  "dependencies": {
+    "edges": [
+      {
+        "from": "main",
+        "to": "sensor",
+        "via": [
+          "sensor_init",
+          "sensor_process",
+          "sensor_read"
+        ]
+      }
+    ],
+    "mermaid": "flowchart TD\n    main[main] -->|sensor_init, sensor_process| sensor[sensor]"
+  },
+  "tools": [
+    {
+      "id": "flash",
+      "name": "flash.sh",
+      "path": "scripts/flash.sh",
+      "type": "shell-script",
+      "category": "flash",
+      "source": "scanner"
+    }
+  ]
 }

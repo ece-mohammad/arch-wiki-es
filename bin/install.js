@@ -4,7 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const os = require('os');
 
-console.log('🏛️  Installing arch-wiki AI Skill...\n');
+console.log('🏛️  Installing arch-wiki-es AI Skill...\n');
 
 const rootDir = path.join(__dirname, '..');
 const skillFile = path.join(rootDir, 'SKILL.md');
@@ -20,17 +20,17 @@ const homeDir = os.homedir();
 const targets = [];
 
 // 1. Antigravity Global Skills Path
-const antigravityPath = path.join(homeDir, '.gemini', 'antigravity', 'skills', 'arch-wiki');
+const antigravityPath = path.join(homeDir, '.gemini', 'antigravity', 'skills', 'arch-wiki-es');
 targets.push({ name: 'Antigravity AI Agent', path: antigravityPath });
 
 // 2. Claude Code Skills Path
-const claudePath = path.join(homeDir, '.claude', 'skills', 'arch-wiki');
+const claudePath = path.join(homeDir, '.claude', 'skills', 'arch-wiki-es');
 targets.push({ name: 'Claude Code', path: claudePath });
 
 // 3. Local Workspace Target (if run inside a project)
-const cwdSkillPath = path.join(process.cwd(), '.skills', 'arch-wiki');
+const cwdSkillPath = path.join(process.cwd(), '.skills', 'arch-wiki-es');
 if (process.cwd() !== rootDir) {
-    targets.push({ name: 'Local Project Workspace (.skills/arch-wiki)', path: cwdSkillPath });
+    targets.push({ name: 'Local Project Workspace (.skills/arch-wiki-es)', path: cwdSkillPath });
 }
 
 let installedCount = 0;
@@ -61,7 +61,7 @@ targets.forEach(target => {
             fs.copyFileSync(overrideExampleFile, path.join(templatesDir, 'embedded-overrides.example.json'));
         }
 
-        console.log(`✅ Installed arch-wiki to ${target.name}:`);
+        console.log(`✅ Installed arch-wiki-es to ${target.name}:`);
         console.log(`   └─ ${target.path}\n`);
         installedCount++;
     } catch (err) {
@@ -70,10 +70,10 @@ targets.forEach(target => {
 });
 
 if (installedCount > 0) {
-    console.log('🎉 arch-wiki Skill Installation Complete!');
+    console.log('🎉 arch-wiki-es Skill Installation Complete!');
     console.log('\n💡 Usage in AI Chat / Agent:');
     console.log('   Simply prompt your AI assistant:');
-    console.log('   "Run arch-wiki skill to generate architecture documentation for this project"\n');
+    console.log('   "Run arch-wiki-es skill to generate architecture documentation for this project"\n');
 } else {
     console.error('❌ Skill installation failed. Please check folder permissions.');
 }

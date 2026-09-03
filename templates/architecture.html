@@ -784,348 +784,101 @@
     <main class="main-content">
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Arch Wiki Embedded Systems - Architecture</title><script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script><style>:root{--bg:#0d1117;--panel:#161b22;--panel2:#21262d;--border:#30363d;--text:#e6edf3;--muted:#8b949e;--accent:#58a6ff}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14px system-ui,sans-serif}header{position:sticky;top:0;z-index:2;background:var(--panel);border-bottom:1px solid var(--border);padding:18px 28px}header h1{margin:0 0 4px}header p{margin:0;color:var(--muted)}.layout{display:flex;min-height:calc(100vh - 78px)}aside{width:250px;flex:none;background:var(--panel);border-right:1px solid var(--border);padding:16px;position:fixed;top:78px;bottom:0;overflow:auto}main{margin-left:250px;padding:28px;max-width:1500px;width:calc(100% - 250px)}.nav-btn{display:block;width:100%;text-align:left;background:none;border:1px solid transparent;color:var(--muted);padding:10px;border-radius:7px;margin:3px 0;cursor:pointer}.nav-btn:hover,.nav-btn.active{background:var(--panel2);border-color:var(--accent);color:var(--text)}.section{display:none}.section.active{display:block}h2{border-bottom:1px solid var(--border);padding-bottom:10px}h3{color:var(--accent)}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:16px}.card{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:18px;margin:0 0 16px;overflow:auto}pre{background:#090c10;border:1px solid var(--border);padding:14px;border-radius:7px;overflow:auto;white-space:pre-wrap;word-break:break-word}code{color:#9cdcfe}.muted{color:var(--muted)}.files span{color:var(--muted);margin-left:8px}.toolbar{display:flex;gap:12px;align-items:center;margin-bottom:14px}button{color:var(--text);background:var(--panel2);border:1px solid var(--border);border-radius:6px;padding:7px 10px;cursor:pointer}.readme{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:24px;line-height:1.6}.readme img{max-width:100%}@media(max-width:750px){aside{position:static;width:100%;border-right:0;border-bottom:1px solid var(--border);display:flex;flex-wrap:wrap;gap:4px}.layout{display:block}main{margin:0;width:100%;padding:16px}.nav-btn{width:auto}}</style></head><body><header><h1>Arch Wiki Embedded Systems</h1><p>Embedded firmware architecture map | rtos | Generated 2026-08-10</p></header><div class="layout"><aside><button class="nav-btn" onclick="showTab('brief',this)">Brief</button><button class="nav-btn" onclick="showTab('readme',this)">Project README</button><button class="nav-btn" onclick="showTab('hardware',this)">Hardware</button><button class="nav-btn" onclick="showTab('configurations',this)">Configurations</button><button class="nav-btn" onclick="showTab('memory-layout',this)">Memory Layout</button><button class="nav-btn" onclick="showTab('modules-components',this)">Modules &amp; Components</button><button class="nav-btn" onclick="showTab('class-diagrams',this)">Class Diagrams</button><button class="nav-btn" onclick="showTab('sequence-diagrams',this)">Sequence Diagrams</button><button class="nav-btn" onclick="showTab('interaction-diagrams',this)">Interaction Diagrams</button><button class="nav-btn" onclick="showTab('state-machines',this)">State Machines</button><button class="nav-btn" onclick="showTab('flow-charts',this)">Flow Charts</button><button class="nav-btn" onclick="showTab('data-pipelines',this)">Data Pipelines</button><button class="nav-btn" onclick="showTab('build',this)">Build</button></aside><main><section class="section" id="sec-brief"><h2>Brief</h2><article class="card"><h3>Purpose</h3><p>arch-wiki is an embedded firmware architecture documentation skill for AI coding assistants. It scans a firmware repository and generates:</p></article><article class="card"><h3>System</h3><pre>{
   &quot;type&quot;: &quot;rtos&quot;,
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Embedded Sample - Architecture</title><script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script><style>
+:root{--bg:#0d1117;--panel:#161b22;--panel2:#21262d;--border:#30363d;--text:#e6edf3;--muted:#8b949e;--accent:#58a6ff}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:14px system-ui,sans-serif}
+header{position:sticky;top:0;z-index:2;background:var(--panel);border-bottom:1px solid var(--border);padding:18px 28px}
+header h1{margin:0 0 4px}header p{margin:0;color:var(--muted)}
+.layout{display:flex;min-height:calc(100vh - 78px)}
+aside{width:260px;flex:none;background:var(--panel);border-right:1px solid var(--border);padding:16px;position:fixed;top:78px;bottom:0;overflow:auto}
+main{margin-left:260px;padding:28px;max-width:1500px;width:calc(100% - 260px)}
+.nav-btn{display:block;width:100%;text-align:left;background:none;border:1px solid transparent;color:var(--muted);padding:9px 12px;border-radius:7px;margin:2px 0;cursor:pointer;font-size:13px}
+.nav-btn:hover,.nav-btn.active{background:var(--panel2);border-color:var(--accent);color:var(--text)}
+.section{display:none}.section.active{display:block}
+h2{border-bottom:1px solid var(--border);padding-bottom:10px}h3{color:var(--accent);margin-top:0}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:18px;margin:0 0 16px;overflow:auto}
+pre{background:#090c10;border:1px solid var(--border);padding:14px;border-radius:7px;overflow:auto;white-space:pre-wrap;word-break:break-word}
+code{color:#9cdcfe}.muted{color:var(--muted)}
+.files span{color:var(--muted);margin-left:8px}
+.toolbar{display:flex;gap:12px;align-items:center;margin-bottom:14px}
+button{color:var(--text);background:var(--panel2);border:1px solid var(--border);border-radius:6px;padding:7px 10px;cursor:pointer}
+.readme{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:24px;line-height:1.6}
+.readme img{max-width:100%}
+.data-table{width:100%;border-collapse:collapse;margin-top:8px}
+.data-table th,.data-table td{border:1px solid var(--border);padding:8px 12px;text-align:left}
+.data-table th{background:var(--panel2);color:var(--accent)}
+.badge{background:var(--panel2);border:1px solid var(--border);padding:2px 6px;border-radius:4px;font-size:11px;color:var(--accent)}
+@media(max-width:750px){aside{position:static;width:100%;border-right:0;border-bottom:1px solid var(--border);display:flex;flex-wrap:wrap;gap:4px}.layout{display:block}main{margin:0;width:100%;padding:16px}.nav-btn{width:auto}}
+</style></head><body><header><h1>Embedded Sample</h1><p>Embedded architecture map | PlatformIO (bare-metal) | Generated 2026-09-03</p></header><div class="layout"><aside><button class="nav-btn" onclick="showTab('brief',this)">Brief</button><button class="nav-btn" onclick="showTab('readme',this)">Project README</button><button class="nav-btn" onclick="showTab('hardware',this)">Hardware</button><button class="nav-btn" onclick="showTab('configurations',this)">Configurations</button><button class="nav-btn" onclick="showTab('memory-layout',this)">Memory Layout</button><button class="nav-btn" onclick="showTab('modules-components',this)">Modules &amp; Components</button><button class="nav-btn" onclick="showTab('dependencies',this)">Dependencies</button><button class="nav-btn" onclick="showTab('files',this)">Files</button><button class="nav-btn" onclick="showTab('functions',this)">Functions</button><button class="nav-btn" onclick="showTab('macros',this)">Macros</button><button class="nav-btn" onclick="showTab('call-graph',this)">Call Graph</button><button class="nav-btn" onclick="showTab('tools',this)">Tools &amp; Scripts</button><button class="nav-btn" onclick="showTab('class-diagrams',this)">Class Diagrams</button><button class="nav-btn" onclick="showTab('sequence-diagrams',this)">Sequence Diagrams</button><button class="nav-btn" onclick="showTab('interaction-diagrams',this)">Interaction Diagrams</button><button class="nav-btn" onclick="showTab('state-machines',this)">State Machines</button><button class="nav-btn" onclick="showTab('flow-charts',this)">Flow Charts</button><button class="nav-btn" onclick="showTab('data-pipelines',this)">Data Pipelines</button><button class="nav-btn" onclick="showTab('build',this)">Build</button><button class="nav-btn" onclick="showTab('symbol-index',this)">Symbol Index</button></aside><main><section class="section" id="sec-brief"><h2>Brief</h2><article class="card"><h3>Purpose</h3><p>Firmware for a sensor node.</p></article><article class="card"><h3>Architecture Topology</h3><pre>{
+  &quot;primaryType&quot;: &quot;PlatformIO&quot;,
+  &quot;systemType&quot;: &quot;bare-metal&quot;,
+  &quot;topology&quot;: &quot;single-mcu&quot;,
   &quot;markers&quot;: [
     &quot;PlatformIO&quot;,
-    &quot;Zephyr&quot;
+    &quot;Make&quot;
   ]
 }</pre></article></section>
-<section class="section" id="sec-readme"><h2>Project README</h2><div class="toolbar"><code>README.md</code><button onclick="copyReadme()">Copy Markdown</button></div><article class="readme"><h1>arch-wiki</h1>
-<p><code>arch-wiki</code> is an embedded firmware architecture documentation skill for AI coding assistants. It scans a firmware repository and generates:</p>
-<li><code>docs/architecture/architecture.json</code>: machine-readable architecture metadata.</li>
-<li><code>docs/architecture/architecture.html</code>: interactive architecture dashboard with the project README and generated diagrams embedded in the output.</li>
-<p>The tool is embedded-only. It documents firmware and hardware rather than REST APIs, SQL, Swagger, Docker, or backend services.</p>
-<h2>Documented Architecture</h2>
-<p>The generated files contain:</p>
-<p>0. Brief</p>
-<p>1. Project README</p>
-<p>2. Hardware</p>
-<p>3. Configurations</p>
-<p>4. Memory Layout</p>
-<p>5. Modules &amp; Components</p>
-<p>6. Class Diagrams</p>
-<p>7. Sequence Diagrams</p>
-<p>8. Interaction Diagrams</p>
-<p>9. State Machines</p>
-<p>10. Flow Charts</p>
-<p>11. Data Pipelines</p>
-<p>12. Build</p>
-<p>Modules, components, and user-defined types include their role and structured source-file references. The type catalog excludes primitive, standard-library, vendor SDK, and RTOS types. User-defined types include their fields, usage roles, modules, components, evidence, and source locations.</p>
-<p>Created objects include allocation kind, storage location, lifetime, owner, creator, ownership transfers, and release/destruction information. Unproven C/C++ ownership is reported as unknown with a warning rather than guessed.</p>
-<p>The target project&#x27;s README is embedded in both JSON and HTML at generation time. Regenerate after changing the README. Mermaid is loaded from a CDN when diagrams are rendered, so network access is needed for diagram rendering in a browser.</p>
-<h2>Supported Projects</h2>
-<p>The scanner recognizes common markers for:</p>
-<li>Bare-metal C/C++</li>
-<li>FreeRTOS</li>
-<li>Zephyr</li>
-<li>Embedded Linux/device tree</li>
-<li>PlatformIO</li>
-<li>CMake</li>
-<li>Make</li>
-<li>ESP-IDF</li>
-<li>STM32CubeMX</li>
-<li>Rust embedded projects</li>
-<p>It reads source/header files, build files, linker scripts, map files, device-tree files, Kconfig files, and project README content using only Python&#x27;s standard library.</p>
-<h2>Install</h2>
-<pre><code>npx arch-wiki</code></pre>
-<p>For local development:</p>
-<pre><code>node ./bin/install.js</code></pre>
-<p>The installer registers <code>SKILL.md</code> and the scanner with supported AI assistant skill locations.</p>
-<h2>Generate Documentation</h2>
-<p>From a target firmware project after installing the skill:</p>
-<pre><code>python3 docs/architecture/build_html.py --init</code></pre>
-<p>For subsequent changes:</p>
-<pre><code>python3 docs/architecture/build_html.py --sync</code></pre>
-<p>The script creates <code>docs/architecture/</code> when needed. The first run creates or replaces the generated JSON and HTML files. Subsequent runs rescan the project and regenerate both files.</p>
-<p>To scan a different project from a local checkout:</p>
-<pre><code>python3 /path/to/arch-wiki/templates/build_html.py --init /path/to/firmware-project</code></pre>
-<p>The target project must be passed as an existing path. If no target path is supplied, the current working directory is scanned.</p>
-<p>The generated dashboard can be opened directly in a browser. Mermaid diagrams require access to the Mermaid CDN referenced by the HTML.</p>
-<h2>Manifest Sections</h2>
-<p><code>architecture.json</code> contains these top-level sections:</p>
-<p>| Section | Contents |</p>
-<p>|---|---|</p>
-<p>| <code>meta</code> | Project type, languages, detected markers, and generation date |</p>
-<p>| <code>readme</code> | Embedded project README content and source metadata |</p>
-<p>| <code>brief</code> | System purpose, constraints, and documentation status |</p>
-<p>| <code>hardware</code> | MCU, board, peripherals, interfaces, pins, and power metadata |</p>
-<p>| <code>configurations</code> | Build profiles, feature flags, Kconfig, and device-tree settings |</p>
-<p>| <code>memoryLayout</code> | Linker regions, sections, partitions, stack, heap, and map files |</p>
-<p>| <code>modules</code> | Logical firmware subsystems, roles, files, tasks, and type usage |</p>
-<p>| <code>components</code> | Concrete source-level drivers, services, HALs, and application units |</p>
-<p>| <code>dataTypes</code> | Project-defined structs, enums, unions, typedefs, classes, and traits |</p>
-<p>| <code>objects</code> | Created objects, storage, lifetime, ownership, and cleanup metadata |</p>
-<p>| <code>diagrams</code> | Class, sequence, interaction, state, and flow diagrams |</p>
-<p>| <code>dataPipelines</code> | Detected data movement between firmware modules |</p>
-<p>| <code>build</code> | Build system, toolchain, targets, artifacts, and flash/debug metadata |</p>
-<h2>Types and Source Traceability</h2>
-<p>Only project-defined types are documented as <code>dataTypes</code>. Primitive types, standard-library types, RTOS types, vendor HAL types, and external dependency types are excluded. They can still appear as field or signature labels.</p>
-<p>Each module, component, and user-defined type includes structured file references where detected:</p>
-<pre><code>{
-  &quot;path&quot;: &quot;src/sensors/sensor_manager.c&quot;,
-  &quot;role&quot;: &quot;implementation&quot;,
-  &quot;contains&quot;: [&quot;sensor_manager_init&quot;],
-  &quot;line&quot;: 42
-}</code></pre>
-<p>User-defined type entries include:</p>
-<li>The type&#x27;s firmware role.</li>
-<li>Fields and references to other project-defined types.</li>
-<li>Modules and components that use the type.</li>
-<li>Usage roles such as <code>produces</code>, <code>consumes</code>, <code>queues</code>, <code>serializes</code>, or <code>stores</code>.</li>
-<li>Definition and usage files.</li>
-<li>Evidence and confidence metadata.</li>
-<h2>Object Lifetime and Ownership</h2>
-<p>The <code>objects</code> section documents concrete instances and resources created by firmware, including:</p>
-<li>Global and static objects.</li>
-<li>Stack objects.</li>
-<li>Heap allocations.</li>
-<li>RTOS resources such as tasks and queues.</li>
-<li>Pool-managed objects.</li>
-<li>Peripheral handles and buffers where detectable.</li>
-<p>Each object may include:</p>
-<li>User-defined type reference.</li>
-<li>Runtime role.</li>
-<li>Storage location and memory section.</li>
-<li>Lifetime scope and start/end events.</li>
-<li>Creator and destruction/release path.</li>
-<li>Owner and ownership model.</li>
-<li>Ownership transfers and usage files.</li>
-<p>C and C++ ownership cannot always be proven statically. The scanner reports <code>unknown</code> ownership and low confidence instead of claiming a transfer or cleanup path without evidence.</p>
-<h2>Manual Overrides</h2>
-<p>Static analysis cannot reliably determine every board detail, safety constraint, or ownership policy. Add an optional file at:</p>
-<pre><code>docs/architecture/embedded-overrides.json</code></pre>
-<p>Use it to provide board/MCU details, pin mappings, power and timing requirements, memory partitions, module/component roles, user-defined type relationships, object ownership, diagrams, and flash/debug commands. The example format is in <code>templates/embedded-overrides.example.json</code>.</p>
-<p>Override values are merged after scanner output. Lists containing objects with an <code>id</code> replace matching generated entries; object values extend generated sections. Invalid override JSON is reported in the generated manifest warnings.</p>
-<h2>Project Structure</h2>
-<pre><code>arch-wiki/
-├── SKILL.md
-├── README.md
-├── bin/install.js
-├── templates/
-│   ├── architecture.json
-│   ├── architecture.html
-│   ├── build_html.py
-│   └── embedded-overrides.example.json
-└── plans/
-    └── embedded-arch-wiki.md</code></pre>
-<h2>Limitations</h2>
-<p>The scanner is intentionally dependency-free and evidence-based. It does not replace a compiler, linker, static analyzer, or hardware review. Complex macro-generated types, custom allocators, ownership conventions, electrical constraints, and generated diagrams may require manual overrides.</p>
-<p>Current analysis is intentionally conservative:</p>
-<li>Hardware values are extracted only from recognizable source/configuration markers.</li>
-<li>Detailed pin maps, clock trees, power budgets, and runtime configuration require explicit source evidence or overrides.</li>
-<li>C/C++ ownership is uncertain when custom allocators, callbacks, or pointer conventions obscure responsibility.</li>
-<li>Generated diagrams are starting points and should be reviewed against the firmware.</li>
-<li>The built-in Markdown renderer covers common README constructs, not the complete Markdown specification.</li>
-<li>The generator uses only the Python standard library; no third-party Python package is required.</li>
-<h2>License</h2>
-<p>MIT.</p></article><details><summary>View Markdown source</summary><pre id="readme-source"># arch-wiki
+<section class="section" id="sec-readme"><h2>Project README</h2><div class="card"><h3>Project Documentation Index</h3><table class="data-table"><thead><tr><th>File</th><th>Directory</th><th>Summary</th></tr></thead><tbody><tr><td><code>README.md</code></td><td>.</td><td>Firmware for a sensor node.</td></tr><tr><td><code>docs/README.md</code></td><td>docs</td><td>Architecture and design notes for the embedded sample project.</td></tr></tbody></table></div><div class="toolbar"><code>README.md</code><button onclick="copyReadme()">Copy Markdown</button></div><article class="readme"><h1>Embedded Sample</h1>
+<p>Firmware for a sensor node.</p></article><details><summary>View Markdown source</summary><pre id="readme-source"># Embedded Sample
 
-`arch-wiki` is an embedded firmware architecture documentation skill for AI coding assistants. It scans a firmware repository and generates:
-
-- `docs/architecture/architecture.json`: machine-readable architecture metadata.
-- `docs/architecture/architecture.html`: interactive architecture dashboard with the project README and generated diagrams embedded in the output.
-
-The tool is embedded-only. It documents firmware and hardware rather than REST APIs, SQL, Swagger, Docker, or backend services.
-
-## Documented Architecture
-
-The generated files contain:
-
-0. Brief
-1. Project README
-2. Hardware
-3. Configurations
-4. Memory Layout
-5. Modules &amp; Components
-6. Class Diagrams
-7. Sequence Diagrams
-8. Interaction Diagrams
-9. State Machines
-10. Flow Charts
-11. Data Pipelines
-12. Build
-
-Modules, components, and user-defined types include their role and structured source-file references. The type catalog excludes primitive, standard-library, vendor SDK, and RTOS types. User-defined types include their fields, usage roles, modules, components, evidence, and source locations.
-
-Created objects include allocation kind, storage location, lifetime, owner, creator, ownership transfers, and release/destruction information. Unproven C/C++ ownership is reported as unknown with a warning rather than guessed.
-
-The target project&#x27;s README is embedded in both JSON and HTML at generation time. Regenerate after changing the README. Mermaid is loaded from a CDN when diagrams are rendered, so network access is needed for diagram rendering in a browser.
-
-## Supported Projects
-
-The scanner recognizes common markers for:
-
-- Bare-metal C/C++
-- FreeRTOS
-- Zephyr
-- Embedded Linux/device tree
-- PlatformIO
-- CMake
-- Make
-- ESP-IDF
-- STM32CubeMX
-- Rust embedded projects
-
-It reads source/header files, build files, linker scripts, map files, device-tree files, Kconfig files, and project README content using only Python&#x27;s standard library.
-
-## Install
-
-```bash
-npx arch-wiki
-```
-
-For local development:
-
-```bash
-node ./bin/install.js
-```
-
-The installer registers `SKILL.md` and the scanner with supported AI assistant skill locations.
-
-## Generate Documentation
-
-From a target firmware project after installing the skill:
-
-```bash
-python3 docs/architecture/build_html.py --init
-```
-
-For subsequent changes:
-
-```bash
-python3 docs/architecture/build_html.py --sync
-```
-
-The script creates `docs/architecture/` when needed. The first run creates or replaces the generated JSON and HTML files. Subsequent runs rescan the project and regenerate both files.
-
-To scan a different project from a local checkout:
-
-```bash
-python3 /path/to/arch-wiki/templates/build_html.py --init /path/to/firmware-project
-```
-
-The target project must be passed as an existing path. If no target path is supplied, the current working directory is scanned.
-
-The generated dashboard can be opened directly in a browser. Mermaid diagrams require access to the Mermaid CDN referenced by the HTML.
-
-## Manifest Sections
-
-`architecture.json` contains these top-level sections:
-
-| Section | Contents |
-|---|---|
-| `meta` | Project type, languages, detected markers, and generation date |
-| `readme` | Embedded project README content and source metadata |
-| `brief` | System purpose, constraints, and documentation status |
-| `hardware` | MCU, board, peripherals, interfaces, pins, and power metadata |
-| `configurations` | Build profiles, feature flags, Kconfig, and device-tree settings |
-| `memoryLayout` | Linker regions, sections, partitions, stack, heap, and map files |
-| `modules` | Logical firmware subsystems, roles, files, tasks, and type usage |
-| `components` | Concrete source-level drivers, services, HALs, and application units |
-| `dataTypes` | Project-defined structs, enums, unions, typedefs, classes, and traits |
-| `objects` | Created objects, storage, lifetime, ownership, and cleanup metadata |
-| `diagrams` | Class, sequence, interaction, state, and flow diagrams |
-| `dataPipelines` | Detected data movement between firmware modules |
-| `build` | Build system, toolchain, targets, artifacts, and flash/debug metadata |
-
-## Types and Source Traceability
-
-Only project-defined types are documented as `dataTypes`. Primitive types, standard-library types, RTOS types, vendor HAL types, and external dependency types are excluded. They can still appear as field or signature labels.
-
-Each module, component, and user-defined type includes structured file references where detected:
-
-```json
-{
-  &quot;path&quot;: &quot;src/sensors/sensor_manager.c&quot;,
-  &quot;role&quot;: &quot;implementation&quot;,
-  &quot;contains&quot;: [&quot;sensor_manager_init&quot;],
-  &quot;line&quot;: 42
-}
-```
-
-User-defined type entries include:
-
-- The type&#x27;s firmware role.
-- Fields and references to other project-defined types.
-- Modules and components that use the type.
-- Usage roles such as `produces`, `consumes`, `queues`, `serializes`, or `stores`.
-- Definition and usage files.
-- Evidence and confidence metadata.
-
-## Object Lifetime and Ownership
-
-The `objects` section documents concrete instances and resources created by firmware, including:
-
-- Global and static objects.
-- Stack objects.
-- Heap allocations.
-- RTOS resources such as tasks and queues.
-- Pool-managed objects.
-- Peripheral handles and buffers where detectable.
-
-Each object may include:
-
-- User-defined type reference.
-- Runtime role.
-- Storage location and memory section.
-- Lifetime scope and start/end events.
-- Creator and destruction/release path.
-- Owner and ownership model.
-- Ownership transfers and usage files.
-
-C and C++ ownership cannot always be proven statically. The scanner reports `unknown` ownership and low confidence instead of claiming a transfer or cleanup path without evidence.
-
-## Manual Overrides
-
-Static analysis cannot reliably determine every board detail, safety constraint, or ownership policy. Add an optional file at:
-
-```text
-docs/architecture/embedded-overrides.json
-```
-
-Use it to provide board/MCU details, pin mappings, power and timing requirements, memory partitions, module/component roles, user-defined type relationships, object ownership, diagrams, and flash/debug commands. The example format is in `templates/embedded-overrides.example.json`.
-
-Override values are merged after scanner output. Lists containing objects with an `id` replace matching generated entries; object values extend generated sections. Invalid override JSON is reported in the generated manifest warnings.
-
-## Project Structure
-
-```text
-arch-wiki/
-├── SKILL.md
-├── README.md
-├── bin/install.js
-├── templates/
-│   ├── architecture.json
-│   ├── architecture.html
-│   ├── build_html.py
-│   └── embedded-overrides.example.json
-└── plans/
-    └── embedded-arch-wiki.md
-```
-
-## Limitations
-
-The scanner is intentionally dependency-free and evidence-based. It does not replace a compiler, linker, static analyzer, or hardware review. Complex macro-generated types, custom allocators, ownership conventions, electrical constraints, and generated diagrams may require manual overrides.
-
-Current analysis is intentionally conservative:
-
-- Hardware values are extracted only from recognizable source/configuration markers.
-- Detailed pin maps, clock trees, power budgets, and runtime configuration require explicit source evidence or overrides.
-- C/C++ ownership is uncertain when custom allocators, callbacks, or pointer conventions obscure responsibility.
-- Generated diagrams are starting points and should be reviewed against the firmware.
-- The built-in Markdown renderer covers common README constructs, not the complete Markdown specification.
-- The generator uses only the Python standard library; no third-party Python package is required.
-
-## License
-
-MIT.
+Firmware for a sensor node.
 </pre></details></section>
-<section class="section" id="sec-hardware"><h2>Hardware</h2><article class="card"><h3>Target</h3><pre>{
-  &quot;mcu&quot;: &quot;STM32CubeMX&quot;
-}</pre></article><article class="card"><h3>Peripherals</h3><div class="grid"><article class="card"><h3>can</h3>can</article><article class="card"><h3>time</h3>timer</article></div></article><article class="card"><h3>Source files</h3><ul><li><code>tests/fixtures/embedded-sample/platformio.ini</code> <span>hardware configuration</span></li></ul></article></section>
-<section class="section" id="sec-configurations"><h2>Configurations</h2><article class="card"><h3>Build profiles</h3><pre>[]</pre></article><article class="card"><h3>Feature flags</h3><pre>[]</pre></article><article class="card"><h3>Configuration sources</h3><ul><li><code>tests/fixtures/embedded-sample/platformio.ini</code> <span>configuration</span></li></ul></article></section>
-<section class="section" id="sec-memory-layout"><h2>Memory Layout</h2><article class="card"><h3>Memory regions</h3><pre>[]</pre></article><article class="card"><h3>Linker/map files</h3><p class="muted">No source files detected.</p></article></section>
-<section class="section" id="sec-modules-components"><h2>Modules &amp; Components</h2><h3>Modules</h3><div class="grid"><article class="card"><h3>Tests</h3><p><b>Role:</b> Firmware subsystem discovered from source layout.</p><ul><li><code>tests/fixtures/embedded-sample/src/sensor.c</code> <span>implementation</span></li></ul></article></div><h3>Components</h3><div class="grid"><article class="card"><h3>Sensor</h3><p><b>Role:</b> Sensor implementation component.</p><ul><li><code>tests/fixtures/embedded-sample/src/sensor.c</code> <span>implementation</span></li></ul></article></div><h3>User-Defined Data Types</h3><div class="grid"><article class="card"><h3>SensorReading</h3><p><b>Role:</b> Project-defined struct used by firmware components.</p><p><b>Usage:</b> consumes, consumes</p><ul><li><code>tests/fixtures/embedded-sample/src/sensor.c</code> <span>definition</span> line 3</li></ul></article></div><h3>Objects, Lifetime & Ownership</h3><div class="grid"><article class="card"><h3>current_reading</h3><p><b>Role:</b> Runtime instance of SensorReading.</p><pre>{
-  &quot;type&quot;: &quot;sensorreading&quot;,
+<section class="section" id="sec-hardware"><h2>Hardware</h2><article class="card"><h3>Target MCU &amp; Architecture</h3><pre>{
+  &quot;mcu&quot;: &quot;STM32F411RE&quot;,
+  &quot;family&quot;: &quot;STM32F4&quot;,
+  &quot;vendor&quot;: &quot;STMicroelectronics&quot;,
+  &quot;architecture&quot;: &quot;ARM Cortex-M4&quot;,
+  &quot;frequencyMHz&quot;: 84
+}</pre></article><article class="card"><h3>Board</h3><pre>{
+  &quot;name&quot;: &quot;nucleo_f411re&quot;
+}</pre></article><article class="card"><h3>Clock Configuration</h3><pre>{
+  &quot;sysclk&quot;: &quot;84MHz&quot;
+}</pre></article><article class="card"><h3>Peripherals</h3><div class="grid"></div></article><article class="card"><h3>Pin Mappings</h3><pre>[]</pre></article><article class="card"><h3>Hardware Source Files</h3><ul><li><code>platformio.ini</code> <span>hardware config</span></li></ul></article></section>
+<section class="section" id="sec-configurations"><h2>Configurations</h2><article class="card"><h3>Build Profiles</h3><pre>[
+  {
+    &quot;id&quot;: &quot;platformio_environment&quot;,
+    &quot;name&quot;: &quot;PlatformIO environment&quot;,
+    &quot;source&quot;: &quot;platformio.ini&quot;
+  },
+  {
+    &quot;id&quot;: &quot;make_build&quot;,
+    &quot;name&quot;: &quot;Make build&quot;,
+    &quot;source&quot;: &quot;Makefile&quot;
+  }
+]</pre></article><div class="card"><h3>Category: Feature (1)</h3><table class="data-table"><thead><tr><th>Parameter</th><th>Value</th><th>Source</th></tr></thead><tbody><tr><td><code>ENABLE_SENSOR</code></td><td></td><td><code>platformio.ini:5</code></td></tr></tbody></table></div><div class="card"><h3>Category: Clock (1)</h3><table class="data-table"><thead><tr><th>Parameter</th><th>Value</th><th>Source</th></tr></thead><tbody><tr><td><code>SYS_CLOCK_HZ</code></td><td>84000000</td><td><code>src/main.c:4</code></td></tr></tbody></table></div><div class="card"><h3>Category: Application (2)</h3><table class="data-table"><thead><tr><th>Parameter</th><th>Value</th><th>Source</th></tr></thead><tbody><tr><td><code>SENSOR_CALIBRATION_OFFSET</code></td><td>12</td><td><code>src/sensor.c:4</code></td></tr><tr><td><code>SENSOR_MAX_CHANNELS</code></td><td>8</td><td><code>src/sensor.h:6</code></td></tr></tbody></table></div><div class="card"><h3>Category: Peripheral (1)</h3><table class="data-table"><thead><tr><th>Parameter</th><th>Value</th><th>Source</th></tr></thead><tbody><tr><td><code>SENSOR_TIMEOUT_MS</code></td><td>100</td><td><code>src/sensor.h:7</code></td></tr></tbody></table></div><article class="card"><h3>Configuration Sources</h3><ul><li><code>Makefile</code> <span>configuration</span></li><li><code>platformio.ini</code> <span>configuration</span></li><li><code>src/sensor.h</code> <span>configuration</span></li></ul></article></section>
+<section class="section" id="sec-memory-layout"><h2>Memory Layout</h2><article class="card"><h3>Memory Regions</h3><pre>[]</pre></article><article class="card"><h3>Sections</h3><pre>[]</pre></article><article class="card"><h3>Linker / Map Files</h3><p class="muted">No source files detected.</p></article></section>
+<section class="section" id="sec-modules-components"><h2>Modules &amp; Components</h2><h3>Modules</h3><div class="grid"><article class="card"><h3>Src</h3><p><b>Role:</b> Src firmware subsystem.</p><ul><li><code>src/main.c</code> <span>implementation</span></li><li><code>src/sensor.c</code> <span>implementation</span></li><li><code>src/sensor.h</code> <span>implementation</span></li></ul></article></div><h3>Components</h3><div class="grid"><article class="card"><h3>Main</h3><p><b>Role:</b> Main application component.</p><p><b>Provides:</b> <code>main</code></p><p><b>Consumes:</b> <code>bsp_init, sensor_init, sensor_process, sensor_read, system_clock_config</code></p><ul><li><code>src/main.c</code> <span>implementation</span></li></ul></article><article class="card"><h3>Sensor</h3><p><b>Role:</b> Sensor application component.</p><p><b>Provides:</b> <code>sensor_init, sensor_read, sensor_get_state, sensor_process</code></p><p><b>Consumes:</b> <code>sensor_hw_reset, sensor_init</code></p><ul><li><code>src/sensor.h</code> <span>implementation</span></li></ul></article></div><h3>User-Defined Data Types</h3><div class="grid"><article class="card"><h3>SensorReading</h3><p><b>Kind:</b> struct</p><p><b>Role:</b> Project-defined struct used by firmware components.</p><p><b>Fields:</b> value, timestamp</p><ul><li><code>src/sensor.h</code> <span>definition</span> line 16</li></ul></article><article class="card"><h3>SensorState</h3><p><b>Kind:</b> enum</p><p><b>Role:</b> Project-defined enum used by firmware components.</p><p><b>Fields:</b> none</p><ul><li><code>src/sensor.h</code> <span>definition</span> line 9</li></ul></article></div><h3>Objects & Storage</h3><div class="grid"><article class="card"><h3>r</h3><p><b>Kind:</b> global</p><p><b>Role:</b> Runtime instance of SensorReading.</p><pre>{
+  &quot;storage&quot;: {
+    &quot;location&quot;: &quot;global-data&quot;,
+    &quot;region&quot;: &quot;ram&quot;,
+    &quot;section&quot;: &quot;.bss&quot;,
+    &quot;size&quot;: null
+  },
+  &quot;lifetime&quot;: {
+    &quot;scope&quot;: &quot;firmware&quot;,
+    &quot;startsAt&quot;: &quot;declaration or initialization&quot;,
+    &quot;endsAt&quot;: &quot;reset&quot;,
+    &quot;createdBy&quot;: null,
+    &quot;destroyedBy&quot;: null,
+    &quot;persistsAcrossReset&quot;: false
+  },
+  &quot;ownership&quot;: {
+    &quot;model&quot;: &quot;global&quot;,
+    &quot;owner&quot;: {
+      &quot;kind&quot;: &quot;source-file&quot;,
+      &quot;id&quot;: &quot;src/main.c&quot;
+    },
+    &quot;transferEvents&quot;: []
+  }
+}</pre><ul><li><code>src/main.c</code> <span>definition</span> line 18</li></ul></article><article class="card"><h3>current_reading</h3><p><b>Kind:</b> static</p><p><b>Role:</b> Runtime instance of SensorReading.</p><pre>{
+  &quot;storage&quot;: {
+    &quot;location&quot;: &quot;global-data&quot;,
+    &quot;region&quot;: &quot;ram&quot;,
+    &quot;section&quot;: &quot;.bss&quot;,
+    &quot;size&quot;: null
+  },
   &quot;lifetime&quot;: {
     &quot;scope&quot;: &quot;firmware&quot;,
     &quot;startsAt&quot;: &quot;declaration or initialization&quot;,
@@ -1138,45 +891,142 @@ MIT.
     &quot;model&quot;: &quot;static&quot;,
     &quot;owner&quot;: {
       &quot;kind&quot;: &quot;source-file&quot;,
-      &quot;id&quot;: &quot;tests/fixtures/embedded-sample/src/sensor.c&quot;
+      &quot;id&quot;: &quot;src/sensor.c&quot;
     },
     &quot;transferEvents&quot;: []
-  },
+  }
+}</pre><ul><li><code>src/sensor.c</code> <span>definition</span> line 6</li></ul></article><article class="card"><h3>current_state</h3><p><b>Kind:</b> static</p><p><b>Role:</b> Runtime instance of SensorState.</p><pre>{
   &quot;storage&quot;: {
     &quot;location&quot;: &quot;global-data&quot;,
     &quot;region&quot;: &quot;ram&quot;,
     &quot;section&quot;: &quot;.bss&quot;,
     &quot;size&quot;: null
+  },
+  &quot;lifetime&quot;: {
+    &quot;scope&quot;: &quot;firmware&quot;,
+    &quot;startsAt&quot;: &quot;declaration or initialization&quot;,
+    &quot;endsAt&quot;: &quot;reset&quot;,
+    &quot;createdBy&quot;: null,
+    &quot;destroyedBy&quot;: null,
+    &quot;persistsAcrossReset&quot;: false
+  },
+  &quot;ownership&quot;: {
+    &quot;model&quot;: &quot;static&quot;,
+    &quot;owner&quot;: {
+      &quot;kind&quot;: &quot;source-file&quot;,
+      &quot;id&quot;: &quot;src/sensor.c&quot;
+    },
+    &quot;transferEvents&quot;: []
   }
-}</pre><ul><li><code>tests/fixtures/embedded-sample/src/sensor.c</code> <span>definition</span> line 8</li></ul></article></div></section>
+}</pre><ul><li><code>src/sensor.c</code> <span>definition</span> line 7</li></ul></article></div></section>
+<section class="section" id="sec-dependencies"><h2>Dependencies</h2><article class="card"><h3>Inter-Component Call Graph</h3><pre class="mermaid">flowchart TD
+    main[main] --&gt;|sensor_init, sensor_process| sensor[sensor]</pre></article><article class="card"><h3>Dependency Edges</h3><pre>[
+  {
+    &quot;from&quot;: &quot;main&quot;,
+    &quot;to&quot;: &quot;sensor&quot;,
+    &quot;via&quot;: [
+      &quot;sensor_init&quot;,
+      &quot;sensor_process&quot;,
+      &quot;sensor_read&quot;
+    ]
+  }
+]</pre></article></section>
+<section class="section" id="sec-files"><h2>Files</h2><div class="card"><table class="data-table"><thead><tr><th>Path</th><th>Lang</th><th>Lines</th><th>Functions</th><th>Types</th><th>Macros</th></tr></thead><tbody><tr><td><code>src/main.c</code></td><td>C/C++</td><td>22</td><td><code>bsp_init, main, system_clock_config</code></td><td><code></code></td><td><code>SYS_CLOCK_HZ</code></td></tr><tr><td><code>src/sensor.c</code></td><td>C/C++</td><td>43</td><td><code>sensor_get_state, sensor_hw_reset, sensor_init, sensor_process, sensor_read</code></td><td><code></code></td><td><code>SENSOR_CALIBRATION_OFFSET</code></td></tr><tr><td><code>src/sensor.h</code></td><td>C/C++</td><td>26</td><td><code></code></td><td><code>SensorReading, SensorState</code></td><td><code>SENSOR_MAX_CHANNELS, SENSOR_TIMEOUT_MS</code></td></tr></tbody></table></div></section>
+<section class="section" id="sec-functions"><h2>Functions</h2><div class="grid"><article class="card"><h3>system_clock_config</h3><p><code>void system_clock_config(void)</code></p><p><b>File:</b> <code>src/main.c:6</code> (private)</p><p><b>Callers:</b> <code>bsp_init</code></p><p><b>Callees:</b> <code>none</code></p></article><article class="card"><h3>bsp_init</h3><p><code>void bsp_init(void)</code></p><p><b>File:</b> <code>src/main.c:9</code> (private)</p><p><b>Callers:</b> <code>main</code></p><p><b>Callees:</b> <code>system_clock_config</code></p></article><article class="card"><h3>main</h3><p><code>int main(void)</code></p><p><b>File:</b> <code>src/main.c:13</code> (public)</p><p><b>Callers:</b> <code>none</code></p><p><b>Callees:</b> <code>bsp_init, sensor_init, sensor_process, sensor_read</code></p></article><article class="card"><h3>sensor_hw_reset</h3><p><code>void sensor_hw_reset(void)</code></p><p><b>File:</b> <code>src/sensor.c:9</code> (private)</p><p><b>Callers:</b> <code>sensor_init</code></p><p><b>Callees:</b> <code>none</code></p></article><article class="card"><h3>sensor_init</h3><p><code>void sensor_init(void)</code></p><p><b>File:</b> <code>src/sensor.c:12</code> (public)</p><p><b>Callers:</b> <code>main, sensor_process</code></p><p><b>Callees:</b> <code>sensor_hw_reset</code></p></article><article class="card"><h3>sensor_read</h3><p><code>SensorReading sensor_read(void)</code></p><p><b>File:</b> <code>src/sensor.c:17</code> (public)</p><p><b>Callers:</b> <code>main</code></p><p><b>Callees:</b> <code>none</code></p></article><article class="card"><h3>sensor_get_state</h3><p><code>SensorState sensor_get_state(void)</code></p><p><b>File:</b> <code>src/sensor.c:21</code> (public)</p><p><b>Callers:</b> <code>none</code></p><p><b>Callees:</b> <code>none</code></p></article><article class="card"><h3>sensor_process</h3><p><code>void sensor_process(void)</code></p><p><b>File:</b> <code>src/sensor.c:25</code> (public)</p><p><b>Callers:</b> <code>main</code></p><p><b>Callees:</b> <code>sensor_init</code></p></article></div></section>
+<section class="section" id="sec-macros"><h2>Macros</h2><div class="card"><table class="data-table"><thead><tr><th>Macro</th><th>Value</th><th>Category</th><th>Source</th></tr></thead><tbody><tr><td><code>SYS_CLOCK_HZ</code></td><td><code>84000000</code></td><td><span class='badge'>clock</span></td><td><code>src/main.c:4</code></td></tr><tr><td><code>SENSOR_CALIBRATION_OFFSET</code></td><td><code>12</code></td><td><span class='badge'>application</span></td><td><code>src/sensor.c:4</code></td></tr><tr><td><code>SENSOR_MAX_CHANNELS</code></td><td><code>8</code></td><td><span class='badge'>application</span></td><td><code>src/sensor.h:6</code></td></tr><tr><td><code>SENSOR_TIMEOUT_MS</code></td><td><code>100</code></td><td><span class='badge'>peripheral</span></td><td><code>src/sensor.h:7</code></td></tr></tbody></table></div></section>
+<section class="section" id="sec-call-graph"><h2>Call Graph</h2><article class="card"><h3>Function Call Relationships</h3><pre class="mermaid">flowchart LR
+    bsp_init[bsp_init] --&gt; system_clock_config[system_clock_config]
+    main[main] --&gt; bsp_init[bsp_init]
+    main[main] --&gt; sensor_init[sensor_init]
+    main[main] --&gt; sensor_read[sensor_read]
+    main[main] --&gt; sensor_process[sensor_process]
+    sensor_init[sensor_init] --&gt; sensor_hw_reset[sensor_hw_reset]
+    sensor_process[sensor_process] --&gt; sensor_init[sensor_init]</pre></article><article class="card"><h3>Call Edges</h3><pre>[
+  {
+    &quot;caller&quot;: &quot;bsp_init&quot;,
+    &quot;callee&quot;: &quot;system_clock_config&quot;,
+    &quot;file&quot;: &quot;src/main.c&quot;,
+    &quot;line&quot;: 9
+  },
+  {
+    &quot;caller&quot;: &quot;main&quot;,
+    &quot;callee&quot;: &quot;bsp_init&quot;,
+    &quot;file&quot;: &quot;src/main.c&quot;,
+    &quot;line&quot;: 13
+  },
+  {
+    &quot;caller&quot;: &quot;main&quot;,
+    &quot;callee&quot;: &quot;sensor_init&quot;,
+    &quot;file&quot;: &quot;src/main.c&quot;,
+    &quot;line&quot;: 13
+  },
+  {
+    &quot;caller&quot;: &quot;main&quot;,
+    &quot;callee&quot;: &quot;sensor_read&quot;,
+    &quot;file&quot;: &quot;src/main.c&quot;,
+    &quot;line&quot;: 13
+  },
+  {
+    &quot;caller&quot;: &quot;main&quot;,
+    &quot;callee&quot;: &quot;sensor_process&quot;,
+    &quot;file&quot;: &quot;src/main.c&quot;,
+    &quot;line&quot;: 13
+  },
+  {
+    &quot;caller&quot;: &quot;sensor_init&quot;,
+    &quot;callee&quot;: &quot;sensor_hw_reset&quot;,
+    &quot;file&quot;: &quot;src/sensor.c&quot;,
+    &quot;line&quot;: 12
+  },
+  {
+    &quot;caller&quot;: &quot;sensor_process&quot;,
+    &quot;callee&quot;: &quot;sensor_init&quot;,
+    &quot;file&quot;: &quot;src/sensor.c&quot;,
+    &quot;line&quot;: 25
+  }
+]</pre></article></section>
+<section class="section" id="sec-tools"><h2>Tools &amp; Scripts</h2><article class="card"><h3>Project Helper Tools &amp; Scripts</h3><table class="data-table"><thead><tr><th>Name</th><th>Path</th><th>Type</th><th>Category</th></tr></thead><tbody><tr><td><code>flash.sh</code></td><td><code>scripts/flash.sh</code></td><td>shell-script</td><td><span class='badge'>flash</span></td></tr></tbody></table></article><article class="card"><h3>Makefile: Makefile (Role: wrapper)</h3><table class="data-table"><thead><tr><th>Target</th><th>Category</th><th>Recipe</th></tr></thead><tbody><tr><td><code>all</code></td><td><span class='badge'>build</span></td><td><pre>@echo &quot;Use platformio to build&quot;</pre></td></tr><tr><td><code>flash</code></td><td><span class='badge'>flash</span></td><td><pre>openocd -f board.cfg -c &quot;program build/firmware.elf verify reset exit&quot;</pre></td></tr><tr><td><code>monitor</code></td><td><span class='badge'>debug</span></td><td><pre>minicom -D $(PORT) -b $(BAUD)</pre></td></tr><tr><td><code>clean</code></td><td><span class='badge'>clean</span></td><td><pre>rm -rf .pio build</pre></td></tr></tbody></table></article></section>
 <section class="section" id="sec-class-diagrams"><h2>Class Diagrams</h2><article class="card"><h3>User-Defined Types</h3><p>Project-defined types and roles.</p><pre class="mermaid">classDiagram
     class SensorReading {
         &lt;&lt;struct&gt;&gt;
         +Project-defined struct used by firmware components.
+    }
+    class SensorState {
+        &lt;&lt;enum&gt;&gt;
+        +Project-defined enum used by firmware components.
     }</pre></article></section>
-<section class="section" id="sec-sequence-diagrams"><h2>Sequence Diagrams</h2><article class="card"><h3>Firmware Startup</h3><p>High-level startup sequence.</p><pre class="mermaid">sequenceDiagram
-    Reset-&gt;&gt;Startup: initialize
-    Startup-&gt;&gt;Application: start</pre></article></section>
+<section class="section" id="sec-sequence-diagrams"><h2>Sequence Diagrams</h2><article class="card"><h3>Firmware Startup</h3><p>Boot and initialization sequence derived from main() call hierarchy.</p><pre class="mermaid">sequenceDiagram
+    autonumber
+    actor Hardware
+    Hardware-&gt;&gt;main: Reset Handler
+    main-&gt;&gt;bsp_init: bsp_init()
+    bsp_init-&gt;&gt;system_clock_config: system_clock_config()
+    main-&gt;&gt;sensor_init: sensor_init()
+    sensor_init-&gt;&gt;sensor_hw_reset: sensor_hw_reset()
+    main-&gt;&gt;sensor_process: sensor_process()
+    sensor_process-&gt;&gt;sensor_init: sensor_init()
+    main-&gt;&gt;sensor_read: sensor_read()</pre></article></section>
 <section class="section" id="sec-interaction-diagrams"><h2>Interaction Diagrams</h2><article class="card"><h3>Firmware Components</h3><p>Detected module boundaries.</p><pre class="mermaid">flowchart LR
-    tests[Tests]</pre></article></section>
-<section class="section" id="sec-state-machines"><h2>State Machines</h2><article class="card"><h3>Device Lifecycle</h3><p>Generic lifecycle pending source-specific review.</p><pre class="mermaid">stateDiagram-v2
-    [*] --&gt; Boot
-    Boot --&gt; Running
-    Running --&gt; Sleep
-    Sleep --&gt; Running</pre></article></section>
+    src[Src]</pre></article></section>
+<section class="section" id="sec-state-machines"><h2>State Machines</h2><article class="card"><h3>SensorState Machine</h3><p>State machine derived from SensorState and switch-case transitions.</p><pre class="mermaid">stateDiagram-v2
+    [*] --&gt; SENSOR_STATE_IDLE
+    SENSOR_STATE_IDLE --&gt; SENSOR_STATE_SAMPLING
+    SENSOR_STATE_SAMPLING --&gt; SENSOR_STATE_READY
+    SENSOR_STATE_READY --&gt; SENSOR_STATE_IDLE</pre></article></section>
 <section class="section" id="sec-flow-charts"><h2>Flow Charts</h2><article class="card"><h3>Firmware Startup</h3><p>Generic startup flow.</p><pre class="mermaid">flowchart TD
     Reset --&gt; Init
     Init --&gt; Main</pre></article></section>
-<section class="section" id="sec-data-pipelines"><h2>Data Pipelines</h2><article class="card"><h3>Pipelines</h3><pre>[
+<section class="section" id="sec-data-pipelines"><h2>Data Pipelines</h2><article class="card"><h3>Pipelines</h3><pre class="mermaid">flowchart LR
+    src[Src]</pre><pre>[
   {
     &quot;id&quot;: &quot;firmware-data-flow&quot;,
     &quot;name&quot;: &quot;Firmware Data Flow&quot;,
     &quot;description&quot;: &quot;Detected flow between firmware modules.&quot;,
     &quot;stages&quot;: [
       {
-        &quot;id&quot;: &quot;tests&quot;,
-        &quot;name&quot;: &quot;Tests&quot;,
-        &quot;component&quot;: &quot;tests&quot;,
+        &quot;id&quot;: &quot;src&quot;,
+        &quot;name&quot;: &quot;Src&quot;,
+        &quot;component&quot;: &quot;src&quot;,
         &quot;inputType&quot;: null,
         &quot;outputType&quot;: &quot;sensorreading&quot;,
         &quot;objectLifetime&quot;: &quot;module-defined&quot;,
@@ -1184,7 +1034,7 @@ MIT.
       }
     ],
     &quot;edges&quot;: [],
-    &quot;mermaid&quot;: &quot;flowchart LR\n    tests[Tests]\n&quot;
+    &quot;mermaid&quot;: &quot;flowchart LR\n    src[Src]&quot;
   }
 }</code></pre>
             </div>
@@ -1501,13 +1351,14 @@ MIT.
 </body>
 </html>
 ]</pre></article></section>
-<section class="section" id="sec-build"><h2>Build</h2><article class="card"><h3>Build system</h3><pre>{
+<section class="section" id="sec-build"><h2>Build</h2><article class="card"><h3>Build System &amp; Toolchain</h3><pre>{
   &quot;system&quot;: {
     &quot;type&quot;: &quot;PlatformIO&quot;,
     &quot;files&quot;: [
-      &quot;tests/fixtures/embedded-sample/platformio.ini&quot;
+      &quot;Makefile&quot;,
+      &quot;platformio.ini&quot;
     ],
-    &quot;buildDirectory&quot;: &quot;build&quot;,
+    &quot;buildDirectory&quot;: &quot;.pio&quot;,
     &quot;generator&quot;: null
   },
   &quot;toolchain&quot;: {
@@ -1518,18 +1369,81 @@ MIT.
     &quot;targetTriple&quot;: null,
     &quot;version&quot;: null
   },
+  &quot;makefiles&quot;: [
+    {
+      &quot;path&quot;: &quot;Makefile&quot;,
+      &quot;role&quot;: &quot;wrapper&quot;,
+      &quot;targets&quot;: [
+        {
+          &quot;name&quot;: &quot;all&quot;,
+          &quot;recipe&quot;: &quot;@echo \&quot;Use platformio to build\&quot;&quot;,
+          &quot;category&quot;: &quot;build&quot;
+        },
+        {
+          &quot;name&quot;: &quot;flash&quot;,
+          &quot;recipe&quot;: &quot;openocd -f board.cfg -c \&quot;program build/firmware.elf verify reset exit\&quot;&quot;,
+          &quot;category&quot;: &quot;flash&quot;
+        },
+        {
+          &quot;name&quot;: &quot;monitor&quot;,
+          &quot;recipe&quot;: &quot;minicom -D $(PORT) -b $(BAUD)&quot;,
+          &quot;category&quot;: &quot;debug&quot;
+        },
+        {
+          &quot;name&quot;: &quot;clean&quot;,
+          &quot;recipe&quot;: &quot;rm -rf .pio build&quot;,
+          &quot;category&quot;: &quot;clean&quot;
+        }
+      ],
+      &quot;variables&quot;: {
+        &quot;PORT&quot;: &quot;/dev/ttyACM0&quot;,
+        &quot;BAUD&quot;: &quot;115200&quot;
+      }
+    }
+  ],
   &quot;profiles&quot;: [],
-  &quot;targets&quot;: [],
+  &quot;targets&quot;: [
+    &quot;all&quot;,
+    &quot;flash&quot;,
+    &quot;monitor&quot;,
+    &quot;clean&quot;
+  ],
   &quot;artifacts&quot;: [],
   &quot;linkerScripts&quot;: [],
   &quot;commands&quot;: {
     &quot;configure&quot;: null,
-    &quot;build&quot;: null,
+    &quot;build&quot;: &quot;pio run&quot;,
     &quot;test&quot;: null,
-    &quot;flash&quot;: null,
+    &quot;flash&quot;: &quot;make flash&quot;,
     &quot;debug&quot;: null
   },
   &quot;flashAndDebug&quot;: {},
   &quot;staticAnalysis&quot;: [],
   &quot;ci&quot;: []
-}</pre></article></section></main></div><script>function showTab(id,b){document.querySelectorAll('.section').forEach(x=>x.classList.remove('active'));var x=document.getElementById('sec-'+id);if(x)x.classList.add('active');document.querySelectorAll('.nav-btn').forEach(x=>x.classList.remove('active'));if(b)b.classList.add('active');if(window.mermaid)mermaid.run()}function copyReadme(){navigator.clipboard.writeText(document.getElementById('readme-source').textContent)}document.querySelector('.section').classList.add('active');document.querySelector('.nav-btn').classList.add('active');if(window.mermaid)mermaid.initialize({startOnLoad:false,theme:'dark'})</script></body></html>
+}</pre></article></section>
+<section class="section" id="sec-symbol-index"><h2>Symbol Index</h2><div class="card"><input type="text" id="sym-filter" placeholder="Filter symbols..." onkeyup="filterSymbols()" style="width:100%;padding:8px;margin-bottom:12px;background:var(--panel2);border:1px solid var(--border);color:var(--text);border-radius:6px;"><table class="data-table" id="sym-table"><thead><tr><th>Symbol</th><th>Kind</th><th>Location</th><th>Detail</th></tr></thead><tbody><tr><td><code>bsp_init</code></td><td><span class='badge'>function</span></td><td><code>src/main.c:9</code></td><td>void bsp_init(void)</td></tr><tr><td><code>current_reading</code></td><td><span class='badge'>object</span></td><td><code>src/sensor.c:6</code></td><td>static instance (Runtime instance of SensorReading.)</td></tr><tr><td><code>current_state</code></td><td><span class='badge'>object</span></td><td><code>src/sensor.c:7</code></td><td>static instance (Runtime instance of SensorState.)</td></tr><tr><td><code>main</code></td><td><span class='badge'>function</span></td><td><code>src/main.c:13</code></td><td>int main(void)</td></tr><tr><td><code>r</code></td><td><span class='badge'>object</span></td><td><code>src/main.c:18</code></td><td>global instance (Runtime instance of SensorReading.)</td></tr><tr><td><code>SENSOR_CALIBRATION_OFFSET</code></td><td><span class='badge'>macro</span></td><td><code>src/sensor.c:4</code></td><td>12</td></tr><tr><td><code>sensor_get_state</code></td><td><span class='badge'>function</span></td><td><code>src/sensor.c:21</code></td><td>SensorState sensor_get_state(void)</td></tr><tr><td><code>sensor_hw_reset</code></td><td><span class='badge'>function</span></td><td><code>src/sensor.c:9</code></td><td>void sensor_hw_reset(void)</td></tr><tr><td><code>sensor_init</code></td><td><span class='badge'>function</span></td><td><code>src/sensor.c:12</code></td><td>void sensor_init(void)</td></tr><tr><td><code>SENSOR_MAX_CHANNELS</code></td><td><span class='badge'>macro</span></td><td><code>src/sensor.h:6</code></td><td>8</td></tr><tr><td><code>sensor_process</code></td><td><span class='badge'>function</span></td><td><code>src/sensor.c:25</code></td><td>void sensor_process(void)</td></tr><tr><td><code>sensor_read</code></td><td><span class='badge'>function</span></td><td><code>src/sensor.c:17</code></td><td>SensorReading sensor_read(void)</td></tr><tr><td><code>SENSOR_TIMEOUT_MS</code></td><td><span class='badge'>macro</span></td><td><code>src/sensor.h:7</code></td><td>100</td></tr><tr><td><code>SensorReading</code></td><td><span class='badge'>struct</span></td><td><code>src/sensor.h:16</code></td><td>Project-defined struct used by firmware components.</td></tr><tr><td><code>SensorState</code></td><td><span class='badge'>enum</span></td><td><code>src/sensor.h:9</code></td><td>Project-defined enum used by firmware components.</td></tr><tr><td><code>SYS_CLOCK_HZ</code></td><td><span class='badge'>macro</span></td><td><code>src/main.c:4</code></td><td>84000000</td></tr><tr><td><code>system_clock_config</code></td><td><span class='badge'>function</span></td><td><code>src/main.c:6</code></td><td>void system_clock_config(void)</td></tr></tbody></table></div></section></main></div><script>
+function showTab(id,b){
+  document.querySelectorAll('.section').forEach(x=>x.classList.remove('active'));
+  var x=document.getElementById('sec-'+id);
+  if(x)x.classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(x=>x.classList.remove('active'));
+  if(b)b.classList.add('active');
+  if(window.mermaid)mermaid.run();
+}
+function copyReadme(){
+  navigator.clipboard.writeText(document.getElementById('readme-source').textContent);
+}
+function filterSymbols(){
+  var input=document.getElementById('sym-filter');
+  var filter=input.value.toUpperCase();
+  var table=document.getElementById('sym-table');
+  var tr=table.getElementsByTagName('tr');
+  for(var i=1;i<tr.length;i++){
+    var txt=tr[i].textContent||tr[i].innerText;
+    tr[i].style.display=txt.toUpperCase().indexOf(filter)>-1?'':'none';
+  }
+}
+document.querySelector('.section').classList.add('active');
+document.querySelector('.nav-btn').classList.add('active');
+if(window.mermaid)mermaid.initialize({startOnLoad:false,theme:'dark'});
+</script></body></html>

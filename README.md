@@ -1,11 +1,11 @@
-# arch-wiki
+# arch-wiki-es
 
-`arch-wiki` is an embedded firmware architecture documentation skill for AI coding assistants. It scans a firmware repository and generates:
+`arch-wiki-es` is an embedded firmware architecture and symbol documentation skill for AI coding assistants. It is a specialized fork of `arch-wiki` geared specifically towards embedded systems, microcontrollers, and firmware codebases. It bridges high-level firmware architecture mapping with Doxygen-style symbol extraction, call graphs, and hardware/configuration indexing.
 
-- `docs/architecture/architecture.json`: machine-readable architecture metadata.
-- `docs/architecture/architecture.html`: interactive architecture dashboard with the project README and generated diagrams embedded in the output.
+It scans an embedded firmware repository and generates:
 
-The tool is embedded-only. It documents firmware and hardware rather than REST APIs, SQL, Swagger, Docker, or backend services.
+- `docs/architecture/architecture.json`: Machine-readable architecture metadata, symbol catalogs, and configuration parameters.
+- `docs/architecture/architecture.html`: Interactive architecture dashboard with project documentation, searchable symbol index, and embedded Mermaid diagrams.
 
 ## Documented Architecture
 
@@ -50,17 +50,9 @@ The target project's README is embedded in both JSON and HTML at generation time
 ## Supported Projects
 
 The scanner recognizes common markers for:
+`arch-wiki-es` is dedicated exclusively to bare-metal, RTOS, and embedded Linux firmware, providing structured insight into hardware peripherals, memory maps, clock trees, state machines, call graphs, and build systems.
 
-- Bare-metal C/C++
-- FreeRTOS
-- Zephyr
-- Embedded Linux/device tree
-- PlatformIO
-- CMake
-- Make
-- ESP-IDF
-- STM32CubeMX
-- Rust embedded projects
+## Documented Architecture
 
 ## Project Structure
 
@@ -94,11 +86,49 @@ your-project/
 
 ## Quick Start (Installation & Setup)
 It reads source/header files, build files, linker scripts, map files, device-tree files, Kconfig files, and project README content using only Python's standard library.
+The generated documentation contains:
+
+0. **Brief & Topology Overview**: System purpose, primary framework, RTOS/bare-metal classification, and MCU topology.
+1. **Project README & Multi-README Index**: Embedded root README alongside an indexed catalog of all submodule and driver READMEs found in the project.
+2. **Hardware & Peripherals Configuration**: Detected MCU, family, board, clock tree configuration, active peripherals (UART, SPI, I2C, CAN, ADC, Timers, DMA, GPIO, USB), and pin mappings.
+3. **Categorized Configuration Parameters**: Preprocessor defines and compile flags grouped by functional category (`clock`, `peripheral`, `memory`, `communication`, `rtos`, `power`, `debug`, `feature`, `compiler`, `application`) with source file and line attribution.
+4. **Memory Layout & Linker Map**: Memory regions (FLASH, RAM, EEPROM), origins, lengths, section mappings (`.text`, `.rodata`, `.data`, `.bss`, `.noinit`), stack/heap sizes, and linker scripts.
+5. **Modules & Components**: Logical subsystems, concrete source units, public API declarations, and `provides`/`consumes` interfaces.
+6. **Dependencies & Inter-Component Integration**: Cross-component call graphs and interface bindings.
+7. **Files & Per-File Catalog**: Source file catalog listing functions, types, macros, globals, and line counts per file.
+8. **Functions & Signatures**: Function signatures, return types, parameters, visibility (`public`/`private`), callers, and callees.
+9. **Macros & Preprocessor Definitions**: Constants and parameterized macros with values, category, and source location.
+10. **Call Graph**: Function call hierarchy visualized via interactive Mermaid diagrams.
+11. **Tools & Scripts**: Project utility scripts (`.sh`, `.bat`, `.py`), OpenOCD/debug configs, task runners, and Makefile target role analysis (`primary`, `utility`, `wrapper`).
+12. **Class Diagrams**: User-defined structs, unions, enums, and class relationships.
+13. **Sequence Diagrams**: Firmware startup and hardware initialization call hierarchy derived from `main()`.
+14. **Interaction Diagrams**: Subsystem boundaries and component communication channels.
+15. **State Machines**: Source-derived finite state machines extracted from state enums and `switch`/`case` transition logic.
+16. **Flow Charts**: Firmware execution loops, interrupt service routines, and reset flows.
+17. **Data Pipelines**: Data flow between firmware modules with queue and buffer payload typing.
+18. **Firmware Build & Toolchain**: Detected build system, toolchain target triple, build profiles, and flash/debug commands.
+19. **Searchable Symbol Index**: Filterable index of all project functions, types, macros, and global objects.
+
+## Supported Projects & Frameworks
+
+The scanner automatically identifies project environments and tailors hardware and configuration extraction accordingly:
+
+- **STM32CubeIDE & STM32CubeMX**: Parses `.ioc`, `.cproject`, `.project`, linker scripts, and HAL initialization code.
+- **PlatformIO**: Parses `platformio.ini` environments, boards, frameworks, build flags, and library dependencies.
+- **ESP-IDF**: Parses `sdkconfig`, `sdkconfig.defaults`, target chip definitions, and component manifests.
+- **Zephyr RTOS**: Parses `west.yml`, `prj.conf`, Kconfig options, and device-tree overlays (`.dts`, `.overlay`).
+- **FreeRTOS & RTOS Projects**: Parses `FreeRTOSConfig.h`, task creation calls, queues, and semaphores.
+- **Arduino**: Parses `.ino` sketches, `boards.txt`, core libraries, and peripheral setup routines.
+- **Bare-metal C/C++ (Make & CMake)**: Parses `Makefile` rules, `CMakeLists.txt`, toolchain flags, and GNU linker scripts (`.ld`).
+- **Keil / MDK**: Parses `.uvprojx` project definitions and target device settings.
+- **Rust Embedded**: Parses `Cargo.toml`, `.cargo/config.toml`, target architectures, and memory layouts.
+
+Analysis is entirely dependency-free and uses only Python's standard library.
 
 ## Install
 
 ```bash
-npx arch-wiki
+npx arch-wiki-es
 ```
 
 For local development:
@@ -107,7 +137,7 @@ For local development:
 node ./bin/install.js
 ```
 
-The installer registers `SKILL.md` and the scanner with supported AI assistant skill locations.
+The installer registers `SKILL.md` and the generator script with supported AI assistant skill environments (Antigravity, Claude Code, and local workspace `.skills/`).
 
 ## Generate Documentation
 
@@ -129,28 +159,25 @@ The AI Assistant will autonomously:
 
 Copy `SKILL.md` into your Antigravity skills directory:
 From a target firmware project after installing the skill:
+Run the generator from the target firmware repository:
 
 ```bash
 python3 docs/architecture/build_html.py --init
 ```
 
-For subsequent changes:
+For subsequent updates after firmware changes:
 
 ```bash
 python3 docs/architecture/build_html.py --sync
 ```
 
-The script creates `docs/architecture/` when needed. The first run creates or replaces the generated JSON and HTML files. Subsequent runs rescan the project and regenerate both files.
-
-To scan a different project from a local checkout:
+To scan a target project from an external checkout:
 
 ```bash
-python3 /path/to/arch-wiki/templates/build_html.py --init /path/to/firmware-project
+python3 /path/to/arch-wiki-es/templates/build_html.py --init /path/to/firmware-project
 ```
 
-The target project must be passed as an existing path. If no target path is supplied, the current working directory is scanned.
-
-The generated dashboard can be opened directly in a browser. Mermaid diagrams require access to the Mermaid CDN referenced by the HTML.
+The generated dashboard can be opened directly in any web browser. Mermaid diagrams render client-side using the Mermaid CDN.
 
 ## Manifest Sections
 
@@ -158,23 +185,31 @@ The generated dashboard can be opened directly in a browser. Mermaid diagrams re
 
 | Section | Contents |
 |---|---|
-| `meta` | Project type, languages, detected markers, and generation date |
-| `readme` | Embedded project README content and source metadata |
-| `brief` | System purpose, constraints, and documentation status |
-| `hardware` | MCU, board, peripherals, interfaces, pins, and power metadata |
-| `configurations` | Build profiles, feature flags, Kconfig, and device-tree settings |
+| `meta` | Primary project type, system type, topology, languages, detected markers, and generation date |
+| `readme` | Embedded project root README content and source metadata |
+| `readmes` | Multi-README index across all project directories with summary, path, and lines |
+| `brief` | System purpose, architecture topology, constraints, and documentation status |
+| `hardware` | MCU, board, clock configuration, peripherals, pin mappings, and power metadata |
+| `configurations` | Build profiles, categorized parameters (`clock`, `peripheral`, `rtos`, `memory`, etc.), and feature flags |
 | `memoryLayout` | Linker regions, sections, partitions, stack, heap, and map files |
 | `modules` | Logical firmware subsystems, roles, files, tasks, and type usage |
-| `components` | Concrete source-level drivers, services, HALs, and application units |
-| `dataTypes` | Project-defined structs, enums, unions, typedefs, classes, and traits |
+| `components` | Concrete drivers, services, HALs, public APIs, provides, and consumes |
+| `dataTypes` | Project-defined structs, enums (with members), unions, typedefs, and classes |
 | `objects` | Created objects, storage, lifetime, ownership, and cleanup metadata |
-| `diagrams` | Class, sequence, interaction, state, and flow diagrams |
+| `diagrams` | Class, boot sequence, component interaction, source-derived state machines, and flow charts |
 | `dataPipelines` | Detected data movement between firmware modules |
-| `build` | Build system, toolchain, targets, artifacts, and flash/debug metadata |
+| `build` | Build system, toolchain, Makefile role analysis (primary/utility), targets, and commands |
+| `functions` | Function definitions, signatures, return types, parameters, callers, and callees |
+| `macros` | Preprocessor defines with values, category, parameters, file, and line |
+| `callGraph` | Caller → callee call graph edges and Mermaid diagram |
+| `fileIndex` | Per-file catalog of functions, types, macros, globals, and line counts |
+| `symbolIndex` | Flat searchable/filterable index of all project symbols |
+| `dependencies` | Inter-component/module call graph and dependencies |
+| `tools` | Helper scripts, openocd configs, and task runner utilities categorized by task |
 
 ## Types and Source Traceability
 
-Only project-defined types are documented as `dataTypes`. Primitive types, standard-library types, RTOS types, vendor HAL types, and external dependency types are excluded. They can still appear as field or signature labels.
+Only project-defined types are documented as `dataTypes`. Primitive types, standard-library types, RTOS types, vendor HAL types, and external dependency types are excluded from top-level catalogs (though they appear as parameter or field types).
 
 Each module, component, and user-defined type includes structured file references where detected:
 
@@ -190,38 +225,26 @@ Each module, component, and user-defined type includes structured file reference
 User-defined type entries include:
 
 - The type's firmware role.
-- Fields and references to other project-defined types.
+- Struct fields and enum members (with values).
 - Modules and components that use the type.
 - Usage roles such as `produces`, `consumes`, `queues`, `serializes`, or `stores`.
-- Definition and usage files.
-- Evidence and confidence metadata.
+- Definition files and line evidence.
 
-## Object Lifetime and Ownership
+## Object Lifetime and Storage
 
-The `objects` section documents concrete instances and resources created by firmware, including:
+The `objects` section documents concrete instances and resources created by firmware:
 
-- Global and static objects.
-- Stack objects.
-- Heap allocations.
-- RTOS resources such as tasks and queues.
-- Pool-managed objects.
-- Peripheral handles and buffers where detectable.
+- Global and static variables (in `.data` or `.bss`).
+- Stack allocations.
+- Dynamic heap allocations (`malloc`, `calloc`, `pvPortMalloc`).
+- RTOS resources such as task stacks, message queues, and semaphores.
+- Peripheral handles and hardware buffers.
 
-Each object may include:
-
-- User-defined type reference.
-- Runtime role.
-- Storage location and memory section.
-- Lifetime scope and start/end events.
-- Creator and destruction/release path.
-- Owner and ownership model.
-- Ownership transfers and usage files.
-
-C and C++ ownership cannot always be proven statically. The scanner reports `unknown` ownership and low confidence instead of claiming a transfer or cleanup path without evidence.
+Each object records storage location, memory section, lifetime scope, creator function, and ownership model. Unproven C/C++ ownership is reported as `unknown` with low confidence rather than guessed.
 
 ## Manual Overrides
 
-Static analysis cannot reliably determine every board detail, safety constraint, or ownership policy. Add an optional file at:
+For hardware specifications, safety constraints, or pin functions that cannot be deduced from source code alone, add an optional override file at:
 
 ```text
 docs/architecture/embedded-overrides.json
@@ -243,6 +266,7 @@ Includes a 1-click **📋 Copy to Clipboard** button directly on every endpoint 
 
 ---
 Override values are merged after scanner output. Lists containing objects with an `id` replace matching generated entries; object values extend generated sections. Invalid override JSON is reported in the generated manifest warnings.
+Use it to supply board details, pin mappings, power budgets, memory partitions, or custom state machines. Overrides are merged into the generated data at scan time. An example format is available in `templates/embedded-overrides.example.json`.
 
 ## Project Structure
 
@@ -300,7 +324,7 @@ The generated `architecture.html` includes 11 navigation sections:
 | 📄 **PDF Export** | 1-click PDF generator that forces pre-rendering of diagrams, Swagger views, and scope mappings |
 
 ```text
-arch-wiki/
+arch-wiki-es/
 ├── SKILL.md
 ├── README.md
 ├── bin/install.js
@@ -375,13 +399,12 @@ Therefore, the next step is to measure **accuracy**, not just exploration reduct
 The scanner is intentionally dependency-free and evidence-based. It does not replace a compiler, linker, static analyzer, or hardware review. Complex macro-generated types, custom allocators, ownership conventions, electrical constraints, and generated diagrams may require manual overrides.
 
 Current analysis is intentionally conservative:
+The scanner is intentionally lightweight, dependency-free, and evidence-based:
 
-- Hardware values are extracted only from recognizable source/configuration markers.
-- Detailed pin maps, clock trees, power budgets, and runtime configuration require explicit source evidence or overrides.
-- C/C++ ownership is uncertain when custom allocators, callbacks, or pointer conventions obscure responsibility.
-- Generated diagrams are starting points and should be reviewed against the firmware.
-- The built-in Markdown renderer covers common README constructs, not the complete Markdown specification.
-- The generator uses only the Python standard library; no third-party Python package is required.
+- Hardware parameters are extracted from recognizable configuration markers, register initializations, and build settings.
+- Static C/C++ analysis cannot infer pointer ownership through complex macro layers or function pointer tables without explicit evidence or overrides.
+- The built-in Markdown renderer handles standard README constructs without requiring external libraries.
+- The generator runs on standard Python 3 with zero third-party package dependencies.
 
 ## License
 

@@ -1,12 +1,12 @@
 ---
-name: arch-wiki
+name: arch-wiki-es
 description: >
   Scans embedded firmware projects and updates docs/architecture/architecture.json
   and docs/architecture/architecture.html with hardware, configuration, memory,
   modules, user-defined types, object ownership, diagrams, data pipelines, and build metadata.
 ---
 
-# arch-wiki - Embedded Firmware Architecture Skill
+# arch-wiki-es - Embedded Firmware Architecture Skill
 
 Use this skill for C, C++, Rust, bare-metal, RTOS, embedded Linux, PlatformIO,
 CMake, Make, Zephyr, ESP-IDF, STM32CubeMX, and similar firmware projects. This
@@ -155,7 +155,7 @@ Run arch-wiki to rescan the codebase and sync the architecture map.
 5. Verify parity and report additions/changes
 ```
 ```bash
-python3 /path/to/arch-wiki/templates/build_html.py --sync /path/to/firmware-project
+python3 /path/to/arch-wiki-es/templates/build_html.py --sync /path/to/firmware-project
 ```
 
 The generator writes `docs/architecture/architecture.json` and
@@ -164,19 +164,26 @@ regenerates both files on every invocation.
 
 ## Generated Sections
 
-- Brief
-- Project README
-- Hardware
-- Configurations
-- Memory Layout
-- Modules & Components
+- Brief & Topology Overview
+- Project README & Multi-README Index
+- Hardware & Peripherals Configuration
+- Categorized Configuration Parameters
+- Memory Layout & Linker Map
+- Modules & Components (with Public APIs)
+- Dependencies & Inter-Component Integration
+- Files & Per-File Catalog
+- Functions & Signatures
+- Macros & Preprocessor Definitions
+- Call Graph (Caller → Callee)
+- Tools & Scripts (Makefile Analysis & Utility Scripts)
 - Class Diagrams
-- Sequence Diagrams
+- Sequence Diagrams (Boot/Init Sequence)
 - Interaction Diagrams
-- State Machines
+- State Machines (Source-Derived)
 - Flow Charts
 - Data Pipelines
-- Build
+- Build System & Toolchain
+- Searchable Flat Symbol Index
 
 ## Evidence Rules
 
