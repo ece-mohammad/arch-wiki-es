@@ -4,6 +4,46 @@ const fs = require('fs');
 const path = require('path');
 const os = require('os');
 
+// Support -v, --version flags
+if (process.argv.includes('--version') || process.argv.includes('-v')) {
+    try {
+        const pkg = require('../package.json');
+        console.log(`arch-wiki-es v${pkg.version}`);
+    } catch (e) {
+        console.log('arch-wiki-es v1.0.0');
+    }
+    process.exit(0);
+}
+
+// Support -h, --help flags
+if (process.argv.includes('--help') || process.argv.includes('-h')) {
+    console.log(`
+arch-wiki-es - Embedded Firmware Architecture & Documentation Skill for AI Assistants
+
+Usage:
+  npx arch-wiki-es [options]
+  arch-wiki-es [options]
+  node bin/install.js [options]
+
+Options:
+  -h, --help        Show this help message and exit
+  -v, --version     Show arch-wiki-es version
+  -u, --uninstall   Uninstall the skill from all AI assistant directories
+
+Supported Assistants:
+  - Antigravity AI Agent (~/.gemini/antigravity/skills/arch-wiki-es)
+  - Antigravity Config   (~/.gemini/config/skills/arch-wiki-es)
+  - Claude Code          (~/.claude/skills/arch-wiki-es)
+  - Cursor AI            (~/.cursor/skills/arch-wiki-es)
+  - Local Workspace      (.skills/arch-wiki-es and .agents/skills/arch-wiki-es)
+
+After installation, invoke the skill with your AI assistant or run:
+  python3 docs/architecture/build_html.py --init
+  python3 docs/architecture/build_html.py --sync
+`);
+    process.exit(0);
+}
+
 // Support --uninstall flag
 if (process.argv.includes('--uninstall') || process.argv.includes('-u')) {
     require('./uninstall.js');

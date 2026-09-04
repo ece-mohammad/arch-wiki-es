@@ -217,5 +217,22 @@ def test_ai_agent_ignore_files_respected(tmp_path):
     assert "c1.c" not in scanned_files
     assert "g1.c" not in scanned_files
 
+def test_cli_flags_help_and_version(monkeypatch, capsys):
+    import sys
+    # Test --version
+    monkeypatch.setattr(sys, "argv", ["build_html.py", "--version"])
+    build_html.main()
+    out = capsys.readouterr().out
+    assert "arch-wiki-es v1.0.0" in out
+
+    # Test -h / --help
+    monkeypatch.setattr(sys, "argv", ["build_html.py", "-h"])
+    build_html.main()
+    out = capsys.readouterr().out
+    assert "Usage:" in out
+    assert "--sync" in out
+    assert "--init" in out
+
+
 
 

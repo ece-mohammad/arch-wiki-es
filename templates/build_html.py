@@ -1965,7 +1965,27 @@ if(window.mermaid)mermaid.initialize({startOnLoad:false,theme:'dark'});
     )
 
 def main():
-    target_arg = next((Path(arg).resolve() for arg in sys.argv[1:] if not arg.startswith("--") and Path(arg).exists()), None)
+    if "-v" in sys.argv or "--version" in sys.argv:
+        print("arch-wiki-es v1.0.0")
+        return
+    if "-h" in sys.argv or "--help" in sys.argv:
+        print("""arch-wiki-es - Embedded Firmware Architecture Scanner & Dashboard Generator
+
+Usage:
+  python3 build_html.py [options] [target_directory]
+
+Options:
+  -h, --help       Show this help message and exit
+  -v, --version    Show version number
+  --init           Initialize docs/architecture/ files in target project
+  --sync           Incrementally rescan and synchronize architecture files
+
+Arguments:
+  target_directory Path to firmware project root (default: current working directory)
+""")
+        return
+
+    target_arg = next((Path(arg).resolve() for arg in sys.argv[1:] if not arg.startswith("--") and not arg.startswith("-") and Path(arg).exists()), None)
     if target_arg:
         target = target_arg
     else:
