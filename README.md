@@ -1,17 +1,27 @@
 # arch-wiki-es
 
-`arch-wiki-es` is an embedded firmware architecture and symbol documentation skill for AI coding assistants. It is a specialized fork of `arch-wiki` geared specifically towards embedded systems, microcontrollers, and firmware codebases. It bridges high-level firmware architecture mapping with Doxygen-style symbol extraction, call graphs, and hardware/configuration indexing.
+`arch-wiki-es` is an embedded firmware architecture and symbol documentation skill for AI coding assistants. It is a specialized fork of `arch-wiki` geared specifically towards embedded systems, microcontrollers, and firmware codebases. It bridges high-level firmware architecture mapping with Doxygen-style symbol extraction, call graphs, hardware/configuration indexing, and 1-click AI senior developer analysis prompts.
 
 It scans an embedded firmware repository and generates:
 
 - `docs/architecture/architecture.json`: Machine-readable architecture metadata, symbol catalogs, and configuration parameters.
-- `docs/architecture/architecture.html`: Interactive architecture dashboard with project documentation, searchable symbol index, and embedded Mermaid diagrams.
+- `docs/architecture/architecture.html`: Interactive architecture dashboard with project documentation, searchable symbol index, embedded Mermaid diagrams, and 1-click AI analysis prompts.
 
 `arch-wiki-es` is dedicated exclusively to bare-metal, RTOS, and embedded Linux firmware, providing structured insight into hardware peripherals, memory maps, clock trees, state machines, call graphs, and build systems.
 
+## Key Features
+
+- **Doxygen + Architecture Hybrid**: Combines high-level system topology with per-symbol function signatures, callers, callees, macros, and types.
+- **Incremental Synchronization (`--sync`)**: Quickly rescan after modifying drivers, functions, or configurations to keep living documentation in sync.
+- **🤖 Interactive Senior Embedded Developer Prompts**: Click on any function, driver component, or state machine in the dashboard to generate a custom prompt for your AI assistant (Antigravity, Claude, ChatGPT, Cursor) with full call hierarchy, register context, and safety constraints.
+- **Hardware-Aware Scanning**: Extracts MCU targets, frequencies, pin mappings, and peripheral registers from STM32CubeIDE, STM32CubeMX, PlatformIO, Zephyr, ESP-IDF, Arduino, and Make/CMake files.
+- **Source-Derived State Machines & Sequences**: Generates interactive Mermaid diagrams directly from state enums, `switch`/`case` transitions, and `main()` boot call trees.
+- **Categorized Configuration Parameters**: Automatically classifies `#define` constants and flags into `clock`, `peripheral`, `memory`, `communication`, `rtos`, `power`, `debug`, and `feature` categories.
+- **Zero Third-Party Dependencies**: Runs on standard Python 3 standard library.
+
 ## Documented Architecture
 
-The generated documentation contains:
+The generated documentation contains 20 core architectural sections:
 
 0. **Brief & Topology Overview**: System purpose, primary framework, RTOS/bare-metal classification, and MCU topology.
 1. **Project README & Multi-README Index**: Embedded root README alongside an indexed catalog of all submodule and driver READMEs found in the project.
@@ -48,8 +58,6 @@ The scanner automatically identifies project environments and tailors hardware a
 - **Keil / MDK**: Parses `.uvprojx` project definitions and target device settings.
 - **Rust Embedded**: Parses `Cargo.toml`, `.cargo/config.toml`, target architectures, and memory layouts.
 
-Analysis is entirely dependency-free and uses only Python's standard library.
-
 ## Install
 
 ```bash
@@ -64,27 +72,70 @@ node ./bin/install.js
 
 The installer registers `SKILL.md` and the generator script with supported AI assistant skill environments (Antigravity, Claude Code, and local workspace `.skills/`).
 
-## Generate Documentation
+## Syncing After Codebase Changes
 
-Run the generator from the target firmware repository:
+### First-Time Initialization
+
+Run from your firmware repository:
 
 ```bash
 python3 docs/architecture/build_html.py --init
 ```
 
-For subsequent updates after firmware changes:
+### Incremental Synchronization
+
+Whenever you add a driver, modify function signatures, update state machine transitions, or adjust linker scripts:
 
 ```bash
 python3 docs/architecture/build_html.py --sync
 ```
 
-To scan a target project from an external checkout:
+To run against an external repository:
 
 ```bash
-python3 /path/to/arch-wiki-es/templates/build_html.py --init /path/to/firmware-project
+python3 /path/to/arch-wiki-es/templates/build_html.py --sync /path/to/firmware-project
 ```
 
-The generated dashboard can be opened directly in any web browser. Mermaid diagrams render client-side using the Mermaid CDN.
+The generator will scan the repository and update both `architecture.json` and `architecture.html`.
+
+## 🤖 Interactive AI Senior Developer Prompts
+
+Inside `docs/architecture/architecture.html`:
+
+- Every function in the **Functions** tab features a **📋 AI Prompt** button.
+- Every component in **Modules & Components** features a **📋 AI Prompt** button.
+- Every state machine in **State Machines** features a **📋 AI Prompt** button.
+
+Clicking the button opens an interactive modal preloaded with a structured prompt tailored for AI coding assistants:
+
+```text
+You are joining this project as a senior embedded firmware engineer.
+
+Analyze this firmware function:
+HAL_StatusTypeDef sensor_read(SensorReading* reading)
+File: src/sensor.c:42 (public)
+Module: sensors | Component: sensor
+Callers: main, telemetry_task
+Callees: i2c_read, sensor_calibrate
+
+Use:
+1. docs/architecture/architecture.json
+2. arch-wiki-es documentation
+3. the project source code and hardware configuration
+
+Discover the actual implementation flow, hardware register interactions, and call hierarchy.
+
+Analyze:
+- Control flow, callers, callees, and hardware peripheral/register accesses
+- Concurrency, ISR safety, reentrancy, and timing constraints
+- Stack usage, buffer bounds, and error recovery
+
+Generate:
+1. Mermaid sequence diagram (execution and call flow)
+2. Mermaid flowchart (logic branching and error recovery)
+```
+
+Click **📋 Copy Prompt** (or direct copy on the card) to copy the prompt to your clipboard and paste it directly into your AI chat window.
 
 ## Manifest Sections
 
@@ -113,41 +164,6 @@ The generated dashboard can be opened directly in any web browser. Mermaid diagr
 | `symbolIndex` | Flat searchable/filterable index of all project symbols |
 | `dependencies` | Inter-component/module call graph and dependencies |
 | `tools` | Helper scripts, openocd configs, and task runner utilities categorized by task |
-
-## Types and Source Traceability
-
-Only project-defined types are documented as `dataTypes`. Primitive types, standard-library types, RTOS types, vendor HAL types, and external dependency types are excluded from top-level catalogs (though they appear as parameter or field types).
-
-Each module, component, and user-defined type includes structured file references where detected:
-
-```json
-{
-  "path": "src/sensors/sensor_manager.c",
-  "role": "implementation",
-  "contains": ["sensor_manager_init"],
-  "line": 42
-}
-```
-
-User-defined type entries include:
-
-- The type's firmware role.
-- Struct fields and enum members (with values).
-- Modules and components that use the type.
-- Usage roles such as `produces`, `consumes`, `queues`, `serializes`, or `stores`.
-- Definition files and line evidence.
-
-## Object Lifetime and Storage
-
-The `objects` section documents concrete instances and resources created by firmware:
-
-- Global and static variables (in `.data` or `.bss`).
-- Stack allocations.
-- Dynamic heap allocations (`malloc`, `calloc`, `pvPortMalloc`).
-- RTOS resources such as task stacks, message queues, and semaphores.
-- Peripheral handles and hardware buffers.
-
-Each object records storage location, memory section, lifetime scope, creator function, and ownership model. Unproven C/C++ ownership is reported as `unknown` with low confidence rather than guessed.
 
 ## Manual Overrides
 

@@ -143,3 +143,25 @@ def test_multi_readme_discovery():
     assert "README.md" in readme_paths
     assert "docs/README.md" in readme_paths
     assert data["readme"]["exists"] is True
+
+def test_interactive_ai_prompts_in_html():
+    data = build_html.init_architecture(SAMPLE_DIR)
+    html_output = build_html.render(data)
+    assert "AI Senior Embedded Developer Prompt" in html_output
+    assert "copyFuncPromptDirect" in html_output
+    assert "promptModal" in html_output
+    assert "data-sig=" in html_output
+
+def test_cli_sync_execution(monkeypatch):
+    import sys
+    test_args = ["build_html.py", "--sync", SAMPLE_DIR]
+    monkeypatch.setattr(sys, "argv", test_args)
+    build_html.main()
+    arch_json = Path(SAMPLE_DIR) / "docs" / "architecture" / "architecture.json"
+    arch_html = Path(SAMPLE_DIR) / "docs" / "architecture" / "architecture.html"
+    assert arch_json.exists()
+    assert arch_html.exists()
+    # clean up
+    import shutil
+    shutil.rmtree(Path(SAMPLE_DIR) / "docs" / "architecture", ignore_errors=True)
+

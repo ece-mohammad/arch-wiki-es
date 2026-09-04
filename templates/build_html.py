@@ -353,7 +353,6 @@ def scan_hardware(records, root, project_info):
 # --- 4. Categorized Configuration Parameters ---
 def categorize_param(name):
     u = name.upper()
-    # Check feature flags first (ENABLE_, DISABLE_, USE_, etc.)
     if any(u.startswith(p) for p in ("ENABLE_", "DISABLE_", "USE_", "HAS_", "WITH_", "WITHOUT_", "SUPPORT_")):
         return "feature"
     if any(k in u for k in ("CLK", "CLOCK", "HSE", "HSI", "PLL", "SYSCLK", "F_CPU")):
@@ -1079,9 +1078,7 @@ def scan_state_machines(records, root, types):
             seen_trans = set()
             
             for path, content in records:
-                # Find switch statements
                 for sw_m in re.finditer(r"switch\s*\([^)]*\)\s*\{", content):
-                    # Find closing brace of switch block
                     start_pos = sw_m.end() - 1
                     brace_count = 1
                     idx = start_pos + 1
@@ -1091,10 +1088,7 @@ def scan_state_machines(records, root, types):
                         idx += 1
                     sw_body = content[start_pos:idx]
                     
-                    # Split switch body into case blocks using regex
                     case_splits = re.split(r"\bcase\s+([A-Za-z0-9_]+)\s*:", sw_body)
-                    # case_splits[0] is preamble before first case
-                    # then pairs: (case_label, case_content)
                     for i in range(1, len(case_splits), 2):
                         c_label = case_splits[i].strip()
                         c_body = case_splits[i+1] if i + 1 < len(case_splits) else ""
@@ -1165,7 +1159,6 @@ def scan_sequence_diagrams(functions):
     }]
 
 def scan_dependencies(modules_data, components_data, functions):
-    # Component-to-component dependencies
     func_to_comp = {f["name"]: f["component"] for f in functions}
     comp_deps = {}
     
@@ -1475,8 +1468,8 @@ def file_list(items):
     if not items: return '<p class="muted">No source files detected.</p>'
     return "<ul>" + "".join(f"<li><code>{html.escape(str(item.get('path', item)))}</code> <span>{html.escape(str(item.get('role', 'source')))}</span>{(' line ' + str(item['line'])) if isinstance(item, dict) and item.get('line') else ''}</li>" for item in items) + "</ul>"
 
-def card(title, body):
-    return f'<article class="card"><h3>{html.escape(str(title))}</h3>{body}</article>'
+def card(title, body, extra_attrs=""):
+    return f'<article class="card"{(" " + extra_attrs) if extra_attrs else ""}><h3>{html.escape(str(title))}</h3>{body}</article>'
 
 def render(data):
     meta = data["meta"]
@@ -1547,12 +1540,24 @@ def render(data):
         card("Linker / Map Files", file_list([{"path": x, "role": "linker/map file"} for x in mem.get("linkerScripts", []) + mem.get("mapFiles", [])]))
     )
 
+    comp_cards = ""
+    for c in data["components"]:
+        c_attrs = f'data-name="{html.escape(c["name"])}" data-type="{html.escape(c["type"])}" data-provides="{html.escape(", ".join(c.get("provides", [])))}" data-consumes="{html.escape(", ".join(c.get("consumes", [])))}"'
+        c_body = f"""<div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
+            <div><span class="badge">{html.escape(c.get('type', 'component'))}</span></div>
+            <button class="btn-prompt-copy" onclick="event.stopPropagation(); copyCompPromptDirect(this.closest('.card'))" title="Copy AI Senior Developer Prompt">📋 AI Prompt</button>
+        </div>
+        <p><b>Role:</b> {html.escape(c.get('role', ''))}</p>
+        <p><b>Provides:</b> <code>{html.escape(', '.join(c.get('provides', [])) or 'none')}</code></p>
+        <p><b>Consumes:</b> <code>{html.escape(', '.join(c.get('consumes', [])) or 'none')}</code></p>
+        {file_list(c.get('files', []))}"""
+        comp_cards += card(c["name"], c_body, c_attrs)
+
     module_body = (
         "<h3>Modules</h3><div class=\"grid\">" +
         "".join(card(m["name"], f"<p><b>Role:</b> {html.escape(m.get('role', ''))}</p>{file_list(m.get('files', []))}") for m in data["modules"]) +
-        "</div><h3>Components</h3><div class=\"grid\">" +
-        "".join(card(c["name"], f"<p><b>Role:</b> {html.escape(c.get('role', ''))}</p><p><b>Provides:</b> <code>{html.escape(', '.join(c.get('provides', [])) or 'none')}</code></p><p><b>Consumes:</b> <code>{html.escape(', '.join(c.get('consumes', [])) or 'none')}</code></p>{file_list(c.get('files', []))}") for c in data["components"]) +
-        "</div><h3>User-Defined Data Types</h3><div class=\"grid\">" +
+        f"</div><h3>Components</h3><div class=\"grid\">{comp_cards}</div>" +
+        "<h3>User-Defined Data Types</h3><div class=\"grid\">" +
         "".join(card(t["name"], f"<p><b>Kind:</b> {html.escape(t.get('kind',''))}</p><p><b>Role:</b> {html.escape(t.get('role', ''))}</p><p><b>Fields:</b> {html.escape(', '.join(f['name'] for f in t.get('fields', [])) or 'none')}</p>{file_list(t.get('files', []))}") for t in data["dataTypes"]) +
         "</div><h3>Objects & Storage</h3><div class=\"grid\">" +
         "".join(card(o["name"], f"<p><b>Kind:</b> {html.escape(o.get('kind',''))}</p><p><b>Role:</b> {html.escape(o.get('role', ''))}</p><pre>{val_str({'storage': o.get('storage'), 'lifetime': o.get('lifetime'), 'ownership': o.get('ownership')})}</pre>{file_list(o.get('files', []))}") for o in data["objects"]) +
@@ -1568,7 +1573,22 @@ def render(data):
     files_rows = "".join(f"<tr><td><code>{html.escape(f['path'])}</code></td><td>{html.escape(f['language'])}</td><td>{f['lines']}</td><td><code>{html.escape(', '.join(f['functions']))}</code></td><td><code>{html.escape(', '.join(f['types']))}</code></td><td><code>{html.escape(', '.join(f['macros']))}</code></td></tr>" for f in data.get("fileIndex", []))
     files_body = f'<div class="card"><table class="data-table"><thead><tr><th>Path</th><th>Lang</th><th>Lines</th><th>Functions</th><th>Types</th><th>Macros</th></tr></thead><tbody>{files_rows}</tbody></table></div>'
 
-    func_cards = "".join(card(f["name"], f"<p><code>{html.escape(f['signature'])}</code></p><p><b>File:</b> <code>{html.escape(f['file'])}:{f['line']}</code> ({html.escape(f['visibility'])})</p><p><b>Callers:</b> <code>{html.escape(', '.join(f.get('callers', [])) or 'none')}</code></p><p><b>Callees:</b> <code>{html.escape(', '.join(f.get('callees', [])) or 'none')}</code></p>") for f in data.get("functions", []))
+    func_cards = ""
+    for f in data.get("functions", []):
+        f_attrs = (f'data-name="{html.escape(f["name"])}" data-sig="{html.escape(f["signature"])}" '
+                   f'data-file="{html.escape(f["file"])}" data-line="{f["line"]}" '
+                   f'data-vis="{html.escape(f["visibility"])}" data-mod="{html.escape(f.get("module",""))}" '
+                   f'data-comp="{html.escape(f.get("component",""))}" '
+                   f'data-callers="{html.escape(", ".join(f.get("callers", [])) or "none")}" '
+                   f'data-callees="{html.escape(", ".join(f.get("callees", [])) or "none")}"')
+        f_body = f"""<div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
+            <div><code>{html.escape(f['signature'])}</code></div>
+            <button class="btn-prompt-copy" onclick="event.stopPropagation(); copyFuncPromptDirect(this.closest('.card'))" title="Copy AI Senior Developer Prompt">📋 AI Prompt</button>
+        </div>
+        <p><b>File:</b> <code>{html.escape(f['file'])}:{f['line']}</code> <span class="badge">{html.escape(f['visibility'])}</span></p>
+        <p><b>Callers:</b> <code>{html.escape(', '.join(f.get('callers', [])) or 'none')}</code></p>
+        <p><b>Callees:</b> <code>{html.escape(', '.join(f.get('callees', [])) or 'none')}</code></p>"""
+        func_cards += card(f["name"], f_body, f_attrs)
     functions_body = f'<div class="grid">{func_cards}</div>' if func_cards else '<p class="muted">No functions detected.</p>'
 
     macro_rows = "".join(f"<tr><td><code>{html.escape(m['name'])}</code></td><td><code>{html.escape(str(m['value']) if m['value'] is not None else '')}</code></td><td><span class='badge'>{html.escape(m['category'])}</span></td><td><code>{html.escape(m['file'])}:{m['line']}</code></td></tr>" for m in data.get("macros", []))
@@ -1612,7 +1632,13 @@ def render(data):
         "flowCharts": ("flow-charts", "Flow Charts")
     }
     for key, (ident, title) in diagram_ids.items():
-        body = "".join(card(x.get("title", "Diagram"), f"<p>{html.escape(x.get('description', ''))}</p><pre class=\"mermaid\">{html.escape(x.get('mermaid', ''))}</pre>") for x in data["diagrams"].get(key, [])) or '<p class="muted">No diagrams detected.</p>'
+        cards_list = []
+        for x in data["diagrams"].get(key, []):
+            sm_attrs = f'data-title="{html.escape(x.get("title", ""))}" data-states="{html.escape(", ".join(x.get("states", [])))}"' if key == "stateMachines" else ""
+            prompt_btn = f'<button class="btn-prompt-copy" style="float:right;" onclick="event.stopPropagation(); copySmPromptDirect(this.closest(\'.card\'))" title="Copy AI Senior Developer Prompt">📋 AI Prompt</button>' if key == "stateMachines" else ""
+            c_content = f"{prompt_btn}<p>{html.escape(x.get('description', ''))}</p><pre class=\"mermaid\">{html.escape(x.get('mermaid', ''))}</pre>"
+            cards_list.append(card(x.get("title", "Diagram"), c_content, sm_attrs))
+        body = "".join(cards_list) or '<p class="muted">No diagrams detected.</p>'
         sections.append(section(ident, title, body))
 
     sections.append(section("data-pipelines", "Data Pipelines", card("Pipelines", f"<pre class=\"mermaid\">{html.escape(data.get('dataPipelines', [{}])[0].get('mermaid', ''))}</pre><pre>{val_str(data.get('dataPipelines', []))}</pre>")))
@@ -1623,7 +1649,7 @@ def render(data):
     sections.append(section("symbol-index", "Symbol Index", symbol_body))
 
     css = """
-:root{--bg:#0d1117;--panel:#161b22;--panel2:#21262d;--border:#30363d;--text:#e6edf3;--muted:#8b949e;--accent:#58a6ff}
+:root{--bg:#0d1117;--panel:#161b22;--panel2:#21262d;--border:#30363d;--text:#e6edf3;--muted:#8b949e;--accent:#58a6ff;--green:#3fb950}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--text);font:14px system-ui,sans-serif}
 header{position:sticky;top:0;z-index:2;background:var(--panel);border-bottom:1px solid var(--border);padding:18px 28px}
@@ -1636,18 +1662,30 @@ main{margin-left:260px;padding:28px;max-width:1500px;width:calc(100% - 260px)}
 .section{display:none}.section.active{display:block}
 h2{border-bottom:1px solid var(--border);padding-bottom:10px}h3{color:var(--accent);margin-top:0}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
-.card{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:18px;margin:0 0 16px;overflow:auto}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:18px;margin:0 0 16px;overflow:auto;position:relative}
+.card:hover{border-color:rgba(88,166,255,0.4)}
 pre{background:#090c10;border:1px solid var(--border);padding:14px;border-radius:7px;overflow:auto;white-space:pre-wrap;word-break:break-word}
 code{color:#9cdcfe}.muted{color:var(--muted)}
 .files span{color:var(--muted);margin-left:8px}
 .toolbar{display:flex;gap:12px;align-items:center;margin-bottom:14px}
 button{color:var(--text);background:var(--panel2);border:1px solid var(--border);border-radius:6px;padding:7px 10px;cursor:pointer}
+button:hover{border-color:var(--accent)}
 .readme{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:24px;line-height:1.6}
 .readme img{max-width:100%}
 .data-table{width:100%;border-collapse:collapse;margin-top:8px}
 .data-table th,.data-table td{border:1px solid var(--border);padding:8px 12px;text-align:left}
 .data-table th{background:var(--panel2);color:var(--accent)}
 .badge{background:var(--panel2);border:1px solid var(--border);padding:2px 6px;border-radius:4px;font-size:11px;color:var(--accent)}
+.btn-prompt-copy{background:var(--panel2);border:1px solid var(--border);color:var(--accent);font-size:11px;font-weight:600;padding:4px 8px;border-radius:5px;cursor:pointer;transition:all 0.15s}
+.btn-prompt-copy:hover{background:var(--accent);color:#fff;border-color:var(--accent)}
+.modal-backdrop{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.75);z-index:999;align-items:center;justify-content:center;padding:20px}
+.modal-backdrop.active{display:flex}
+.modal-box{background:var(--panel);border:1px solid var(--border);border-radius:12px;width:100%;max-width:700px;box-shadow:0 12px 36px rgba(0,0,0,0.6);overflow:hidden}
+.modal-head{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid var(--border);background:var(--panel2)}
+.modal-body{padding:20px}
+.modal-body textarea{width:100%;background:#090c10;color:var(--text);border:1px solid var(--border);border-radius:7px;padding:12px;font:12px monospace;line-height:1.5;resize:vertical}
+.modal-close{background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;padding:0 6px}
+.modal-close:hover{color:var(--text)}
 @media(max-width:750px){aside{position:static;width:100%;border-right:0;border-bottom:1px solid var(--border);display:flex;flex-wrap:wrap;gap:4px}.layout{display:block}main{margin:0;width:100%;padding:16px}.nav-btn{width:auto}}
 """
     script = """
@@ -1672,10 +1710,130 @@ function filterSymbols(){
     tr[i].style.display=txt.toUpperCase().indexOf(filter)>-1?'':'none';
   }
 }
+
+// AI Senior Embedded Developer Analysis Prompts
+function getFuncPrompt(name, sig, file, line, vis, mod, comp, callers, callees) {
+  return "You are joining this project as a senior embedded firmware engineer.\\n\\n" +
+    "Analyze this firmware function:\\n\\n" +
+    sig + "\\n" +
+    "File: " + file + ":" + line + " (" + vis + ")\\n" +
+    "Module: " + mod + " | Component: " + comp + "\\n" +
+    "Callers: " + callers + "\\n" +
+    "Callees: " + callees + "\\n\\n" +
+    "Use:\\n" +
+    "1. docs/architecture/architecture.json\\n" +
+    "2. arch-wiki-es documentation\\n" +
+    "3. the project source code and hardware configuration\\n\\n" +
+    "Discover the actual implementation flow, hardware register interactions, and call hierarchy.\\n\\n" +
+    "Analyze:\\n" +
+    "- Control flow, callers, callees, and hardware peripheral/register accesses\\n" +
+    "- Concurrency, ISR safety, reentrancy, and timing constraints\\n" +
+    "- Stack usage, buffer bounds, and error recovery\\n\\n" +
+    "Generate:\\n" +
+    "1. Mermaid sequence diagram (execution and call flow)\\n" +
+    "2. Mermaid flowchart (logic branching and error recovery)\\n\\n" +
+    "Include only functions, registers, and components that actually exist in the codebase.\\n" +
+    "Do not infer missing components.\\n" +
+    "Do not modify anything.";
+}
+
+function openPromptModal(title, subtitle, promptText) {
+  document.getElementById('modalTitle').textContent = title;
+  document.getElementById('modalSubtitle').textContent = subtitle;
+  document.getElementById('modalTextarea').value = promptText;
+  document.getElementById('promptModal').classList.add('active');
+}
+function closePromptModal(e) {
+  if (!e || e.target === document.getElementById('promptModal') || e.target.classList.contains('modal-close')) {
+    document.getElementById('promptModal').classList.remove('active');
+  }
+}
+function copyModalPrompt() {
+  var ta = document.getElementById('modalTextarea');
+  navigator.clipboard.writeText(ta.value).then(function() {
+    var btn = document.getElementById('modalCopyBtn');
+    btn.textContent = '✅ Copied!';
+    setTimeout(function() { btn.textContent = '📋 Copy Prompt'; }, 2000);
+  });
+}
+function copyFuncPromptDirect(card) {
+  var name = card.getAttribute('data-name');
+  var sig = card.getAttribute('data-sig');
+  var file = card.getAttribute('data-file');
+  var line = card.getAttribute('data-line');
+  var vis = card.getAttribute('data-vis');
+  var mod = card.getAttribute('data-mod');
+  var comp = card.getAttribute('data-comp');
+  var callers = card.getAttribute('data-callers');
+  var callees = card.getAttribute('data-callees');
+  var prompt = getFuncPrompt(name, sig, file, line, vis, mod, comp, callers, callees);
+  openPromptModal('AI Prompt: ' + name, file + ':' + line, prompt);
+}
+function copyCompPromptDirect(card) {
+  var name = card.getAttribute('data-name');
+  var type = card.getAttribute('data-type');
+  var provides = card.getAttribute('data-provides');
+  var consumes = card.getAttribute('data-consumes');
+  var prompt = "You are joining this project as a senior embedded systems engineer.\\n\\n" +
+    "Analyze this firmware component: " + name + " (" + type + ")\\n" +
+    "Provides APIs: " + provides + "\\n" +
+    "Consumes APIs: " + consumes + "\\n\\n" +
+    "Use:\\n" +
+    "1. docs/architecture/architecture.json\\n" +
+    "2. arch-wiki-es documentation\\n" +
+    "3. the project source code\\n\\n" +
+    "Analyze hardware bindings, peripheral interfaces, memory footprint, and task interactions.\\n\\n" +
+    "Generate:\\n" +
+    "1. Mermaid component interaction diagram\\n" +
+    "2. Mermaid sequence diagram for public APIs\\n\\n" +
+    "Do not infer missing components. Do not modify anything.";
+  openPromptModal('AI Prompt: Component ' + name, type + ' component', prompt);
+}
+function copySmPromptDirect(card) {
+  var title = card.getAttribute('data-title');
+  var states = card.getAttribute('data-states');
+  var prompt = "You are joining this project as a senior embedded systems engineer.\\n\\n" +
+    "Analyze this finite state machine: " + title + "\\n" +
+    "States: " + states + "\\n\\n" +
+    "Use:\\n" +
+    "1. docs/architecture/architecture.json\\n" +
+    "2. the project source code\\n\\n" +
+    "Analyze all state transitions, timeout handling, race conditions, and error states.\\n" +
+    "Generate:\\n" +
+    "1. Mermaid stateDiagram-v2\\n\\n" +
+    "Do not infer missing components. Do not modify anything.";
+  openPromptModal('AI Prompt: ' + title, 'State machine analysis', prompt);
+}
+
 document.querySelector('.section').classList.add('active');
 document.querySelector('.nav-btn').classList.add('active');
 if(window.mermaid)mermaid.initialize({startOnLoad:false,theme:'dark'});
 """
+
+    modal_html = """
+<div id="promptModal" class="modal-backdrop" onclick="closePromptModal(event)">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <div class="modal-head">
+      <div style="display:flex; align-items:center; gap:10px;">
+        <span style="font-size:22px;">🤖</span>
+        <div>
+          <h3 style="margin:0; font-size:15px; color:var(--text);" id="modalTitle">AI Senior Embedded Developer Prompt</h3>
+          <div style="font-size:12px; color:var(--accent); font-family:monospace; margin-top:2px;" id="modalSubtitle">Analysis Prompt</div>
+        </div>
+      </div>
+      <button class="modal-close" onclick="closePromptModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div style="margin-bottom:12px; display:flex; align-items:center; justify-content:space-between;">
+        <span style="font-size:12px; color:var(--muted);">COPY &amp; PASTE TO YOUR AI CODING ASSISTANT:</span>
+        <button id="modalCopyBtn" class="btn-prompt-copy" onclick="copyModalPrompt()">📋 Copy Prompt</button>
+      </div>
+      <textarea id="modalTextarea" rows="16" readonly></textarea>
+    </div>
+  </div>
+</div>
+"""
+
     return (
         "<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">"
         f"<title>{html.escape(meta.get('displayName', 'Embedded Architecture'))} - Architecture</title>"
@@ -1683,17 +1841,38 @@ if(window.mermaid)mermaid.initialize({startOnLoad:false,theme:'dark'});
         f"<style>{css}</style></head><body><header>"
         f"<h1>{html.escape(meta.get('displayName', 'Embedded Architecture'))}</h1>"
         f"<p>Embedded architecture map | {html.escape(meta.get('primaryType', 'unknown'))} ({html.escape(meta.get('projectType', 'unknown'))}) | Generated {html.escape(meta.get('generatedAt', ''))}</p>"
-        f"</header><div class=\"layout\"><aside>{nav_html}</aside><main>" + "\n".join(sections) + f"</main></div><script>{script}</script></body></html>"
+        f"</header><div class=\"layout\"><aside>{nav_html}</aside><main>" + "\n".join(sections) + f"</main></div>{modal_html}<script>{script}</script></body></html>"
     )
 
 def main():
-    target = next((Path(arg).resolve() for arg in sys.argv[1:] if not arg.startswith("--") and Path(arg).exists()), Path.cwd().resolve())
+    target_arg = next((Path(arg).resolve() for arg in sys.argv[1:] if not arg.startswith("--") and Path(arg).exists()), None)
+    if target_arg:
+        target = target_arg
+    else:
+        cwd = Path.cwd().resolve()
+        if cwd.name == "architecture" and cwd.parent.name == "docs":
+            target = cwd.parent.parent
+        else:
+            target = cwd
+            
+    is_sync = "--sync" in sys.argv
+    action = "Syncing" if is_sync else "Initializing"
+    
     arch = target if target.name == "architecture" else target / "docs" / "architecture"
     arch.mkdir(parents=True, exist_ok=True)
+    
+    print(f"[arch-wiki-es] {action} embedded architecture in {arch}...")
     data = init_architecture(str(target))
+    
     (arch / "architecture.json").write_text(json.dumps(data, indent=2), encoding="utf-8")
     (arch / "architecture.html").write_text(render(data), encoding="utf-8")
-    print(f"[arch-wiki-es] Generated embedded architecture files in {arch}")
+    
+    func_count = len(data.get("functions", []))
+    type_count = len(data.get("dataTypes", []))
+    macro_count = len(data.get("macros", []))
+    sm_count = len(data.get("diagrams", {}).get("stateMachines", []))
+    
+    print(f"[arch-wiki-es] Successfully generated architecture map ({func_count} functions, {macro_count} macros, {type_count} types, {sm_count} state machines).")
 
 if __name__ == "__main__":
     main()

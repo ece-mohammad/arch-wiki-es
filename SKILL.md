@@ -10,70 +10,125 @@ description: >
 
 Use this skill for C, C++, Rust, bare-metal, RTOS, embedded Linux, PlatformIO,
 CMake, Make, Zephyr, ESP-IDF, STM32CubeMX, and similar firmware projects. This
-skill is intentionally embedded-only; do not add API, Swagger, SQL, Docker, or
+skill is intentionally embedded-only; do not add web API, Swagger, SQL, Docker, or
 backend documentation sections.
 
-## Invoke After
+## When to Invoke (Sync Triggers)
 
-- Adding or changing a board, MCU, peripheral, sensor, actuator, or driver.
-- Adding or changing a task, interrupt, timer, queue, callback, or state machine.
-- Adding a project-defined struct, enum, class, trait, message, event, or protocol type.
-- Changing object allocation, storage, lifetime, ownership, or cleanup behavior.
-- Changing a linker script, memory partition, build profile, toolchain, or flash method.
-- Changing a data pipeline, README, device-tree overlay, Kconfig, or firmware configuration.
+Invoke this skill whenever changes occur in the codebase:
 
-## Workflow
+- **Hardware & Peripherals**: Adding or changing MCU, board, clock tree, GPIO, UART, SPI, I2C, CAN, ADC, timers, DMA, sensors, or actuators.
+- **Components & APIs**: Adding or modifying driver functions, public header prototypes, RTOS tasks, message queues, callbacks, or state machines.
+- **Data Types & Enums**: Adding project-defined structs, enums (and member values), typedefs, classes, or packet definitions.
+- **Memory & Build**: Modifying linker scripts (`.ld`), memory regions, section allocations, preprocessor `#define` flags, or Makefile targets.
+- **Documentation & Submodules**: Updating the root README or adding documentation to driver/component subdirectories.
 
-1. Read the target project's `README.md`.
-2. Inspect the existing `docs/architecture/architecture.json` if present.
-3. Identify the board, MCU, build system, toolchain, and RTOS.
-4. Scan hardware configuration, source, headers, linker scripts, map files, and build files.
-5. Scan modules, components, source file roles, and project-defined types.
-6. Exclude primitive, standard-library, vendor SDK, and RTOS types from `dataTypes`.
-7. Record each user-defined type's role, usage, and containing files.
-8. Record created objects, storage, lifetime, owner, transfers, and release paths.
-9. Update diagrams, data pipelines, and build metadata.
-10. Apply `docs/architecture/embedded-overrides.json` when source analysis cannot determine intent.
-11. Run:
+## Execution Commands
+
+### 1. First-Time Setup (or Full Init)
+
+```bash
+python3 docs/architecture/build_html.py --init
+```
+
+*Scans the repository, extracts hardware parameters, categorized configuration flags, functions, call graphs, state machines, and builds `docs/architecture/architecture.json` and `docs/architecture/architecture.html`.*
+
+### 2. Incremental Sync (After Codebase Changes)
 
 ```bash
 python3 docs/architecture/build_html.py --sync
 ```
 
-12. Verify the generated HTML contains the README and all embedded sections.
+*Rescans modified sources, updates symbol catalogs, recalculates cross-component dependencies and call graphs, and refreshes the interactive dashboard.*
 
-For a target project outside the current working directory, pass its existing path:
+For a project outside the current working directory:
 
 ```bash
 python3 /path/to/arch-wiki-es/templates/build_html.py --sync /path/to/firmware-project
 ```
 
-The generator writes `docs/architecture/architecture.json` and
-`docs/architecture/architecture.html` in the target project. It rescans and
-regenerates both files on every invocation.
+## AI Assistant Sync Workflow Prompts
 
-## Generated Sections
+Use these prompt patterns when asking an AI assistant to sync or audit architecture documentation:
 
-- Brief & Topology Overview
-- Project README & Multi-README Index
-- Hardware & Peripherals Configuration
-- Categorized Configuration Parameters
-- Memory Layout & Linker Map
-- Modules & Components (with Public APIs)
-- Dependencies & Inter-Component Integration
-- Files & Per-File Catalog
-- Functions & Signatures
-- Macros & Preprocessor Definitions
-- Call Graph (Caller → Callee)
-- Tools & Scripts (Makefile Analysis & Utility Scripts)
-- Class Diagrams
-- Sequence Diagrams (Boot/Init Sequence)
-- Interaction Diagrams
-- State Machines (Source-Derived)
-- Flow Charts
-- Data Pipelines
-- Build System & Toolchain
-- Searchable Flat Symbol Index
+### Prompt A — "I added or modified a driver / peripheral component"
+
+```
+I added a new driver/component to the firmware.
+Run arch-wiki-es to sync the architecture map:
+1. Run `python3 docs/architecture/build_html.py --sync`
+2. Verify that the new component appears under Modules & Components with its public APIs.
+3. Check that peripheral bindings and inter-component dependencies are updated.
+```
+
+### Prompt B — "I modified functions, macros, or state machine transitions"
+
+```
+I updated firmware functions and state machine logic.
+Run arch-wiki-es to rescan:
+1. Run `python3 docs/architecture/build_html.py --sync`
+2. Ensure the state diagram in State Machines tab reflects the new transitions.
+3. Verify the updated function signatures and call graph edges.
+```
+
+### Prompt C — "I updated memory layout, clock setup, or build flags"
+
+```
+I changed the target MCU / clock configuration / linker script.
+Run arch-wiki-es to sync:
+1. Run `python3 docs/architecture/build_html.py --sync`
+2. Verify updated memory regions (FLASH, RAM) and frequency in Hardware and Memory Layout tabs.
+3. Check that newly added #define parameters are categorized correctly.
+```
+
+### Prompt D — "Full Rescan & Parity Audit"
+
+```
+Run arch-wiki-es to perform a full parity audit against the firmware codebase:
+1. Run `python3 docs/architecture/build_html.py --sync`
+2. Audit actual codebase against docs/architecture/architecture.json:
+   - Verify all public APIs in header files are documented in Functions tab.
+   - Verify all user-defined structs and enums are captured in User-Defined Data Types.
+   - Verify unproven C/C++ ownership is marked unknown with warnings.
+   - Verify all build targets in Makefiles/platformio.ini are listed.
+```
+
+## 🤖 Interactive Senior Embedded Developer Prompts
+
+The generated `architecture.html` includes an interactive modal system:
+
+- Every **Function card** has a **📋 AI Prompt** button.
+- Every **Component card** has a **📋 AI Prompt** button.
+- Every **State Machine card** has a **📋 AI Prompt** button.
+
+Clicking any of these generates a tailor-made prompt formatted for an AI coding assistant (Antigravity, Claude, ChatGPT, Cursor) instructing it to:
+1. Trace execution flow, callers, callees, and register access.
+2. Analyze concurrency, ISR safety, interrupt priorities, and reentrancy.
+3. Check stack consumption, buffer bounds, and error recovery.
+4. Output Mermaid sequence diagrams and logic flowcharts.
+
+## Generated Architecture Sections
+
+0. **Brief & Topology Overview**: MCU topology, bare-metal vs RTOS classification.
+1. **Project README & Multi-README Index**: Embedded root README and catalog of all driver READMEs.
+2. **Hardware & Peripherals Configuration**: Detected MCU, clock frequencies, peripherals, pinout.
+3. **Categorized Configuration Parameters**: Defines grouped by functional category (`clock`, `peripheral`, `rtos`, etc.).
+4. **Memory Layout & Linker Map**: Flash/RAM origins, lengths, sections (`.text`, `.data`, `.bss`).
+5. **Modules & Components**: Logical firmware subsystems, drivers, public APIs (`provides`/`consumes`).
+6. **Dependencies & Inter-Component Integration**: Cross-component call graphs.
+7. **Files & Per-File Catalog**: Source files catalog with symbol counts and line totals.
+8. **Functions & Signatures**: Full signatures, return types, parameters, visibility, callers/callees.
+9. **Macros & Preprocessor Definitions**: Defines with values, parameter lists, and categories.
+10. **Call Graph**: Function call hierarchy visualized via Mermaid flowchart.
+11. **Tools & Scripts**: Makefile target role analysis (`primary`, `utility`, `wrapper`) and helper scripts.
+12. **Class Diagrams**: Structs, enums, unions, and relationships.
+13. **Sequence Diagrams**: Startup and hardware initialization call hierarchy derived from `main()`.
+14. **Interaction Diagrams**: Subsystem boundaries and communication channels.
+15. **State Machines**: Source-derived state machines extracted from enums and `switch`/`case` transitions.
+16. **Flow Charts**: Firmware execution loops, reset flows, and interrupt handlers.
+17. **Data Pipelines**: Detected data flow between firmware modules.
+18. **Firmware Build & Toolchain**: Build system, toolchain target triple, and flash/debug commands.
+19. **Searchable Symbol Index**: Filterable index of all project functions, types, macros, and globals.
 
 ## Evidence Rules
 
@@ -84,41 +139,16 @@ value should include a source file and confidence. C/C++ ownership should be
 `dataTypes` contains user-defined project types only. Standard types may appear as
 field or signature labels but must not become independent documentation entries.
 
-## Type and File Rules
-
-- Include project-defined structs, unions, enums, typedefs, classes, traits, callback types, message types, and protocol types.
-- Exclude primitive, standard-library, vendor SDK, HAL, RTOS, and external dependency types.
-- Include a role for each module, component, type, and created object.
-- Use structured file references with path, file role, symbols, and line evidence when available.
-- Record both definition files and meaningful usage files; do not list a header merely because it was included.
-- Link fields to other project-defined types with `typeReference`.
-- Record type usage roles such as `produces`, `consumes`, `queues`, `stores`, `serializes`, `deserializes`, `transmits`, and `receives`.
-
-## Object Lifetime and Ownership Rules
-
-For created objects and resources, inspect:
-
-- Global, static, stack, heap, pool, RTOS, persistent, DMA, and peripheral-handle storage.
-- Creation and initialization functions.
-- Activation, suspension, reset, release, and destruction paths.
-- Module, component, task, or system ownership.
-- Borrowed access, shared access, queue transfer, DMA handoff, and ownership transfer.
-
-Do not treat every pointer argument as an ownership transfer. If creation,
-release, or responsibility cannot be proven, use `unknown` and include a warning
-with the relevant source evidence.
-
-## Override Rules
+## Manual Overrides
 
 Use `docs/architecture/embedded-overrides.json` for facts that static scanning
 cannot safely infer, including board details, pin mappings, power constraints,
 memory partitions, module roles, type relationships, object ownership, state
-machines, data pipelines, and flash/debug commands. Preserve `source` and
-`confidence` metadata when applying overrides.
+machines, data pipelines, and flash/debug commands. Overrides are merged during `--sync`.
 
 ## Verification Checklist
 
-- `architecture.json` contains only the embedded schema.
+- `architecture.json` contains only the embedded schema (21 top-level keys).
 - The generated README content matches the target project's README.
 - All requested navigation sections are present in the HTML.
 - No standard or vendor types appear as top-level `dataTypes` entries.

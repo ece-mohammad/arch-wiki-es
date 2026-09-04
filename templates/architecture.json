@@ -25,7 +25,7 @@
     "title": "Embedded Sample",
     "content": "# Embedded Sample\n\nFirmware for a sensor node.\n",
     "exists": true,
-    "lastModified": "2026-08-10",
+    "lastModified": "2026-09-03",
     "source": "project-readme"
   },
   "readmes": [
@@ -36,7 +36,7 @@
       "directory": ".",
       "isRoot": true,
       "lines": 3,
-      "lastModified": "2026-08-10",
+      "lastModified": "2026-09-03",
       "source": "scanner"
     },
     {

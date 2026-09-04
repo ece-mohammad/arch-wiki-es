@@ -1,5 +1,5 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Embedded Sample - Architecture</title><script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script><style>
-:root{--bg:#0d1117;--panel:#161b22;--panel2:#21262d;--border:#30363d;--text:#e6edf3;--muted:#8b949e;--accent:#58a6ff}
+:root{--bg:#0d1117;--panel:#161b22;--panel2:#21262d;--border:#30363d;--text:#e6edf3;--muted:#8b949e;--accent:#58a6ff;--green:#3fb950}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--text);font:14px system-ui,sans-serif}
 header{position:sticky;top:0;z-index:2;background:var(--panel);border-bottom:1px solid var(--border);padding:18px 28px}
@@ -12,18 +12,30 @@ main{margin-left:260px;padding:28px;max-width:1500px;width:calc(100% - 260px)}
 .section{display:none}.section.active{display:block}
 h2{border-bottom:1px solid var(--border);padding-bottom:10px}h3{color:var(--accent);margin-top:0}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
-.card{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:18px;margin:0 0 16px;overflow:auto}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:18px;margin:0 0 16px;overflow:auto;position:relative}
+.card:hover{border-color:rgba(88,166,255,0.4)}
 pre{background:#090c10;border:1px solid var(--border);padding:14px;border-radius:7px;overflow:auto;white-space:pre-wrap;word-break:break-word}
 code{color:#9cdcfe}.muted{color:var(--muted)}
 .files span{color:var(--muted);margin-left:8px}
 .toolbar{display:flex;gap:12px;align-items:center;margin-bottom:14px}
 button{color:var(--text);background:var(--panel2);border:1px solid var(--border);border-radius:6px;padding:7px 10px;cursor:pointer}
+button:hover{border-color:var(--accent)}
 .readme{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:24px;line-height:1.6}
 .readme img{max-width:100%}
 .data-table{width:100%;border-collapse:collapse;margin-top:8px}
 .data-table th,.data-table td{border:1px solid var(--border);padding:8px 12px;text-align:left}
 .data-table th{background:var(--panel2);color:var(--accent)}
 .badge{background:var(--panel2);border:1px solid var(--border);padding:2px 6px;border-radius:4px;font-size:11px;color:var(--accent)}
+.btn-prompt-copy{background:var(--panel2);border:1px solid var(--border);color:var(--accent);font-size:11px;font-weight:600;padding:4px 8px;border-radius:5px;cursor:pointer;transition:all 0.15s}
+.btn-prompt-copy:hover{background:var(--accent);color:#fff;border-color:var(--accent)}
+.modal-backdrop{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.75);z-index:999;align-items:center;justify-content:center;padding:20px}
+.modal-backdrop.active{display:flex}
+.modal-box{background:var(--panel);border:1px solid var(--border);border-radius:12px;width:100%;max-width:700px;box-shadow:0 12px 36px rgba(0,0,0,0.6);overflow:hidden}
+.modal-head{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid var(--border);background:var(--panel2)}
+.modal-body{padding:20px}
+.modal-body textarea{width:100%;background:#090c10;color:var(--text);border:1px solid var(--border);border-radius:7px;padding:12px;font:12px monospace;line-height:1.5;resize:vertical}
+.modal-close{background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;padding:0 6px}
+.modal-close:hover{color:var(--text)}
 @media(max-width:750px){aside{position:static;width:100%;border-right:0;border-bottom:1px solid var(--border);display:flex;flex-wrap:wrap;gap:4px}.layout{display:block}main{margin:0;width:100%;padding:16px}.nav-btn{width:auto}}
 </style></head><body><header><h1>Embedded Sample</h1><p>Embedded architecture map | PlatformIO (bare-metal) | Generated 2026-09-03</p></header><div class="layout"><aside><button class="nav-btn" onclick="showTab('brief',this)">Brief</button><button class="nav-btn" onclick="showTab('readme',this)">Project README</button><button class="nav-btn" onclick="showTab('hardware',this)">Hardware</button><button class="nav-btn" onclick="showTab('configurations',this)">Configurations</button><button class="nav-btn" onclick="showTab('memory-layout',this)">Memory Layout</button><button class="nav-btn" onclick="showTab('modules-components',this)">Modules &amp; Components</button><button class="nav-btn" onclick="showTab('dependencies',this)">Dependencies</button><button class="nav-btn" onclick="showTab('files',this)">Files</button><button class="nav-btn" onclick="showTab('functions',this)">Functions</button><button class="nav-btn" onclick="showTab('macros',this)">Macros</button><button class="nav-btn" onclick="showTab('call-graph',this)">Call Graph</button><button class="nav-btn" onclick="showTab('tools',this)">Tools &amp; Scripts</button><button class="nav-btn" onclick="showTab('class-diagrams',this)">Class Diagrams</button><button class="nav-btn" onclick="showTab('sequence-diagrams',this)">Sequence Diagrams</button><button class="nav-btn" onclick="showTab('interaction-diagrams',this)">Interaction Diagrams</button><button class="nav-btn" onclick="showTab('state-machines',this)">State Machines</button><button class="nav-btn" onclick="showTab('flow-charts',this)">Flow Charts</button><button class="nav-btn" onclick="showTab('data-pipelines',this)">Data Pipelines</button><button class="nav-btn" onclick="showTab('build',this)">Build</button><button class="nav-btn" onclick="showTab('symbol-index',this)">Symbol Index</button></aside><main><section class="section" id="sec-brief"><h2>Brief</h2><article class="card"><h3>Purpose</h3><p>Firmware for a sensor node.</p></article><article class="card"><h3>Architecture Topology</h3><pre>{
   &quot;primaryType&quot;: &quot;PlatformIO&quot;,
@@ -63,7 +75,21 @@ Firmware for a sensor node.
   }
 ]</pre></article><div class="card"><h3>Category: Feature (1)</h3><table class="data-table"><thead><tr><th>Parameter</th><th>Value</th><th>Source</th></tr></thead><tbody><tr><td><code>ENABLE_SENSOR</code></td><td></td><td><code>platformio.ini:5</code></td></tr></tbody></table></div><div class="card"><h3>Category: Clock (1)</h3><table class="data-table"><thead><tr><th>Parameter</th><th>Value</th><th>Source</th></tr></thead><tbody><tr><td><code>SYS_CLOCK_HZ</code></td><td>84000000</td><td><code>src/main.c:4</code></td></tr></tbody></table></div><div class="card"><h3>Category: Application (2)</h3><table class="data-table"><thead><tr><th>Parameter</th><th>Value</th><th>Source</th></tr></thead><tbody><tr><td><code>SENSOR_CALIBRATION_OFFSET</code></td><td>12</td><td><code>src/sensor.c:4</code></td></tr><tr><td><code>SENSOR_MAX_CHANNELS</code></td><td>8</td><td><code>src/sensor.h:6</code></td></tr></tbody></table></div><div class="card"><h3>Category: Peripheral (1)</h3><table class="data-table"><thead><tr><th>Parameter</th><th>Value</th><th>Source</th></tr></thead><tbody><tr><td><code>SENSOR_TIMEOUT_MS</code></td><td>100</td><td><code>src/sensor.h:7</code></td></tr></tbody></table></div><article class="card"><h3>Configuration Sources</h3><ul><li><code>Makefile</code> <span>configuration</span></li><li><code>platformio.ini</code> <span>configuration</span></li><li><code>src/sensor.h</code> <span>configuration</span></li></ul></article></section>
 <section class="section" id="sec-memory-layout"><h2>Memory Layout</h2><article class="card"><h3>Memory Regions</h3><pre>[]</pre></article><article class="card"><h3>Sections</h3><pre>[]</pre></article><article class="card"><h3>Linker / Map Files</h3><p class="muted">No source files detected.</p></article></section>
-<section class="section" id="sec-modules-components"><h2>Modules &amp; Components</h2><h3>Modules</h3><div class="grid"><article class="card"><h3>Src</h3><p><b>Role:</b> Src firmware subsystem.</p><ul><li><code>src/main.c</code> <span>implementation</span></li><li><code>src/sensor.c</code> <span>implementation</span></li><li><code>src/sensor.h</code> <span>implementation</span></li></ul></article></div><h3>Components</h3><div class="grid"><article class="card"><h3>Main</h3><p><b>Role:</b> Main application component.</p><p><b>Provides:</b> <code>main</code></p><p><b>Consumes:</b> <code>bsp_init, sensor_init, sensor_process, sensor_read, system_clock_config</code></p><ul><li><code>src/main.c</code> <span>implementation</span></li></ul></article><article class="card"><h3>Sensor</h3><p><b>Role:</b> Sensor application component.</p><p><b>Provides:</b> <code>sensor_init, sensor_read, sensor_get_state, sensor_process</code></p><p><b>Consumes:</b> <code>sensor_hw_reset, sensor_init</code></p><ul><li><code>src/sensor.h</code> <span>implementation</span></li></ul></article></div><h3>User-Defined Data Types</h3><div class="grid"><article class="card"><h3>SensorReading</h3><p><b>Kind:</b> struct</p><p><b>Role:</b> Project-defined struct used by firmware components.</p><p><b>Fields:</b> value, timestamp</p><ul><li><code>src/sensor.h</code> <span>definition</span> line 16</li></ul></article><article class="card"><h3>SensorState</h3><p><b>Kind:</b> enum</p><p><b>Role:</b> Project-defined enum used by firmware components.</p><p><b>Fields:</b> none</p><ul><li><code>src/sensor.h</code> <span>definition</span> line 9</li></ul></article></div><h3>Objects & Storage</h3><div class="grid"><article class="card"><h3>r</h3><p><b>Kind:</b> global</p><p><b>Role:</b> Runtime instance of SensorReading.</p><pre>{
+<section class="section" id="sec-modules-components"><h2>Modules &amp; Components</h2><h3>Modules</h3><div class="grid"><article class="card"><h3>Src</h3><p><b>Role:</b> Src firmware subsystem.</p><ul><li><code>src/main.c</code> <span>implementation</span></li><li><code>src/sensor.c</code> <span>implementation</span></li><li><code>src/sensor.h</code> <span>implementation</span></li></ul></article></div><h3>Components</h3><div class="grid"><article class="card" data-name="Main" data-type="application" data-provides="main" data-consumes="bsp_init, sensor_init, sensor_process, sensor_read, system_clock_config"><h3>Main</h3><div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
+            <div><span class="badge">application</span></div>
+            <button class="btn-prompt-copy" onclick="event.stopPropagation(); copyCompPromptDirect(this.closest('.card'))" title="Copy AI Senior Developer Prompt">📋 AI Prompt</button>
+        </div>
+        <p><b>Role:</b> Main application component.</p>
+        <p><b>Provides:</b> <code>main</code></p>
+        <p><b>Consumes:</b> <code>bsp_init, sensor_init, sensor_process, sensor_read, system_clock_config</code></p>
+        <ul><li><code>src/main.c</code> <span>implementation</span></li></ul></article><article class="card" data-name="Sensor" data-type="application" data-provides="sensor_init, sensor_read, sensor_get_state, sensor_process" data-consumes="sensor_hw_reset, sensor_init"><h3>Sensor</h3><div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
+            <div><span class="badge">application</span></div>
+            <button class="btn-prompt-copy" onclick="event.stopPropagation(); copyCompPromptDirect(this.closest('.card'))" title="Copy AI Senior Developer Prompt">📋 AI Prompt</button>
+        </div>
+        <p><b>Role:</b> Sensor application component.</p>
+        <p><b>Provides:</b> <code>sensor_init, sensor_read, sensor_get_state, sensor_process</code></p>
+        <p><b>Consumes:</b> <code>sensor_hw_reset, sensor_init</code></p>
+        <ul><li><code>src/sensor.h</code> <span>implementation</span></li></ul></article></div><h3>User-Defined Data Types</h3><div class="grid"><article class="card"><h3>SensorReading</h3><p><b>Kind:</b> struct</p><p><b>Role:</b> Project-defined struct used by firmware components.</p><p><b>Fields:</b> value, timestamp</p><ul><li><code>src/sensor.h</code> <span>definition</span> line 16</li></ul></article><article class="card"><h3>SensorState</h3><p><b>Kind:</b> enum</p><p><b>Role:</b> Project-defined enum used by firmware components.</p><p><b>Fields:</b> none</p><ul><li><code>src/sensor.h</code> <span>definition</span> line 9</li></ul></article></div><h3>Objects & Storage</h3><div class="grid"><article class="card"><h3>r</h3><p><b>Kind:</b> global</p><p><b>Role:</b> Runtime instance of SensorReading.</p><pre>{
   &quot;storage&quot;: {
     &quot;location&quot;: &quot;global-data&quot;,
     &quot;region&quot;: &quot;ram&quot;,
@@ -146,7 +172,55 @@ Firmware for a sensor node.
   }
 ]</pre></article></section>
 <section class="section" id="sec-files"><h2>Files</h2><div class="card"><table class="data-table"><thead><tr><th>Path</th><th>Lang</th><th>Lines</th><th>Functions</th><th>Types</th><th>Macros</th></tr></thead><tbody><tr><td><code>src/main.c</code></td><td>C/C++</td><td>22</td><td><code>bsp_init, main, system_clock_config</code></td><td><code></code></td><td><code>SYS_CLOCK_HZ</code></td></tr><tr><td><code>src/sensor.c</code></td><td>C/C++</td><td>43</td><td><code>sensor_get_state, sensor_hw_reset, sensor_init, sensor_process, sensor_read</code></td><td><code></code></td><td><code>SENSOR_CALIBRATION_OFFSET</code></td></tr><tr><td><code>src/sensor.h</code></td><td>C/C++</td><td>26</td><td><code></code></td><td><code>SensorReading, SensorState</code></td><td><code>SENSOR_MAX_CHANNELS, SENSOR_TIMEOUT_MS</code></td></tr></tbody></table></div></section>
-<section class="section" id="sec-functions"><h2>Functions</h2><div class="grid"><article class="card"><h3>system_clock_config</h3><p><code>void system_clock_config(void)</code></p><p><b>File:</b> <code>src/main.c:6</code> (private)</p><p><b>Callers:</b> <code>bsp_init</code></p><p><b>Callees:</b> <code>none</code></p></article><article class="card"><h3>bsp_init</h3><p><code>void bsp_init(void)</code></p><p><b>File:</b> <code>src/main.c:9</code> (private)</p><p><b>Callers:</b> <code>main</code></p><p><b>Callees:</b> <code>system_clock_config</code></p></article><article class="card"><h3>main</h3><p><code>int main(void)</code></p><p><b>File:</b> <code>src/main.c:13</code> (public)</p><p><b>Callers:</b> <code>none</code></p><p><b>Callees:</b> <code>bsp_init, sensor_init, sensor_process, sensor_read</code></p></article><article class="card"><h3>sensor_hw_reset</h3><p><code>void sensor_hw_reset(void)</code></p><p><b>File:</b> <code>src/sensor.c:9</code> (private)</p><p><b>Callers:</b> <code>sensor_init</code></p><p><b>Callees:</b> <code>none</code></p></article><article class="card"><h3>sensor_init</h3><p><code>void sensor_init(void)</code></p><p><b>File:</b> <code>src/sensor.c:12</code> (public)</p><p><b>Callers:</b> <code>main, sensor_process</code></p><p><b>Callees:</b> <code>sensor_hw_reset</code></p></article><article class="card"><h3>sensor_read</h3><p><code>SensorReading sensor_read(void)</code></p><p><b>File:</b> <code>src/sensor.c:17</code> (public)</p><p><b>Callers:</b> <code>main</code></p><p><b>Callees:</b> <code>none</code></p></article><article class="card"><h3>sensor_get_state</h3><p><code>SensorState sensor_get_state(void)</code></p><p><b>File:</b> <code>src/sensor.c:21</code> (public)</p><p><b>Callers:</b> <code>none</code></p><p><b>Callees:</b> <code>none</code></p></article><article class="card"><h3>sensor_process</h3><p><code>void sensor_process(void)</code></p><p><b>File:</b> <code>src/sensor.c:25</code> (public)</p><p><b>Callers:</b> <code>main</code></p><p><b>Callees:</b> <code>sensor_init</code></p></article></div></section>
+<section class="section" id="sec-functions"><h2>Functions</h2><div class="grid"><article class="card" data-name="system_clock_config" data-sig="void system_clock_config(void)" data-file="src/main.c" data-line="6" data-vis="private" data-mod="src" data-comp="main" data-callers="bsp_init" data-callees="none"><h3>system_clock_config</h3><div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
+            <div><code>void system_clock_config(void)</code></div>
+            <button class="btn-prompt-copy" onclick="event.stopPropagation(); copyFuncPromptDirect(this.closest('.card'))" title="Copy AI Senior Developer Prompt">📋 AI Prompt</button>
+        </div>
+        <p><b>File:</b> <code>src/main.c:6</code> <span class="badge">private</span></p>
+        <p><b>Callers:</b> <code>bsp_init</code></p>
+        <p><b>Callees:</b> <code>none</code></p></article><article class="card" data-name="bsp_init" data-sig="void bsp_init(void)" data-file="src/main.c" data-line="9" data-vis="private" data-mod="src" data-comp="main" data-callers="main" data-callees="system_clock_config"><h3>bsp_init</h3><div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
+            <div><code>void bsp_init(void)</code></div>
+            <button class="btn-prompt-copy" onclick="event.stopPropagation(); copyFuncPromptDirect(this.closest('.card'))" title="Copy AI Senior Developer Prompt">📋 AI Prompt</button>
+        </div>
+        <p><b>File:</b> <code>src/main.c:9</code> <span class="badge">private</span></p>
+        <p><b>Callers:</b> <code>main</code></p>
+        <p><b>Callees:</b> <code>system_clock_config</code></p></article><article class="card" data-name="main" data-sig="int main(void)" data-file="src/main.c" data-line="13" data-vis="public" data-mod="src" data-comp="main" data-callers="none" data-callees="bsp_init, sensor_init, sensor_process, sensor_read"><h3>main</h3><div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
+            <div><code>int main(void)</code></div>
+            <button class="btn-prompt-copy" onclick="event.stopPropagation(); copyFuncPromptDirect(this.closest('.card'))" title="Copy AI Senior Developer Prompt">📋 AI Prompt</button>
+        </div>
+        <p><b>File:</b> <code>src/main.c:13</code> <span class="badge">public</span></p>
+        <p><b>Callers:</b> <code>none</code></p>
+        <p><b>Callees:</b> <code>bsp_init, sensor_init, sensor_process, sensor_read</code></p></article><article class="card" data-name="sensor_hw_reset" data-sig="void sensor_hw_reset(void)" data-file="src/sensor.c" data-line="9" data-vis="private" data-mod="src" data-comp="sensor" data-callers="sensor_init" data-callees="none"><h3>sensor_hw_reset</h3><div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
+            <div><code>void sensor_hw_reset(void)</code></div>
+            <button class="btn-prompt-copy" onclick="event.stopPropagation(); copyFuncPromptDirect(this.closest('.card'))" title="Copy AI Senior Developer Prompt">📋 AI Prompt</button>
+        </div>
+        <p><b>File:</b> <code>src/sensor.c:9</code> <span class="badge">private</span></p>
+        <p><b>Callers:</b> <code>sensor_init</code></p>
+        <p><b>Callees:</b> <code>none</code></p></article><article class="card" data-name="sensor_init" data-sig="void sensor_init(void)" data-file="src/sensor.c" data-line="12" data-vis="public" data-mod="src" data-comp="sensor" data-callers="main, sensor_process" data-callees="sensor_hw_reset"><h3>sensor_init</h3><div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
+            <div><code>void sensor_init(void)</code></div>
+            <button class="btn-prompt-copy" onclick="event.stopPropagation(); copyFuncPromptDirect(this.closest('.card'))" title="Copy AI Senior Developer Prompt">📋 AI Prompt</button>
+        </div>
+        <p><b>File:</b> <code>src/sensor.c:12</code> <span class="badge">public</span></p>
+        <p><b>Callers:</b> <code>main, sensor_process</code></p>
+        <p><b>Callees:</b> <code>sensor_hw_reset</code></p></article><article class="card" data-name="sensor_read" data-sig="SensorReading sensor_read(void)" data-file="src/sensor.c" data-line="17" data-vis="public" data-mod="src" data-comp="sensor" data-callers="main" data-callees="none"><h3>sensor_read</h3><div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
+            <div><code>SensorReading sensor_read(void)</code></div>
+            <button class="btn-prompt-copy" onclick="event.stopPropagation(); copyFuncPromptDirect(this.closest('.card'))" title="Copy AI Senior Developer Prompt">📋 AI Prompt</button>
+        </div>
+        <p><b>File:</b> <code>src/sensor.c:17</code> <span class="badge">public</span></p>
+        <p><b>Callers:</b> <code>main</code></p>
+        <p><b>Callees:</b> <code>none</code></p></article><article class="card" data-name="sensor_get_state" data-sig="SensorState sensor_get_state(void)" data-file="src/sensor.c" data-line="21" data-vis="public" data-mod="src" data-comp="sensor" data-callers="none" data-callees="none"><h3>sensor_get_state</h3><div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
+            <div><code>SensorState sensor_get_state(void)</code></div>
+            <button class="btn-prompt-copy" onclick="event.stopPropagation(); copyFuncPromptDirect(this.closest('.card'))" title="Copy AI Senior Developer Prompt">📋 AI Prompt</button>
+        </div>
+        <p><b>File:</b> <code>src/sensor.c:21</code> <span class="badge">public</span></p>
+        <p><b>Callers:</b> <code>none</code></p>
+        <p><b>Callees:</b> <code>none</code></p></article><article class="card" data-name="sensor_process" data-sig="void sensor_process(void)" data-file="src/sensor.c" data-line="25" data-vis="public" data-mod="src" data-comp="sensor" data-callers="main" data-callees="sensor_init"><h3>sensor_process</h3><div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
+            <div><code>void sensor_process(void)</code></div>
+            <button class="btn-prompt-copy" onclick="event.stopPropagation(); copyFuncPromptDirect(this.closest('.card'))" title="Copy AI Senior Developer Prompt">📋 AI Prompt</button>
+        </div>
+        <p><b>File:</b> <code>src/sensor.c:25</code> <span class="badge">public</span></p>
+        <p><b>Callers:</b> <code>main</code></p>
+        <p><b>Callees:</b> <code>sensor_init</code></p></article></div></section>
 <section class="section" id="sec-macros"><h2>Macros</h2><div class="card"><table class="data-table"><thead><tr><th>Macro</th><th>Value</th><th>Category</th><th>Source</th></tr></thead><tbody><tr><td><code>SYS_CLOCK_HZ</code></td><td><code>84000000</code></td><td><span class='badge'>clock</span></td><td><code>src/main.c:4</code></td></tr><tr><td><code>SENSOR_CALIBRATION_OFFSET</code></td><td><code>12</code></td><td><span class='badge'>application</span></td><td><code>src/sensor.c:4</code></td></tr><tr><td><code>SENSOR_MAX_CHANNELS</code></td><td><code>8</code></td><td><span class='badge'>application</span></td><td><code>src/sensor.h:6</code></td></tr><tr><td><code>SENSOR_TIMEOUT_MS</code></td><td><code>100</code></td><td><span class='badge'>peripheral</span></td><td><code>src/sensor.h:7</code></td></tr></tbody></table></div></section>
 <section class="section" id="sec-call-graph"><h2>Call Graph</h2><article class="card"><h3>Function Call Relationships</h3><pre class="mermaid">flowchart LR
     bsp_init[bsp_init] --&gt; system_clock_config[system_clock_config]
@@ -222,7 +296,7 @@ Firmware for a sensor node.
     main-&gt;&gt;sensor_read: sensor_read()</pre></article></section>
 <section class="section" id="sec-interaction-diagrams"><h2>Interaction Diagrams</h2><article class="card"><h3>Firmware Components</h3><p>Detected module boundaries.</p><pre class="mermaid">flowchart LR
     src[Src]</pre></article></section>
-<section class="section" id="sec-state-machines"><h2>State Machines</h2><article class="card"><h3>SensorState Machine</h3><p>State machine derived from SensorState and switch-case transitions.</p><pre class="mermaid">stateDiagram-v2
+<section class="section" id="sec-state-machines"><h2>State Machines</h2><article class="card" data-title="SensorState Machine" data-states="SENSOR_STATE_IDLE, SENSOR_STATE_SAMPLING, SENSOR_STATE_READY, SENSOR_STATE_ERROR"><h3>SensorState Machine</h3><button class="btn-prompt-copy" style="float:right;" onclick="event.stopPropagation(); copySmPromptDirect(this.closest('.card'))" title="Copy AI Senior Developer Prompt">📋 AI Prompt</button><p>State machine derived from SensorState and switch-case transitions.</p><pre class="mermaid">stateDiagram-v2
     [*] --&gt; SENSOR_STATE_IDLE
     SENSOR_STATE_IDLE --&gt; SENSOR_STATE_SAMPLING
     SENSOR_STATE_SAMPLING --&gt; SENSOR_STATE_READY
@@ -321,7 +395,29 @@ Firmware for a sensor node.
   &quot;staticAnalysis&quot;: [],
   &quot;ci&quot;: []
 }</pre></article></section>
-<section class="section" id="sec-symbol-index"><h2>Symbol Index</h2><div class="card"><input type="text" id="sym-filter" placeholder="Filter symbols..." onkeyup="filterSymbols()" style="width:100%;padding:8px;margin-bottom:12px;background:var(--panel2);border:1px solid var(--border);color:var(--text);border-radius:6px;"><table class="data-table" id="sym-table"><thead><tr><th>Symbol</th><th>Kind</th><th>Location</th><th>Detail</th></tr></thead><tbody><tr><td><code>bsp_init</code></td><td><span class='badge'>function</span></td><td><code>src/main.c:9</code></td><td>void bsp_init(void)</td></tr><tr><td><code>current_reading</code></td><td><span class='badge'>object</span></td><td><code>src/sensor.c:6</code></td><td>static instance (Runtime instance of SensorReading.)</td></tr><tr><td><code>current_state</code></td><td><span class='badge'>object</span></td><td><code>src/sensor.c:7</code></td><td>static instance (Runtime instance of SensorState.)</td></tr><tr><td><code>main</code></td><td><span class='badge'>function</span></td><td><code>src/main.c:13</code></td><td>int main(void)</td></tr><tr><td><code>r</code></td><td><span class='badge'>object</span></td><td><code>src/main.c:18</code></td><td>global instance (Runtime instance of SensorReading.)</td></tr><tr><td><code>SENSOR_CALIBRATION_OFFSET</code></td><td><span class='badge'>macro</span></td><td><code>src/sensor.c:4</code></td><td>12</td></tr><tr><td><code>sensor_get_state</code></td><td><span class='badge'>function</span></td><td><code>src/sensor.c:21</code></td><td>SensorState sensor_get_state(void)</td></tr><tr><td><code>sensor_hw_reset</code></td><td><span class='badge'>function</span></td><td><code>src/sensor.c:9</code></td><td>void sensor_hw_reset(void)</td></tr><tr><td><code>sensor_init</code></td><td><span class='badge'>function</span></td><td><code>src/sensor.c:12</code></td><td>void sensor_init(void)</td></tr><tr><td><code>SENSOR_MAX_CHANNELS</code></td><td><span class='badge'>macro</span></td><td><code>src/sensor.h:6</code></td><td>8</td></tr><tr><td><code>sensor_process</code></td><td><span class='badge'>function</span></td><td><code>src/sensor.c:25</code></td><td>void sensor_process(void)</td></tr><tr><td><code>sensor_read</code></td><td><span class='badge'>function</span></td><td><code>src/sensor.c:17</code></td><td>SensorReading sensor_read(void)</td></tr><tr><td><code>SENSOR_TIMEOUT_MS</code></td><td><span class='badge'>macro</span></td><td><code>src/sensor.h:7</code></td><td>100</td></tr><tr><td><code>SensorReading</code></td><td><span class='badge'>struct</span></td><td><code>src/sensor.h:16</code></td><td>Project-defined struct used by firmware components.</td></tr><tr><td><code>SensorState</code></td><td><span class='badge'>enum</span></td><td><code>src/sensor.h:9</code></td><td>Project-defined enum used by firmware components.</td></tr><tr><td><code>SYS_CLOCK_HZ</code></td><td><span class='badge'>macro</span></td><td><code>src/main.c:4</code></td><td>84000000</td></tr><tr><td><code>system_clock_config</code></td><td><span class='badge'>function</span></td><td><code>src/main.c:6</code></td><td>void system_clock_config(void)</td></tr></tbody></table></div></section></main></div><script>
+<section class="section" id="sec-symbol-index"><h2>Symbol Index</h2><div class="card"><input type="text" id="sym-filter" placeholder="Filter symbols..." onkeyup="filterSymbols()" style="width:100%;padding:8px;margin-bottom:12px;background:var(--panel2);border:1px solid var(--border);color:var(--text);border-radius:6px;"><table class="data-table" id="sym-table"><thead><tr><th>Symbol</th><th>Kind</th><th>Location</th><th>Detail</th></tr></thead><tbody><tr><td><code>bsp_init</code></td><td><span class='badge'>function</span></td><td><code>src/main.c:9</code></td><td>void bsp_init(void)</td></tr><tr><td><code>current_reading</code></td><td><span class='badge'>object</span></td><td><code>src/sensor.c:6</code></td><td>static instance (Runtime instance of SensorReading.)</td></tr><tr><td><code>current_state</code></td><td><span class='badge'>object</span></td><td><code>src/sensor.c:7</code></td><td>static instance (Runtime instance of SensorState.)</td></tr><tr><td><code>main</code></td><td><span class='badge'>function</span></td><td><code>src/main.c:13</code></td><td>int main(void)</td></tr><tr><td><code>r</code></td><td><span class='badge'>object</span></td><td><code>src/main.c:18</code></td><td>global instance (Runtime instance of SensorReading.)</td></tr><tr><td><code>SENSOR_CALIBRATION_OFFSET</code></td><td><span class='badge'>macro</span></td><td><code>src/sensor.c:4</code></td><td>12</td></tr><tr><td><code>sensor_get_state</code></td><td><span class='badge'>function</span></td><td><code>src/sensor.c:21</code></td><td>SensorState sensor_get_state(void)</td></tr><tr><td><code>sensor_hw_reset</code></td><td><span class='badge'>function</span></td><td><code>src/sensor.c:9</code></td><td>void sensor_hw_reset(void)</td></tr><tr><td><code>sensor_init</code></td><td><span class='badge'>function</span></td><td><code>src/sensor.c:12</code></td><td>void sensor_init(void)</td></tr><tr><td><code>SENSOR_MAX_CHANNELS</code></td><td><span class='badge'>macro</span></td><td><code>src/sensor.h:6</code></td><td>8</td></tr><tr><td><code>sensor_process</code></td><td><span class='badge'>function</span></td><td><code>src/sensor.c:25</code></td><td>void sensor_process(void)</td></tr><tr><td><code>sensor_read</code></td><td><span class='badge'>function</span></td><td><code>src/sensor.c:17</code></td><td>SensorReading sensor_read(void)</td></tr><tr><td><code>SENSOR_TIMEOUT_MS</code></td><td><span class='badge'>macro</span></td><td><code>src/sensor.h:7</code></td><td>100</td></tr><tr><td><code>SensorReading</code></td><td><span class='badge'>struct</span></td><td><code>src/sensor.h:16</code></td><td>Project-defined struct used by firmware components.</td></tr><tr><td><code>SensorState</code></td><td><span class='badge'>enum</span></td><td><code>src/sensor.h:9</code></td><td>Project-defined enum used by firmware components.</td></tr><tr><td><code>SYS_CLOCK_HZ</code></td><td><span class='badge'>macro</span></td><td><code>src/main.c:4</code></td><td>84000000</td></tr><tr><td><code>system_clock_config</code></td><td><span class='badge'>function</span></td><td><code>src/main.c:6</code></td><td>void system_clock_config(void)</td></tr></tbody></table></div></section></main></div>
+<div id="promptModal" class="modal-backdrop" onclick="closePromptModal(event)">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <div class="modal-head">
+      <div style="display:flex; align-items:center; gap:10px;">
+        <span style="font-size:22px;">🤖</span>
+        <div>
+          <h3 style="margin:0; font-size:15px; color:var(--text);" id="modalTitle">AI Senior Embedded Developer Prompt</h3>
+          <div style="font-size:12px; color:var(--accent); font-family:monospace; margin-top:2px;" id="modalSubtitle">Analysis Prompt</div>
+        </div>
+      </div>
+      <button class="modal-close" onclick="closePromptModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div style="margin-bottom:12px; display:flex; align-items:center; justify-content:space-between;">
+        <span style="font-size:12px; color:var(--muted);">COPY &amp; PASTE TO YOUR AI CODING ASSISTANT:</span>
+        <button id="modalCopyBtn" class="btn-prompt-copy" onclick="copyModalPrompt()">📋 Copy Prompt</button>
+      </div>
+      <textarea id="modalTextarea" rows="16" readonly></textarea>
+    </div>
+  </div>
+</div>
+<script>
 function showTab(id,b){
   document.querySelectorAll('.section').forEach(x=>x.classList.remove('active'));
   var x=document.getElementById('sec-'+id);
@@ -343,6 +439,101 @@ function filterSymbols(){
     tr[i].style.display=txt.toUpperCase().indexOf(filter)>-1?'':'none';
   }
 }
+
+// AI Senior Embedded Developer Analysis Prompts
+function getFuncPrompt(name, sig, file, line, vis, mod, comp, callers, callees) {
+  return "You are joining this project as a senior embedded firmware engineer.\n\n" +
+    "Analyze this firmware function:\n\n" +
+    sig + "\n" +
+    "File: " + file + ":" + line + " (" + vis + ")\n" +
+    "Module: " + mod + " | Component: " + comp + "\n" +
+    "Callers: " + callers + "\n" +
+    "Callees: " + callees + "\n\n" +
+    "Use:\n" +
+    "1. docs/architecture/architecture.json\n" +
+    "2. arch-wiki-es documentation\n" +
+    "3. the project source code and hardware configuration\n\n" +
+    "Discover the actual implementation flow, hardware register interactions, and call hierarchy.\n\n" +
+    "Analyze:\n" +
+    "- Control flow, callers, callees, and hardware peripheral/register accesses\n" +
+    "- Concurrency, ISR safety, reentrancy, and timing constraints\n" +
+    "- Stack usage, buffer bounds, and error recovery\n\n" +
+    "Generate:\n" +
+    "1. Mermaid sequence diagram (execution and call flow)\n" +
+    "2. Mermaid flowchart (logic branching and error recovery)\n\n" +
+    "Include only functions, registers, and components that actually exist in the codebase.\n" +
+    "Do not infer missing components.\n" +
+    "Do not modify anything.";
+}
+
+function openPromptModal(title, subtitle, promptText) {
+  document.getElementById('modalTitle').textContent = title;
+  document.getElementById('modalSubtitle').textContent = subtitle;
+  document.getElementById('modalTextarea').value = promptText;
+  document.getElementById('promptModal').classList.add('active');
+}
+function closePromptModal(e) {
+  if (!e || e.target === document.getElementById('promptModal') || e.target.classList.contains('modal-close')) {
+    document.getElementById('promptModal').classList.remove('active');
+  }
+}
+function copyModalPrompt() {
+  var ta = document.getElementById('modalTextarea');
+  navigator.clipboard.writeText(ta.value).then(function() {
+    var btn = document.getElementById('modalCopyBtn');
+    btn.textContent = '✅ Copied!';
+    setTimeout(function() { btn.textContent = '📋 Copy Prompt'; }, 2000);
+  });
+}
+function copyFuncPromptDirect(card) {
+  var name = card.getAttribute('data-name');
+  var sig = card.getAttribute('data-sig');
+  var file = card.getAttribute('data-file');
+  var line = card.getAttribute('data-line');
+  var vis = card.getAttribute('data-vis');
+  var mod = card.getAttribute('data-mod');
+  var comp = card.getAttribute('data-comp');
+  var callers = card.getAttribute('data-callers');
+  var callees = card.getAttribute('data-callees');
+  var prompt = getFuncPrompt(name, sig, file, line, vis, mod, comp, callers, callees);
+  openPromptModal('AI Prompt: ' + name, file + ':' + line, prompt);
+}
+function copyCompPromptDirect(card) {
+  var name = card.getAttribute('data-name');
+  var type = card.getAttribute('data-type');
+  var provides = card.getAttribute('data-provides');
+  var consumes = card.getAttribute('data-consumes');
+  var prompt = "You are joining this project as a senior embedded systems engineer.\n\n" +
+    "Analyze this firmware component: " + name + " (" + type + ")\n" +
+    "Provides APIs: " + provides + "\n" +
+    "Consumes APIs: " + consumes + "\n\n" +
+    "Use:\n" +
+    "1. docs/architecture/architecture.json\n" +
+    "2. arch-wiki-es documentation\n" +
+    "3. the project source code\n\n" +
+    "Analyze hardware bindings, peripheral interfaces, memory footprint, and task interactions.\n\n" +
+    "Generate:\n" +
+    "1. Mermaid component interaction diagram\n" +
+    "2. Mermaid sequence diagram for public APIs\n\n" +
+    "Do not infer missing components. Do not modify anything.";
+  openPromptModal('AI Prompt: Component ' + name, type + ' component', prompt);
+}
+function copySmPromptDirect(card) {
+  var title = card.getAttribute('data-title');
+  var states = card.getAttribute('data-states');
+  var prompt = "You are joining this project as a senior embedded systems engineer.\n\n" +
+    "Analyze this finite state machine: " + title + "\n" +
+    "States: " + states + "\n\n" +
+    "Use:\n" +
+    "1. docs/architecture/architecture.json\n" +
+    "2. the project source code\n\n" +
+    "Analyze all state transitions, timeout handling, race conditions, and error states.\n" +
+    "Generate:\n" +
+    "1. Mermaid stateDiagram-v2\n\n" +
+    "Do not infer missing components. Do not modify anything.";
+  openPromptModal('AI Prompt: ' + title, 'State machine analysis', prompt);
+}
+
 document.querySelector('.section').classList.add('active');
 document.querySelector('.nav-btn').classList.add('active');
 if(window.mermaid)mermaid.initialize({startOnLoad:false,theme:'dark'});
