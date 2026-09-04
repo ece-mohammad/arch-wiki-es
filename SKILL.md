@@ -93,13 +93,13 @@ Run arch-wiki-es to perform a full parity audit against the firmware codebase:
    - Verify all build targets in Makefiles/platformio.ini are listed.
 ```
 
-## 🤖 Interactive Senior Embedded Developer Prompts
+## Interactive Senior Embedded Developer Prompts
 
 The generated `architecture.html` includes an interactive modal system:
 
-- Every **Function card** has a **📋 AI Prompt** button.
-- Every **Component card** has a **📋 AI Prompt** button.
-- Every **State Machine card** has a **📋 AI Prompt** button.
+- Every **Function card** has an **AI Prompt** button.
+- Every **Component card** has an **AI Prompt** button.
+- Every **State Machine card** has an **AI Prompt** button.
 
 Clicking any of these generates a tailor-made prompt formatted for an AI coding assistant (Antigravity, Claude, ChatGPT, Cursor) instructing it to:
 1. Trace execution flow, callers, callees, and register access.

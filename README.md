@@ -13,7 +13,7 @@ It scans an embedded firmware repository and generates:
 
 - **Doxygen + Architecture Hybrid**: Combines high-level system topology with per-symbol function signatures, callers, callees, macros, and types.
 - **Incremental Synchronization (`--sync`)**: Quickly rescan after modifying drivers, functions, or configurations to keep living documentation in sync.
-- **🤖 Interactive Senior Embedded Developer Prompts**: Click on any function, driver component, or state machine in the dashboard to generate a custom prompt for your AI assistant (Antigravity, Claude, ChatGPT, Cursor) with full call hierarchy, register context, and safety constraints.
+- **Interactive Senior Embedded Developer Prompts**: Click on any function, driver component, or state machine in the dashboard to generate a custom prompt for your AI assistant (Antigravity, Claude, ChatGPT, Cursor) with full call hierarchy, register context, and safety constraints.
 - **Hardware-Aware Scanning**: Extracts MCU targets, frequencies, pin mappings, and peripheral registers from STM32CubeIDE, STM32CubeMX, PlatformIO, Zephyr, ESP-IDF, Arduino, and Make/CMake files.
 - **Source-Derived State Machines & Sequences**: Generates interactive Mermaid diagrams directly from state enums, `switch`/`case` transitions, and `main()` boot call trees.
 - **Categorized Configuration Parameters**: Automatically classifies `#define` constants and flags into `clock`, `peripheral`, `memory`, `communication`, `rtos`, `power`, `debug`, and `feature` categories.
@@ -98,13 +98,13 @@ python3 /path/to/arch-wiki-es/templates/build_html.py --sync /path/to/firmware-p
 
 The generator will scan the repository and update both `architecture.json` and `architecture.html`.
 
-## 🤖 Interactive AI Senior Developer Prompts
+## Interactive AI Senior Developer Prompts
 
 Inside `docs/architecture/architecture.html`:
 
-- Every function in the **Functions** tab features a **📋 AI Prompt** button.
-- Every component in **Modules & Components** features a **📋 AI Prompt** button.
-- Every state machine in **State Machines** features a **📋 AI Prompt** button.
+- Every function in the **Functions** tab features an **AI Prompt** button.
+- Every component in **Modules & Components** features an **AI Prompt** button.
+- Every state machine in **State Machines** features an **AI Prompt** button.
 
 Clicking the button opens an interactive modal preloaded with a structured prompt tailored for AI coding assistants:
 
@@ -135,7 +135,7 @@ Generate:
 2. Mermaid flowchart (logic branching and error recovery)
 ```
 
-Click **📋 Copy Prompt** (or direct copy on the card) to copy the prompt to your clipboard and paste it directly into your AI chat window.
+Click **Copy Prompt** (or direct copy on the card) to copy the prompt to your clipboard and paste it directly into your AI chat window.
 
 ## Manifest Sections
 
