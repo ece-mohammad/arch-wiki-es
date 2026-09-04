@@ -187,4 +187,35 @@ def test_gitignore_respected(tmp_path):
     assert "secrets.h" not in scanned_files
     assert "generated.c" not in scanned_files
 
+def test_ai_agent_ignore_files_respected(tmp_path):
+    # Setup .cursorignore, .claudeignore, .geminiignore, .agentignore
+    (tmp_path / ".cursorignore").write_text("cursor_dir/\n*.cursor.c\n", encoding="utf-8")
+    (tmp_path / ".claudeignore").write_text("claude_secret.h\n", encoding="utf-8")
+    (tmp_path / ".geminiignore").write_text("gemini_temp/\n", encoding="utf-8")
+    (tmp_path / ".agentignore").write_text("agent_mock.c\n", encoding="utf-8")
+
+    src = tmp_path / "src"
+    src.mkdir()
+    (src / "app.c").write_text("void app(void) {}", encoding="utf-8")
+    (src / "test.cursor.c").write_text("void c_fn(void) {}", encoding="utf-8")
+    (src / "claude_secret.h").write_text("#define CLAUDE_SECRET 1", encoding="utf-8")
+    (src / "agent_mock.c").write_text("void mock(void) {}", encoding="utf-8")
+
+    cursor_dir = tmp_path / "cursor_dir"
+    cursor_dir.mkdir()
+    (cursor_dir / "c1.c").write_text("void c1(void) {}", encoding="utf-8")
+
+    gemini_dir = tmp_path / "gemini_temp"
+    gemini_dir.mkdir()
+    (gemini_dir / "g1.c").write_text("void g1(void) {}", encoding="utf-8")
+
+    scanned_files = [p.name for p in build_html.files(tmp_path)]
+    assert "app.c" in scanned_files
+    assert "test.cursor.c" not in scanned_files
+    assert "claude_secret.h" not in scanned_files
+    assert "agent_mock.c" not in scanned_files
+    assert "c1.c" not in scanned_files
+    assert "g1.c" not in scanned_files
+
+
 

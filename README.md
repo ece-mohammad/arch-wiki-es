@@ -14,7 +14,7 @@ It scans an embedded firmware repository and generates:
 - **Doxygen + Architecture Hybrid**: Combines high-level system topology with per-symbol function signatures, callers, callees, macros, and types.
 - **Incremental Synchronization (`--sync`)**: Quickly rescan after modifying drivers, functions, or configurations to keep living documentation in sync.
 - **Interactive Senior Embedded Developer Prompts**: Click on any function, driver component, or state machine in the dashboard to generate a custom prompt for your AI assistant (Antigravity, Claude, ChatGPT, Cursor) with full call hierarchy, register context, and safety constraints.
-- **.gitignore Aware**: Automatically parses root and nested `.gitignore` files to prune build directories, generated files, and ignored headers during scanning.
+- **VCS & AI Agent Ignore Aware**: Automatically parses standard `.gitignore` as well as AI coding agent ignore files (`.cursorignore`, `.claudeignore`, `.geminiignore`, `.antigravityignore`, `.agentignore`, `.codeignore`, `.aiignore`) across root and subdirectories to prune build folders, generated code, mock harnesses, and ignored headers.
 - **Hardware-Aware Scanning**: Extracts MCU targets, frequencies, pin mappings, and peripheral registers from STM32CubeIDE, STM32CubeMX, PlatformIO, Zephyr, ESP-IDF, Arduino, and Make/CMake files.
 - **Source-Derived State Machines & Sequences**: Generates interactive Mermaid diagrams directly from state enums, `switch`/`case` transitions, and `main()` boot call trees.
 - **Categorized Configuration Parameters**: Automatically classifies `#define` constants and flags into `clock`, `peripheral`, `memory`, `communication`, `rtos`, `power`, `debug`, and `feature` categories.
@@ -266,7 +266,7 @@ arch-wiki-es/
 
 The scanner is intentionally lightweight, dependency-free, and evidence-based:
 
-- Respects `.gitignore` rules across root and subdirectories to avoid scanning build artifacts and generated files.
+- Respects `.gitignore` and AI agent ignore files (`.cursorignore`, `.claudeignore`, `.geminiignore`, `.agentignore`, etc.) across root and subdirectories to avoid scanning build artifacts and private files.
 - Hardware parameters are extracted from recognizable configuration markers, register initializations, and build settings.
 - Static C/C++ analysis cannot infer pointer ownership through complex macro layers or function pointer tables without explicit evidence or overrides.
 - The built-in Markdown renderer handles standard README constructs without requiring external libraries.

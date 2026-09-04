@@ -149,7 +149,7 @@ machines, data pipelines, and flash/debug commands. Overrides are merged during 
 ## Verification Checklist
 
 - `architecture.json` contains only the embedded schema (21 top-level keys).
-- Files and directories matching `.gitignore` are excluded from scanning.
+- Files and directories matching `.gitignore` and AI agent ignore files (`.cursorignore`, `.claudeignore`, `.geminiignore`, `.agentignore`, etc.) are excluded from scanning.
 - The generated README content matches the target project's README.
 - All requested navigation sections are present in the HTML.
 - No standard or vendor types appear as top-level `dataTypes` entries.

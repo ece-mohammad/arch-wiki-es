@@ -41,14 +41,28 @@ def rel(path, root):
     except ValueError:
         return str(path).replace(os.sep, "/")
 
-def parse_gitignore(root: Path):
+IGNORE_FILENAMES = (
+    ".gitignore",
+    ".cursorignore",
+    ".claudeignore",
+    ".geminiignore",
+    ".antigravityignore",
+    ".agentignore",
+    ".codeignore",
+    ".aiignore"
+)
+
+def parse_ignore_rules(root: Path):
     rules = []
-    # Collect all .gitignore files (root and subdirectories)
-    try:
-        gi_files = list(root.rglob(".gitignore"))
-    except OSError:
-        gi_files = []
-    for p in gi_files:
+    # Collect all .gitignore and AI agent ignore files
+    ignore_files = []
+    for fname in IGNORE_FILENAMES:
+        try:
+            ignore_files.extend(root.rglob(fname))
+        except OSError:
+            pass
+    ignore_files.sort(key=lambda p: (len(p.parts), p.name != ".gitignore", str(p)))
+    for p in ignore_files:
         try:
             lines = p.read_text(encoding="utf-8", errors="replace").splitlines()
         except OSError:
@@ -124,8 +138,10 @@ def is_ignored(rel_path: str, is_dir: bool, rules) -> bool:
             ignored = not rule["negated"]
     return ignored
 
+parse_gitignore = parse_ignore_rules
+
 def files(root):
-    gitignore_rules = parse_gitignore(root)
+    ignore_rules = parse_ignore_rules(root)
     for current, dirs, names in os.walk(root):
         cur_path = Path(current)
         cur_rel = rel(cur_path, root)
@@ -136,7 +152,7 @@ def files(root):
             if d in SKIP or d.startswith("."):
                 continue
             rel_dir = f"{cur_rel}/{d}" if cur_rel else d
-            if is_ignored(rel_dir, True, gitignore_rules):
+            if is_ignored(rel_dir, True, ignore_rules):
                 continue
             filtered_dirs.append(d)
         dirs[:] = filtered_dirs
@@ -144,7 +160,7 @@ def files(root):
         for name in names:
             path = cur_path / name
             rel_file = f"{cur_rel}/{name}" if cur_rel else name
-            if is_ignored(rel_file, False, gitignore_rules):
+            if is_ignored(rel_file, False, ignore_rules):
                 continue
             name_lower = name.lower()
             if (path.suffix in SRC_EXTENSIONS or
