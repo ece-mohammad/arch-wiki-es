@@ -4,6 +4,12 @@ const fs = require('fs');
 const path = require('path');
 const os = require('os');
 
+// Support --uninstall flag
+if (process.argv.includes('--uninstall') || process.argv.includes('-u')) {
+    require('./uninstall.js');
+    process.exit(0);
+}
+
 console.log('🏛️  Installing arch-wiki-es AI Skill...\n');
 
 const rootDir = path.join(__dirname, '..');
@@ -17,20 +23,44 @@ if (!fs.existsSync(skillFile)) {
 }
 
 const homeDir = os.homedir();
+
+// 1. Clean up legacy 'arch-wiki' installation directories if they exist
+const legacyDirs = [
+    path.join(homeDir, '.gemini', 'antigravity', 'skills', 'arch-wiki'),
+    path.join(homeDir, '.gemini', 'config', 'skills', 'arch-wiki'),
+    path.join(homeDir, '.claude', 'skills', 'arch-wiki'),
+    path.join(homeDir, '.cursor', 'skills', 'arch-wiki'),
+    path.join(process.cwd(), '.skills', 'arch-wiki')
+];
+
+legacyDirs.forEach(dir => {
+    try {
+        if (fs.existsSync(dir)) {
+            fs.rmSync(dir, { recursive: true, force: true });
+            console.log(`🧹 Cleaned up legacy arch-wiki skill directory:\n   └─ ${dir}\n`);
+        }
+    } catch (e) {
+        // Ignore permission warnings on cleanup
+    }
+});
+
+// 2. Skill Targets for arch-wiki-es
 const targets = [];
 
-// 1. Antigravity Global Skills Path
-const antigravityPath = path.join(homeDir, '.gemini', 'antigravity', 'skills', 'arch-wiki-es');
-targets.push({ name: 'Antigravity AI Agent', path: antigravityPath });
+// Antigravity Global Skills Paths
+targets.push({ name: 'Antigravity AI Agent (~/.gemini/antigravity/skills/arch-wiki-es)', path: path.join(homeDir, '.gemini', 'antigravity', 'skills', 'arch-wiki-es') });
+targets.push({ name: 'Antigravity Config (~/.gemini/config/skills/arch-wiki-es)', path: path.join(homeDir, '.gemini', 'config', 'skills', 'arch-wiki-es') });
 
-// 2. Claude Code Skills Path
-const claudePath = path.join(homeDir, '.claude', 'skills', 'arch-wiki-es');
-targets.push({ name: 'Claude Code', path: claudePath });
+// Claude Code Skills Path
+targets.push({ name: 'Claude Code (~/.claude/skills/arch-wiki-es)', path: path.join(homeDir, '.claude', 'skills', 'arch-wiki-es') });
 
-// 3. Local Workspace Target (if run inside a project)
-const cwdSkillPath = path.join(process.cwd(), '.skills', 'arch-wiki-es');
+// Cursor AI Skills Path
+targets.push({ name: 'Cursor AI (~/.cursor/skills/arch-wiki-es)', path: path.join(homeDir, '.cursor', 'skills', 'arch-wiki-es') });
+
+// Local Workspace Target (if run inside a target project)
 if (process.cwd() !== rootDir) {
-    targets.push({ name: 'Local Project Workspace (.skills/arch-wiki-es)', path: cwdSkillPath });
+    targets.push({ name: 'Local Project Workspace (.skills/arch-wiki-es)', path: path.join(process.cwd(), '.skills', 'arch-wiki-es') });
+    targets.push({ name: 'Local Project Workspace (.agents/skills/arch-wiki-es)', path: path.join(process.cwd(), '.agents', 'skills', 'arch-wiki-es') });
 }
 
 let installedCount = 0;

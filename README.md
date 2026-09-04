@@ -14,6 +14,7 @@ It scans an embedded firmware repository and generates:
 - **Doxygen + Architecture Hybrid**: Combines high-level system topology with per-symbol function signatures, callers, callees, macros, and types.
 - **Incremental Synchronization (`--sync`)**: Quickly rescan after modifying drivers, functions, or configurations to keep living documentation in sync.
 - **Interactive Senior Embedded Developer Prompts**: Click on any function, driver component, or state machine in the dashboard to generate a custom prompt for your AI assistant (Antigravity, Claude, ChatGPT, Cursor) with full call hierarchy, register context, and safety constraints.
+- **.gitignore Aware**: Automatically parses root and nested `.gitignore` files to prune build directories, generated files, and ignored headers during scanning.
 - **Hardware-Aware Scanning**: Extracts MCU targets, frequencies, pin mappings, and peripheral registers from STM32CubeIDE, STM32CubeMX, PlatformIO, Zephyr, ESP-IDF, Arduino, and Make/CMake files.
 - **Source-Derived State Machines & Sequences**: Generates interactive Mermaid diagrams directly from state enums, `switch`/`case` transitions, and `main()` boot call trees.
 - **Categorized Configuration Parameters**: Automatically classifies `#define` constants and flags into `clock`, `peripheral`, `memory`, `communication`, `rtos`, `power`, `debug`, and `feature` categories.
@@ -58,19 +59,87 @@ The scanner automatically identifies project environments and tailors hardware a
 - **Keil / MDK**: Parses `.uvprojx` project definitions and target device settings.
 - **Rust Embedded**: Parses `Cargo.toml`, `.cargo/config.toml`, target architectures, and memory layouts.
 
-## Install
+## Installation & Uninstallation
+
+The installer registers `SKILL.md` and the generator script with supported AI assistant skill environments:
+- **Antigravity AI Agent** (`~/.gemini/antigravity/skills/arch-wiki-es` and `~/.gemini/config/skills/arch-wiki-es`)
+- **Claude Code** (`~/.claude/skills/arch-wiki-es`)
+- **Cursor AI** (`~/.cursor/skills/arch-wiki-es`)
+- **Local Workspace** (`.skills/arch-wiki-es` and `.agents/skills/arch-wiki-es`)
+
+### Method 1: NPX (Global Installer)
+
+**Install:**
 
 ```bash
 npx arch-wiki-es
 ```
 
-For local development:
+**Uninstall:**
 
 ```bash
-node ./bin/install.js
+npx arch-wiki-es --uninstall
 ```
 
-The installer registers `SKILL.md` and the generator script with supported AI assistant skill environments (Antigravity, Claude Code, and local workspace `.skills/`).
+### Method 2: From Local Repository Clone
+
+**Install:**
+
+```bash
+node bin/install.js
+```
+*(or `npm run install-skill`)*
+
+**Uninstall:**
+
+```bash
+node bin/uninstall.js
+```
+*(or `npm run uninstall-skill`, or `node bin/install.js --uninstall`)*
+
+### Method 3: Manual Removal (Per Assistant)
+
+If you prefer to remove the skill manually from specific AI assistants:
+
+- **Antigravity AI Agent**:
+  - Linux/macOS:
+    ```bash
+    rm -rf ~/.gemini/antigravity/skills/arch-wiki-es ~/.gemini/config/skills/arch-wiki-es
+    ```
+  - Windows (PowerShell):
+    ```powershell
+    Remove-Item -Recurse -Force "$HOME\.gemini\antigravity\skills\arch-wiki-es", "$HOME\.gemini\config\skills\arch-wiki-es" -ErrorAction SilentlyContinue
+    ```
+
+- **Claude Code**:
+  - Linux/macOS:
+    ```bash
+    rm -rf ~/.claude/skills/arch-wiki-es
+    ```
+  - Windows (PowerShell):
+    ```powershell
+    Remove-Item -Recurse -Force "$HOME\.claude\skills\arch-wiki-es" -ErrorAction SilentlyContinue
+    ```
+
+- **Cursor AI**:
+  - Linux/macOS:
+    ```bash
+    rm -rf ~/.cursor/skills/arch-wiki-es
+    ```
+  - Windows (PowerShell):
+    ```powershell
+    Remove-Item -Recurse -Force "$HOME\.cursor\skills\arch-wiki-es" -ErrorAction SilentlyContinue
+    ```
+
+- **Project Workspace**:
+  - Linux/macOS:
+    ```bash
+    rm -rf .skills/arch-wiki-es .agents/skills/arch-wiki-es
+    ```
+  - Windows (PowerShell):
+    ```powershell
+    Remove-Item -Recurse -Force ".skills\arch-wiki-es", ".agents\skills\arch-wiki-es" -ErrorAction SilentlyContinue
+    ```
 
 ## Syncing After Codebase Changes
 
@@ -181,7 +250,9 @@ Use it to supply board details, pin mappings, power budgets, memory partitions, 
 arch-wiki-es/
 ├── SKILL.md
 ├── README.md
-├── bin/install.js
+├── bin/
+│   ├── install.js
+│   └── uninstall.js
 ├── templates/
 │   ├── architecture.json
 │   ├── architecture.html
@@ -195,6 +266,7 @@ arch-wiki-es/
 
 The scanner is intentionally lightweight, dependency-free, and evidence-based:
 
+- Respects `.gitignore` rules across root and subdirectories to avoid scanning build artifacts and generated files.
 - Hardware parameters are extracted from recognizable configuration markers, register initializations, and build settings.
 - Static C/C++ analysis cannot infer pointer ownership through complex macro layers or function pointer tables without explicit evidence or overrides.
 - The built-in Markdown renderer handles standard README constructs without requiring external libraries.

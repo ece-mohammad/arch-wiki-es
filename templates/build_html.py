@@ -35,13 +35,117 @@ def text(path):
         return ""
 
 def rel(path, root):
-    return str(path.relative_to(root)).replace(os.sep, "/")
+    try:
+        r = str(path.relative_to(root)).replace(os.sep, "/")
+        return "" if r == "." else r
+    except ValueError:
+        return str(path).replace(os.sep, "/")
+
+def parse_gitignore(root: Path):
+    rules = []
+    # Collect all .gitignore files (root and subdirectories)
+    try:
+        gi_files = list(root.rglob(".gitignore"))
+    except OSError:
+        gi_files = []
+    for p in gi_files:
+        try:
+            lines = p.read_text(encoding="utf-8", errors="replace").splitlines()
+        except OSError:
+            continue
+        try:
+            rel_base = rel(p.parent, root)
+        except ValueError:
+            rel_base = ""
+        for line in lines:
+            line = line.strip()
+            if not line or line.startswith("#"):
+                continue
+            negated = False
+            if line.startswith("!"):
+                negated = True
+                line = line[1:].strip()
+            dir_only = False
+            if line.endswith("/"):
+                dir_only = True
+                line = line[:-1]
+            anchored = "/" in line or line.startswith("/")
+            if line.startswith("/"):
+                line = line[1:]
+            pattern = gitignore_to_regex(line, anchored, rel_base)
+            rules.append({
+                "raw": line,
+                "base": rel_base,
+                "negated": negated,
+                "dir_only": dir_only,
+                "pattern": pattern
+            })
+    return rules
+
+def gitignore_to_regex(pattern: str, anchored: bool, base: str) -> re.Pattern:
+    res = ""
+    i = 0
+    n = len(pattern)
+    while i < n:
+        c = pattern[i]
+        if c == "*":
+            if i + 1 < n and pattern[i+1] == "*":
+                i += 2
+                if i < n and pattern[i] == "/":
+                    i += 1
+                    res += "(?:.*/)?"
+                else:
+                    res += ".*"
+                continue
+            else:
+                res += "[^/]*"
+        elif c == "?":
+            res += "[^/]"
+        elif c in ".+^$(){}|[]\\":
+            res += "\\" + c
+        else:
+            res += c
+        i += 1
+        
+    prefix = (re.escape(base) + "/") if base else ""
+    if anchored:
+        reg = f"^{prefix}{res}$"
+    else:
+        reg = f"^{prefix}(?:.*/)?{res}$" if prefix else f"^(?:.*/)?{res}$"
+    return re.compile(reg, re.IGNORECASE)
+
+def is_ignored(rel_path: str, is_dir: bool, rules) -> bool:
+    ignored = False
+    norm_path = rel_path.replace("\\", "/").rstrip("/")
+    for rule in rules:
+        if rule["dir_only"] and not is_dir:
+            continue
+        if rule["pattern"].match(norm_path):
+            ignored = not rule["negated"]
+    return ignored
 
 def files(root):
+    gitignore_rules = parse_gitignore(root)
     for current, dirs, names in os.walk(root):
-        dirs[:] = [d for d in dirs if d not in SKIP and not d.startswith(".")]
+        cur_path = Path(current)
+        cur_rel = rel(cur_path, root)
+        
+        # Prune ignored directories
+        filtered_dirs = []
+        for d in dirs:
+            if d in SKIP or d.startswith("."):
+                continue
+            rel_dir = f"{cur_rel}/{d}" if cur_rel else d
+            if is_ignored(rel_dir, True, gitignore_rules):
+                continue
+            filtered_dirs.append(d)
+        dirs[:] = filtered_dirs
+        
         for name in names:
-            path = Path(current) / name
+            path = cur_path / name
+            rel_file = f"{cur_rel}/{name}" if cur_rel else name
+            if is_ignored(rel_file, False, gitignore_rules):
+                continue
             name_lower = name.lower()
             if (path.suffix in SRC_EXTENSIONS or
                 path.suffix in CONFIG_EXTENSIONS or

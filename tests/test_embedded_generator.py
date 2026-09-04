@@ -165,3 +165,26 @@ def test_cli_sync_execution(monkeypatch):
     import shutil
     shutil.rmtree(Path(SAMPLE_DIR) / "docs" / "architecture", ignore_errors=True)
 
+def test_gitignore_respected(tmp_path):
+    # Setup a mock project with a .gitignore
+    (tmp_path / ".gitignore").write_text("build/\n*.ignored.c\nsecrets.h\n", encoding="utf-8")
+    
+    src = tmp_path / "src"
+    src.mkdir()
+    (src / "main.c").write_text("int main(void) { return 0; }", encoding="utf-8")
+    (src / "sensor.c").write_text("void sensor_init(void) {}", encoding="utf-8")
+    (src / "test.ignored.c").write_text("void ignored_fn(void) {}", encoding="utf-8")
+    (src / "secrets.h").write_text("#define SECRET_KEY 12345", encoding="utf-8")
+    
+    build_dir = tmp_path / "build"
+    build_dir.mkdir()
+    (build_dir / "generated.c").write_text("void gen_fn(void) {}", encoding="utf-8")
+    
+    scanned_files = [p.name for p in build_html.files(tmp_path)]
+    assert "main.c" in scanned_files
+    assert "sensor.c" in scanned_files
+    assert "test.ignored.c" not in scanned_files
+    assert "secrets.h" not in scanned_files
+    assert "generated.c" not in scanned_files
+
+
